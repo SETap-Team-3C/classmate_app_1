@@ -21,16 +21,12 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore => widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore =>
+      widget.firestore ?? FirebaseFirestore.instance;
 
   String _buildChatId(String userA, String userB) {
     final ids = [userA, userB]..sort();
     return '${ids[0]}_${ids[1]}';
-  }
-
-  bool _isValidUsername(String username) {
-    final usernameRegex = RegExp(r'^[A-Za-z0-9](?:[A-Za-z0-9_]*[A-Za-z0-9])?$');
-    return usernameRegex.hasMatch(username);
   }
 
   String _formatTimeAgo(Timestamp? timestamp) {
@@ -46,148 +42,77 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return 'older';
   }
 
+  Future<void> _openChatWithUser({
+    required User currentUser,
+    required SearchUser selectedUser,
+  }) async {
+    if (selectedUser.id == currentUser.uid) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You cannot chat with yourself.')),
+      );
+      return;
+    }
+
+    final chatId = _buildChatId(currentUser.uid, selectedUser.id);
+    final currentUserDoc = await _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .get();
+    final currentUsername = (currentUserDoc.data()?['name'] ?? '').toString();
+
+    try {
+      await _firestore.collection('chats').doc(chatId).set({
+        'participants': [currentUser.uid, selectedUser.id],
+        'usernames': {
+          currentUser.uid: currentUsername,
+          selectedUser.id: selectedUser.name,
+        },
+        'lastMessage': '',
+        'lastTimestamp': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      if (!mounted) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatPage(
+            receiverId: selectedUser.id,
+            receiverName: selectedUser.name,
+          ),
+        ),
+      );
+    } on FirebaseException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Could not create chat: ${error.message ?? error.code}',
+          ),
+        ),
+      );
+    }
+  }
+
   Future<void> _showAddUserDialog() async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
-    final usernameController = TextEditingController();
-
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Start New Chat'),
-          content: TextField(
-            controller: usernameController,
-            decoration: const InputDecoration(
-              labelText: 'Enter username',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final username = usernameController.text.trim();
-                if (username.isEmpty) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Please enter a username.')),
-                    );
-                  }
-                  return;
-                }
-
-                if (!_isValidUsername(username)) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Username can only use letters, numbers, and underscores. Underscores cannot be first or last.',
-                        ),
-                      ),
-                    );
-                  }
-                  return;
-                }
-
-                QuerySnapshot<Map<String, dynamic>> query;
-                try {
-                    query = await _firestore
-                      .collection('users')
-                      .where('usernameLower', isEqualTo: username.toLowerCase())
-                      .limit(1)
-                      .get();
-                } on FirebaseException catch (error) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Could not search usernames: ${error.message ?? error.code}',
-                        ),
-                      ),
-                    );
-                  }
-                  return;
-                }
-
-                if (query.docs.isEmpty) {
-                    query = await _firestore
-                      .collection('users')
-                      .where('name', isEqualTo: username)
-                      .limit(1)
-                      .get();
-                }
-
-                if (query.docs.isEmpty) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Username not found.')),
-                    );
-                  }
-                  return;
-                }
-
-                final selectedUserDoc = query.docs.first;
-                final otherUserId = selectedUserDoc.id;
-                final otherUserData = selectedUserDoc.data();
-
-                if (otherUserId == currentUser.uid) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('You cannot chat with yourself.')),
-                    );
-                  }
-                  return;
-                }
-
-                final chatId = _buildChatId(currentUser.uid, otherUserId);
-                final currentUserDoc = await _firestore
-                    .collection('users')
-                    .doc(currentUser.uid)
-                    .get();
-                final currentUsername =
-                    (currentUserDoc.data()?['name'] ?? '').toString();
-
-                try {
-                    await _firestore
-                      .collection('chats')
-                      .doc(chatId)
-                      .set({
-                    'participants': [currentUser.uid, otherUserId],
-                    'usernames': {
-                      currentUser.uid: currentUsername,
-                      otherUserId: (otherUserData['name'] ?? '').toString(),
-                    },
-                    'lastMessage': '',
-                    'lastTimestamp': FieldValue.serverTimestamp(),
-                  }, SetOptions(merge: true));
-
-                  if (context.mounted) {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      this.context,
-                      MaterialPageRoute(
-                        builder: (_) => ChatPage(
-                          receiverId: otherUserId,
-                          receiverName: (otherUserData['name'] ?? 'User').toString(),
-                        ),
-                      ),
-                    );
-                  }
-                } on FirebaseException catch (error) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not create chat: ${error.message ?? error.code}')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Add'),
-            ),
-          ],
+        return UserSearchBottomSheet(
+          firestore: _firestore,
+          currentUserId: currentUser.uid,
+          onUserSelected: (selectedUser) async {
+            Navigator.pop(context);
+            await _openChatWithUser(
+              currentUser: currentUser,
+              selectedUser: selectedUser,
+            );
+          },
         );
       },
     );
@@ -230,9 +155,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
           ),
           Expanded(
             child: widget.showTestEmptyState
-                ? const Center(
-                    child: Text('No chats yet. Tap + to start one.'),
-                  )
+                ? const Center(child: Text('No chats yet. Tap + to start one.'))
                 : StreamBuilder<QuerySnapshot>(
                     stream: _firestore
                         .collection('chats')
@@ -279,9 +202,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       return ListView.builder(
                         itemCount: chats.length,
                         itemBuilder: (context, index) {
-                          final chatData = chats[index].data() as Map<String, dynamic>;
+                          final chatData =
+                              chats[index].data() as Map<String, dynamic>;
                           final chatId = chats[index].id;
-                          final participants = List<String>.from(chatData['participants'] ?? []);
+                          final participants = List<String>.from(
+                            chatData['participants'] ?? [],
+                          );
                           final otherUserId = participants.firstWhere(
                             (id) => id != currentUser?.uid,
                             orElse: () => '',
@@ -291,15 +217,22 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             return const SizedBox.shrink();
                           }
 
-                          final usernames = Map<String, dynamic>.from(chatData['usernames'] ?? {});
-                          final receiverName = (usernames[otherUserId] ?? 'User').toString();
-                          final lastTimestamp = chatData['lastTimestamp'] as Timestamp?;
+                          final usernames = Map<String, dynamic>.from(
+                            chatData['usernames'] ?? {},
+                          );
+                          final receiverName =
+                              (usernames[otherUserId] ?? 'User').toString();
+                          final lastTimestamp =
+                              chatData['lastTimestamp'] as Timestamp?;
 
                           return FutureBuilder<int>(
                             future: _firestore
                                 .collection('messages')
                                 .where('chatId', isEqualTo: chatId)
-                                .where('receiverId', isEqualTo: currentUser?.uid)
+                                .where(
+                                  'receiverId',
+                                  isEqualTo: currentUser?.uid,
+                                )
                                 .where('read', isEqualTo: false)
                                 .count()
                                 .get()
@@ -309,10 +242,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               final unreadText = unreadCount == 0
                                   ? ''
                                   : unreadCount > 3
-                                      ? '3+ new messages'
-                                      : unreadCount == 1
-                                          ? '1 new message'
-                                          : '$unreadCount new messages';
+                                  ? '3+ new messages'
+                                  : unreadCount == 1
+                                  ? '1 new message'
+                                  : '$unreadCount new messages';
 
                               return InkWell(
                                 onTap: () {
@@ -328,13 +261,20 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 },
                                 child: Container(
                                   height: 70,
-                                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
-                                    border: Border.all(color: Colors.grey.shade400),
+                                    border: Border.all(
+                                      color: Colors.grey.shade400,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                  ),
                                   child: Row(
                                     children: [
                                       Expanded(
@@ -355,8 +295,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                             unreadText,
                                             style: TextStyle(
                                               fontSize: 12,
-                                              color: unreadCount > 0 ? Colors.red : Colors.grey,
-                                              fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                                              color: unreadCount > 0
+                                                  ? Colors.red
+                                                  : Colors.grey,
+                                              fontWeight: unreadCount > 0
+                                                  ? FontWeight.bold
+                                                  : FontWeight.normal,
                                             ),
                                             textAlign: TextAlign.center,
                                             overflow: TextOverflow.ellipsis,
@@ -366,12 +310,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                       Expanded(
                                         flex: 1,
                                         child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          crossAxisAlignment: CrossAxisAlignment.end,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
                                           children: [
                                             Text(
                                               _formatTimeAgo(lastTimestamp),
-                                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -388,6 +337,214 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class SearchUser {
+  const SearchUser({
+    required this.id,
+    required this.name,
+    required this.username,
+    required this.email,
+  });
+
+  final String id;
+  final String name;
+  final String username;
+  final String email;
+}
+
+class UserSearchBottomSheet extends StatefulWidget {
+  const UserSearchBottomSheet({
+    this.firestore,
+    required this.currentUserId,
+    required this.onUserSelected,
+    this.usersLoader,
+  });
+
+  final FirebaseFirestore? firestore;
+  final String currentUserId;
+  final Future<void> Function(SearchUser user) onUserSelected;
+  final Future<List<SearchUser>> Function()? usersLoader;
+
+  @override
+  State<UserSearchBottomSheet> createState() => _UserSearchBottomSheetState();
+}
+
+class _UserSearchBottomSheetState extends State<UserSearchBottomSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  late final Future<List<SearchUser>> _usersFuture;
+
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _usersFuture = _loadUsers();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<List<SearchUser>> _loadUsers() async {
+    if (widget.usersLoader != null) {
+      final loadedUsers = await widget.usersLoader!();
+      return loadedUsers
+          .where((user) => user.id != widget.currentUserId)
+          .toList();
+    }
+
+    final firestore = widget.firestore;
+    if (firestore == null) {
+      return const <SearchUser>[];
+    }
+
+    final snapshot = await firestore
+        .collection('users')
+        .orderBy('name')
+        .limit(300)
+        .get();
+
+    return snapshot.docs.where((doc) => doc.id != widget.currentUserId).map((
+      doc,
+    ) {
+      final data = doc.data();
+      final name = (data['name'] ?? 'User').toString();
+      final username = (data['usernameLower'] ?? '').toString();
+      final email = (data['email'] ?? '').toString();
+
+      return SearchUser(
+        id: doc.id,
+        name: name,
+        username: username,
+        email: email,
+      );
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 8, 16, bottomInset + 16),
+        child: SizedBox(
+          height: 520,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Search User',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _searchController,
+                textInputAction: TextInputAction.search,
+                onChanged: (value) {
+                  setState(() {
+                    _query = value.trim().toLowerCase();
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: 'Search by name or username',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: _query.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() => _query = '');
+                          },
+                          icon: const Icon(Icons.close),
+                        ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: FutureBuilder<List<SearchUser>>(
+                  future: _usersFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Could not load users: ${snapshot.error}',
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    }
+
+                    final users = snapshot.data ?? const <SearchUser>[];
+                    final filteredUsers = users.where((user) {
+                      if (_query.isEmpty) return true;
+                      return user.name.toLowerCase().contains(_query) ||
+                          user.username.toLowerCase().contains(_query);
+                    }).toList();
+
+                    if (users.isEmpty) {
+                      return const Center(child: Text('No users available.'));
+                    }
+
+                    if (filteredUsers.isEmpty) {
+                      return const Center(
+                        child: Text('No matching users found.'),
+                      );
+                    }
+
+                    return ListView.separated(
+                      itemCount: filteredUsers.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final user = filteredUsers[index];
+                        final subtitle = [
+                          if (user.username.isNotEmpty) '@${user.username}',
+                          if (user.email.isNotEmpty) user.email,
+                        ].join(' • ');
+
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 2,
+                          ),
+                          leading: CircleAvatar(
+                            child: Text(
+                              user.name.isEmpty
+                                  ? '?'
+                                  : user.name[0].toUpperCase(),
+                            ),
+                          ),
+                          title: Text(
+                            user.name,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: subtitle.isEmpty
+                              ? null
+                              : Text(subtitle, overflow: TextOverflow.ellipsis),
+                          onTap: () async {
+                            await widget.onUserSelected(user);
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
