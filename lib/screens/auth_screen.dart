@@ -3,7 +3,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+  const AuthScreen({
+    super.key,
+    this.auth,
+    this.firestore,
+  });
+
+  final FirebaseAuth? auth;
+  final FirebaseFirestore? firestore;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -15,6 +22,9 @@ class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _isLogin = true;
   bool _isLoading = false;
+
+  FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => widget.firestore ?? FirebaseFirestore.instance;
 
   bool _isValidUsername(String username) {
     final usernameRegex = RegExp(r'^[A-Za-z0-9](?:[A-Za-z0-9_]*[A-Za-z0-9])?$');
@@ -63,7 +73,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
           QuerySnapshot<Map<String, dynamic>> usernameQuery;
           try {
-            usernameQuery = await FirebaseFirestore.instance
+            usernameQuery = await _firestore
                 .collection('users')
                 .where('usernameLower', isEqualTo: identifier.toLowerCase())
                 .limit(1)
@@ -92,12 +102,12 @@ class _AuthScreenState extends State<AuthScreen> {
           }
         }
 
-        final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        final credential = await _auth.signInWithEmailAndPassword(
           email: emailForLogin,
           password: password,
         );
 
-        final userDoc = await FirebaseFirestore.instance
+        final userDoc = await _firestore
             .collection('users')
             .doc(credential.user!.uid)
             .get();
@@ -105,7 +115,7 @@ class _AuthScreenState extends State<AuthScreen> {
         final fallbackName = emailForLogin.split('@').first;
         final resolvedName = existingName.isEmpty ? fallbackName : existingName;
 
-        await FirebaseFirestore.instance
+        await _firestore
             .collection('users')
             .doc(credential.user!.uid)
             .set({
@@ -133,13 +143,13 @@ class _AuthScreenState extends State<AuthScreen> {
         final usernameLower = username.toLowerCase();
 
         final credential =
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+            await _auth.createUserWithEmailAndPassword(
           email: identifier,
           password: password,
         );
 
         try {
-          final usernameTaken = await FirebaseFirestore.instance
+          final usernameTaken = await _firestore
               .collection('users')
               .where('usernameLower', isEqualTo: usernameLower)
               .limit(1)
@@ -151,14 +161,14 @@ class _AuthScreenState extends State<AuthScreen> {
 
           if (takenByAnother) {
             await credential.user?.delete();
-            await FirebaseAuth.instance.signOut();
+            await _auth.signOut();
             throw FirebaseAuthException(
               code: 'username-already-in-use',
               message: 'That username is already taken. Please choose another.',
             );
           }
 
-          await FirebaseFirestore.instance
+          await _firestore
               .collection('users')
               .doc(credential.user!.uid)
               .set({
@@ -169,7 +179,7 @@ class _AuthScreenState extends State<AuthScreen> {
           }, SetOptions(merge: true));
         } on FirebaseException catch (error) {
           await credential.user?.delete();
-          await FirebaseAuth.instance.signOut();
+          await _auth.signOut();
           throw FirebaseAuthException(
             code: error.code,
             message: error.message ?? 'Could not create account profile.',

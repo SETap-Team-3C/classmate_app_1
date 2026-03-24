@@ -6,13 +6,15 @@ import '../services/chat_service.dart';
 class MessageWithDeleteOption extends StatefulWidget {
   final String messageId;
   final String text;
-  final ChatService chatService;
+  final ChatService? chatService;
+  final Future<void> Function()? onDelete;
 
   const MessageWithDeleteOption({
     Key? key,
     required this.messageId,
     required this.text,
-    required this.chatService,
+    this.chatService,
+    this.onDelete,
   }) : super(key: key);
 
   @override
@@ -42,7 +44,11 @@ class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
     if (shouldDelete != true) return;
 
     try {
-      await widget.chatService.deleteMessage(widget.messageId);
+      if (widget.onDelete != null) {
+        await widget.onDelete!.call();
+      } else if (widget.chatService != null) {
+        await widget.chatService!.deleteMessage(widget.messageId);
+      }
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Message deleted')),
@@ -118,11 +124,17 @@ class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
 class ChatPage extends StatefulWidget {
   final String receiverId;
   final String receiverName;
+  final ChatService? chatService;
+  final FirebaseAuth? auth;
+  final bool showTestEmptyState;
 
   const ChatPage({
     Key? key,
     required this.receiverId,
     required this.receiverName,
+    this.chatService,
+    this.auth,
+    this.showTestEmptyState = false,
   }) : super(key: key);
 
   @override
@@ -130,9 +142,18 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final ChatService _chatService = ChatService();
+  ChatService? _chatService;
   final TextEditingController _messageController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseAuth? _auth;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.showTestEmptyState) {
+      _auth = widget.auth ?? FirebaseAuth.instance;
+      _chatService = widget.chatService ?? ChatService(auth: _auth);
+    }
+  }
 
   @override
   void dispose() {
@@ -142,8 +163,9 @@ class _ChatPageState extends State<ChatPage> {
 
   void _sendMessage() {
     if (_messageController.text.isEmpty) return;
+    if (_chatService == null) return;
 
-    _chatService.sendMessage(
+    _chatService!.sendMessage(
       widget.receiverId,
       _messageController.text,
     );
@@ -203,9 +225,13 @@ class _ChatPageState extends State<ChatPage> {
       body: Column(
         children: [
           Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: _chatService.getMessages(
-                _auth.currentUser!.uid,
+            child: widget.showTestEmptyState
+                ? const Center(
+                    child: Text('No messages yet. Start the conversation.'),
+                  )
+                : StreamBuilder<QuerySnapshot>(
+              stream: _chatService!.getMessages(
+                _auth!.currentUser!.uid,
                 widget.receiverId,
               ),
               builder: (context, snapshot) {
@@ -251,11 +277,11 @@ class _ChatPageState extends State<ChatPage> {
                 // Mark incoming messages as read
                 for (final msg in messages) {
                   final data = msg.data() as Map<String, dynamic>;
-                  final isCurrentUser = data['senderId'] == _auth.currentUser!.uid;
+                  final isCurrentUser = data['senderId'] == _auth!.currentUser!.uid;
                   final isRead = data['read'] ?? false;
 
                   if (!isCurrentUser && !isRead) {
-                    _chatService.markMessageAsRead(msg.id, _auth.currentUser!.uid);
+                    _chatService!.markMessageAsRead(msg.id, _auth!.currentUser!.uid);
                   }
                 }
 
@@ -267,7 +293,7 @@ class _ChatPageState extends State<ChatPage> {
                       final messageId = doc.id;
                       final data = doc.data() as Map<String, dynamic>;
                       final isCurrentUser =
-                          data['senderId'] == _auth.currentUser!.uid;
+                          data['senderId'] == _auth!.currentUser!.uid;
                       final isRead = data['read'] ?? false;
                       final readAt = data['readAt'] as Timestamp?;
                       final isLastMessage = index == messages.length - 1;

@@ -5,16 +5,31 @@ import 'messages_screen.dart';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.title});
+  const HomeScreen({
+    super.key,
+    required this.title,
+    this.auth,
+    this.firestore,
+    this.messagesScreenBuilder,
+    this.unreadCountStream,
+  });
+
   final String title;
+  final FirebaseAuth? auth;
+  final FirebaseFirestore? firestore;
+  final WidgetBuilder? messagesScreenBuilder;
+  final Stream<int>? unreadCountStream;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => widget.firestore ?? FirebaseFirestore.instance;
+
   Future<void> _signOut() async {
-    await FirebaseAuth.instance.signOut();
+    await _auth.signOut();
   }
 
   @override
@@ -52,21 +67,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const MessagesScreen()),
+                    MaterialPageRoute(
+                      builder: widget.messagesScreenBuilder ??
+                          (_) => MessagesScreen(
+                                auth: _auth,
+                                firestore: _firestore,
+                              ),
+                    ),
                   );
                 },
               ),
               Positioned(
                 right: 0,
                 top: 0,
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection('messages')
-                      .where('receiverId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
-                      .where('read', isEqualTo: false)
-                      .snapshots(),
+                child: StreamBuilder<int>(
+                  stream: widget.unreadCountStream ??
+                      _firestore
+                          .collection('messages')
+                          .where('receiverId', isEqualTo: _auth.currentUser?.uid)
+                          .where('read', isEqualTo: false)
+                          .snapshots()
+                          .map((snapshot) => snapshot.docs.length),
                   builder: (context, snapshot) {
-                    final hasUnread = (snapshot.data?.docs.length ?? 0) > 0;
+                    final hasUnread = (snapshot.data ?? 0) > 0;
                     return hasUnread
                         ? Container(
                             width: 16,
