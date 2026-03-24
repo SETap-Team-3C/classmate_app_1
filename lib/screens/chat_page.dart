@@ -20,8 +20,6 @@ class MessageWithDeleteOption extends StatefulWidget {
 }
 
 class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
-  bool _showMenu = false;
-
   Future<void> _deleteMessage() async {
     final shouldDelete = await showDialog<bool>(
       context: context,
@@ -31,7 +29,7 @@ class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: const Text('Back'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -59,78 +57,59 @@ class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _showMenu = true),
-      onExit: (_) => setState(() => _showMenu = false),
-      child: Align(
-        alignment: Alignment.centerRight,
-        child: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            Container(
-              margin: const EdgeInsets.symmetric(
-                vertical: 4,
-                horizontal: 8,
-              ),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue[300],
-                borderRadius: BorderRadius.circular(12),
-              ),
+    return Align(
+      alignment: Alignment.centerRight,
+      child: Stack(
+        alignment: Alignment.topRight,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(
+              vertical: 4,
+              horizontal: 8,
+            ),
+            padding: const EdgeInsets.fromLTRB(12, 12, 36, 12),
+            decoration: BoxDecoration(
+              color: Colors.blue[300],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: GestureDetector(
+              onLongPress: _deleteMessage,
               child: Text(
                 widget.text,
                 style: const TextStyle(fontSize: 16),
               ),
             ),
-            if (_showMenu)
-              Positioned(
-                right: 0,
-                top: 0,
-                child: PopupMenuButton<String>(
-                  initialValue: null,
-                  onSelected: (String value) async {
-                    if (value == 'delete') {
-                      await _deleteMessage();
-                    }
-                  },
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                    const PopupMenuItem<String>(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text('Delete'),
-                        ],
-                      ),
-                    ),
-                  ],
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[700],
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.more_vert,
-                      color: Colors.white,
-                      size: 16,
-                    ),
+          ),
+          Positioned(
+            right: 6,
+            top: 6,
+            child: PopupMenuButton<String>(
+              tooltip: 'Message options',
+              onSelected: (String value) async {
+                if (value == 'delete') {
+                  await _deleteMessage();
+                }
+              },
+              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                const PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete, color: Colors.red),
+                      SizedBox(width: 8),
+                      Text('Delete'),
+                    ],
                   ),
                 ),
-              ),
-            Positioned.fill(
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onLongPress: _deleteMessage,
-                  child: const SizedBox(width: 1, height: 1),
-                ),
+              ],
+              child: const Icon(
+                Icons.more_vert,
+                color: Colors.black87,
+                size: 18,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
