@@ -7,7 +7,20 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
+chatbox
+import 'package:classmate_app_1/screens/auth_gate.dart';
 
+void main() {
+  testWidgets('AuthGate shows login screen when signed out', (
+    WidgetTester tester,
+  ) async {
+    final mockAuth = MockFirebaseAuth(signedIn: false);
+
+    await tester.pumpWidget(MaterialApp(home: AuthGate(auth: mockAuth)));
+
+    await tester.pump();
+    expect(find.widgetWithText(ElevatedButton, 'Login'), findsOneWidget);
 import 'package:classmate_app_1/widets/custom_textfield.dart';
 
 void main() {
@@ -34,5 +47,6 @@ void main() {
 
     await tester.enterText(find.byType(TextFormField), 'test@example.com');
     expect(latest, 'test@example.com');
+    main
   });
 }

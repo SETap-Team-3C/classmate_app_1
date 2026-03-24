@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+
+import '../../chat_page.dart';
+
+class ChatListScreen extends StatelessWidget {
+  const ChatListScreen({super.key});
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../chat/chat_screen.dart';
@@ -11,6 +16,26 @@ class ChatListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: const Text('Classmate')),
+      body: ListView(
+        children: [
+          ListTile(
+            title: const Text('General Chat'),
+            subtitle: const Text('Tap to open conversation'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ChatPage(
+                    receiverId: 'general',
+                    receiverName: 'General Chat',
+                    showTestEmptyState: true,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       appBar: AppBar(
         title: const Text("Classmate"),
         centerTitle: true,
