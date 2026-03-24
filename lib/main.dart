@@ -36,8 +36,8 @@ class ClassmateApp extends StatelessWidget {
       ),
       // Logic: If a user is already signed in, go to Chat. Otherwise, Login.
       home: (FirebaseAuth.instance.currentUser != null)
-          ? const ChatListScreen()
-          : const LoginScreen(),
+          ? ChatListScreen()
+          : LoginScreen(),
     );
   }
 }
