@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
@@ -16,13 +17,25 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
+  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
   String email = '';
   String password = '';
   bool isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _analytics.logEvent(name: 'screen_opened', parameters: {'screen': 'login'});
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+
+    await _analytics.logEvent(
+      name: 'login_attempt',
+      parameters: {'has_email': email.isNotEmpty},
+    );
 
     setState(() => isLoading = true);
     final error = await _authService.login(email: email, password: password);
@@ -38,6 +51,18 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+  }
+
+  Future<void> _logTestButtonTap() async {
+    await _analytics.logEvent(
+      name: 'test_button_tap',
+      parameters: {'screen': 'login'},
+    );
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Test analytics event sent')));
   }
 
   @override
@@ -88,6 +113,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                   child: const Text("Don't have an account? Sign Up"),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton(
+                  onPressed: _logTestButtonTap,
+                  child: const Text('Send Test Analytics Event'),
                 ),
               ],
             ),
