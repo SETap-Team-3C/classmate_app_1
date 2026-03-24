@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'screens/messages_screen.dart';
 import 'screens/profile_screen.dart';
 
 void main() {
@@ -53,8 +54,16 @@ class _MyHomePageState extends State<MyHomePage> {
       bottomNavigationBar: Container(
         height: 60,
         color: Colors.grey,
-        child: const Center(
-          child: Icon(Icons.mail, size: 45, color: Colors.white),
+        child: Center(
+          child: IconButton(
+            icon: const Icon(Icons.mail, size: 45, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const MessagesScreen()),
+              );
+            },
+          ),
         ),
       ),
     );
