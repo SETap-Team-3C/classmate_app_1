@@ -1,78 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+// Your new screens
+import 'screens/auth/login_screen.dart';
+import 'screens/auth/home/chat_list_screen.dart';
+// Kept from the main branch
 import 'screens/profile_screen.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  // Ensures Flutter is ready before Firebase starts
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    // This prevents the app from crashing if Firebase isn't configured yet
+    debugPrint("Firebase initialization failed: $e");
+  }
+
+  runApp(const ClassmateApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+class ClassmateApp extends StatelessWidget {
+  const ClassmateApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Classmate App',
+      debugShowCheckedModeBanner: false,
+      title: 'Classmate',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Classmate Home'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-          )
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
+      // Logic: If a user is already signed in, go to Chat. Otherwise, Login.
+      home: (FirebaseAuth.instance.currentUser != null)
+          ? const ChatListScreen()
+          : const LoginScreen(),
     );
   }
 }
