@@ -20,4 +20,5 @@ void main() {
     await tester.tap(find.text("Login"));
     await tester.pumpAndSettle();
   }, skip: true);
+  });
 }

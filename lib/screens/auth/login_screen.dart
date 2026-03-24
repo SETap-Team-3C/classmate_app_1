@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
+import '../../services/auth_service.dart';
+import '../../core/utils/validators.dart';
 import '../../widets/custom_textfield.dart';
 import 'home/chat_list_screen.dart';
 import 'signup_screen.dart';
@@ -11,6 +13,8 @@ class LoginScreen extends StatefulWidget {
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
+  @override
+  _LoginScreenState createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
@@ -38,6 +42,29 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+
+  bool isLoading = false;
+
+  void _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => isLoading = true);
+
+    String? error = await _authService.login(email: email, password: password);
+
+    setState(() => isLoading = false);
+
+    if (error == null) {
+      // ✅ Go to chat screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => ChatListScreen()),
+      );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+    }
   }
 
   @override
@@ -46,6 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
@@ -65,6 +93,25 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 15),
                 CustomTextField(
                   label: 'Password',
+                Text(
+                  "Classmate",
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Text("Welcome back"),
+
+                SizedBox(height: 30),
+
+                CustomTextField(
+                  label: "Email",
+                  onChanged: (val) => email = val,
+                  validator: Validators.validateEmail,
+                ),
+
+                SizedBox(height: 15),
+
+                CustomTextField(
+                  label: "Password",
                   obscureText: true,
                   onChanged: (val) => password = val,
                   validator: Validators.validatePassword,
@@ -80,6 +127,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: const Text('Login'),
                       ),
                 const SizedBox(height: 10),
+
+                SizedBox(height: 25),
+
+                isLoading
+                    ? CircularProgressIndicator()
+                    : ElevatedButton(
+                        onPressed: _login,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: Size(double.infinity, 50),
+                        ),
+                        child: Text("Login"),
+                      ),
+
+                SizedBox(height: 10),
+
                 TextButton(
                   onPressed: () {
                     Navigator.push(
@@ -88,6 +150,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                   child: const Text("Don't have an account? Sign Up"),
+                      MaterialPageRoute(builder: (_) => SignupScreen()),
+                    );
+                  },
+                  child: Text("Don't have an account? Sign Up"),
                 ),
               ],
             ),
