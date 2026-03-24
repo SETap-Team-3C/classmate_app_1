@@ -22,28 +22,39 @@ class MessageWithDeleteOption extends StatefulWidget {
 class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
   bool _showMenu = false;
 
-  void _deleteMessage() {
-    showDialog(
+  Future<void> _deleteMessage() async {
+    final shouldDelete = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Message'),
         content: const Text('Are you sure you want to delete your message?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
-              widget.chatService.deleteMessage(widget.messageId);
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
     );
+
+    if (shouldDelete != true) return;
+
+    try {
+      await widget.chatService.deleteMessage(widget.messageId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Message deleted')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not delete message: $error')),
+      );
+    }
   }
 
   @override
@@ -77,9 +88,9 @@ class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
                 top: 0,
                 child: PopupMenuButton<String>(
                   initialValue: null,
-                  onSelected: (String value) {
+                  onSelected: (String value) async {
                     if (value == 'delete') {
-                      _deleteMessage();
+                      await _deleteMessage();
                     }
                   },
                   itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
@@ -108,6 +119,16 @@ class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
                   ),
                 ),
               ),
+            Positioned.fill(
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onLongPress: _deleteMessage,
+                  child: const SizedBox(width: 1, height: 1),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -171,14 +192,30 @@ class _ChatPageState extends State<ChatPage> {
         preferredSize: const Size.fromHeight(60),
         child: Container(
           color: Colors.grey[400],
-          child: Align(
-            alignment: Alignment.center,
-            child: Text(
-              widget.receiverName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+          child: SafeArea(
+            bottom: false,
+            child: SizedBox(
+              height: 60,
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        widget.receiverName,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 48),
+                ],
               ),
             ),
           ),
