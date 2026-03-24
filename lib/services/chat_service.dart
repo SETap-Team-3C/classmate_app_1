@@ -32,6 +32,8 @@ class ChatService {
       'receiverId': receiverId,
       'text': message,
       'timestamp': FieldValue.serverTimestamp(),
+      'read': false,
+      'readAt': null,
     });
 
     batch.set(chatDoc, {
@@ -47,6 +49,14 @@ class ChatService {
     await batch.commit();
   }
 
+  Future<void> markMessageAsRead(String messageId, String readBy) async {
+    await _firestore.collection('messages').doc(messageId).update({
+      'read': true,
+      'readAt': FieldValue.serverTimestamp(),
+      'readBy': readBy,
+    });
+  }
+
   Stream<QuerySnapshot> getMessages(
     String userId,
     String otherUserId,
@@ -56,7 +66,20 @@ class ChatService {
     return _firestore
         .collection("messages")
         .where("chatId", isEqualTo: chatId)
-        .orderBy("timestamp")
         .snapshots();
+  }
+
+  Future<int> getUnreadCount(String chatId, String currentUserId) async {
+    final snapshot = await _firestore
+        .collection('messages')
+        .where('chatId', isEqualTo: chatId)
+        .where('receiverId', isEqualTo: currentUserId)
+        .where('read', isEqualTo: false)
+        .get();
+    return snapshot.docs.length;
+  }
+
+  Future<void> deleteMessage(String messageId) async {
+    await _firestore.collection('messages').doc(messageId).delete();
   }
 }

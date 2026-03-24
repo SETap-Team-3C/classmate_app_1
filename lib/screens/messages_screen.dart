@@ -21,6 +21,19 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return usernameRegex.hasMatch(username);
   }
 
+  String _formatTimeAgo(Timestamp? timestamp) {
+    if (timestamp == null) return '';
+    final now = DateTime.now();
+    final messageTime = timestamp.toDate();
+    final difference = now.difference(messageTime);
+
+    if (difference.inMinutes < 1) return 'now';
+    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
+    if (difference.inHours < 24) return '${difference.inHours}h ago';
+    if (difference.inDays < 7) return '${difference.inDays}d ago';
+    return 'older';
+  }
+
   Future<void> _showAddUserDialog() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
@@ -251,6 +264,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   itemCount: chats.length,
                   itemBuilder: (context, index) {
                     final chatData = chats[index].data() as Map<String, dynamic>;
+                    final chatId = chats[index].id;
                     final participants = List<String>.from(chatData['participants'] ?? []);
                     final otherUserId = participants.firstWhere(
                       (id) => id != currentUser?.uid,
@@ -263,33 +277,95 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
                     final usernames = Map<String, dynamic>.from(chatData['usernames'] ?? {});
                     final receiverName = (usernames[otherUserId] ?? 'User').toString();
+                    final lastMessage = (chatData['lastMessage'] ?? '').toString();
+                    final lastTimestamp = chatData['lastTimestamp'] as Timestamp?;
 
-                    return InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatPage(
-                              receiverId: otherUserId,
-                              receiverName: receiverName,
+                    return FutureBuilder<int>(
+                      future: FirebaseFirestore.instance
+                          .collection('messages')
+                          .where('chatId', isEqualTo: chatId)
+                          .where('receiverId', isEqualTo: currentUser?.uid)
+                          .where('read', isEqualTo: false)
+                          .count()
+                          .get()
+                          .then((snapshot) => snapshot.count ?? 0),
+                      builder: (context, unreadSnapshot) {
+                        final unreadCount = unreadSnapshot.data ?? 0;
+                        final unreadText = unreadCount == 0
+                            ? ''
+                            : unreadCount > 3
+                                ? '3+ new messages'
+                                : unreadCount == 1
+                                    ? '1 new message'
+                                    : '$unreadCount new messages';
+
+                        return InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ChatPage(
+                                  receiverId: otherUserId,
+                                  receiverName: receiverName,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            height: 70,
+                            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              border: Border.all(color: Colors.grey.shade400),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                    receiverName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Center(
+                                    child: Text(
+                                      unreadText,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: unreadCount > 0 ? Colors.red : Colors.grey,
+                                        fontWeight: unreadCount > 0 ? FontWeight.bold : FontWeight.normal,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 1,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        _formatTimeAgo(lastTimestamp),
+                                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
                       },
-                      child: Container(
-                        height: 60,
-                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          border: Border.all(color: Colors.grey.shade400),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          receiverName,
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                        ),
-                      ),
                     );
                   },
                 );

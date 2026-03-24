@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
@@ -44,14 +45,42 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 60,
         color: Colors.grey,
         child: Center(
-          child: IconButton(
-            icon: const Icon(Icons.mail, size: 45, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const MessagesScreen()),
-              );
-            },
+          child: Stack(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.mail, size: 45, color: Colors.white),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MessagesScreen()),
+                  );
+                },
+              ),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('messages')
+                      .where('receiverId', isEqualTo: FirebaseAuth.instance.currentUser?.uid)
+                      .where('read', isEqualTo: false)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final hasUnread = (snapshot.data?.docs.length ?? 0) > 0;
+                    return hasUnread
+                        ? Container(
+                            width: 16,
+                            height: 16,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          )
+                        : const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
