@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/auth/home/chat_list_screen.dart';
@@ -12,6 +13,13 @@ void main() async {
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    await FirebaseAnalytics.instance.logEvent(
+      name: 'copilot_startup_test',
+      parameters: {
+        'platform': DefaultFirebaseOptions.currentPlatform.projectId,
+      },
     );
   } catch (e) {
     // This prevents the app from crashing if Firebase isn't configured yet
