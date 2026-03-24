@@ -7,7 +7,11 @@ import 'screens/auth/home/chat_list_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (_) {
+    // Allow startup without Firebase config for local/web preview.
+  }
 
   runApp(ClassmateApp());
 }
@@ -20,9 +24,11 @@ class ClassmateApp extends StatelessWidget {
       title: 'Classmate',
 
       // 🔥 Auto login check
-      home: FirebaseAuth.instance.currentUser == null
-          ? LoginScreen()
-          : ChatListScreen(),
+      home:
+          (Firebase.apps.isNotEmpty &&
+              FirebaseAuth.instance.currentUser != null)
+          ? ChatListScreen()
+          : LoginScreen(),
     );
   }
 }
