@@ -277,7 +277,6 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
                     final usernames = Map<String, dynamic>.from(chatData['usernames'] ?? {});
                     final receiverName = (usernames[otherUserId] ?? 'User').toString();
-                    final lastMessage = (chatData['lastMessage'] ?? '').toString();
                     final lastTimestamp = chatData['lastTimestamp'] as Timestamp?;
 
                     return FutureBuilder<int>(

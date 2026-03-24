@@ -23,11 +23,27 @@ class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
   bool _showMenu = false;
 
   void _deleteMessage() {
-    widget.chatService.deleteMessage(widget.messageId);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Message deleted')),
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Message'),
+        content: const Text('Are you sure you want to delete your message?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              widget.chatService.deleteMessage(widget.messageId);
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
-    Navigator.pop(context);
   }
 
   @override
@@ -151,8 +167,22 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.receiverName),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: Container(
+          color: Colors.grey[400],
+          child: Align(
+            alignment: Alignment.center,
+            child: Text(
+              widget.receiverName,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -284,6 +314,7 @@ class _ChatPageState extends State<ChatPage> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
+                    onSubmitted: (_) => _sendMessage(),
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
                       border: OutlineInputBorder(
