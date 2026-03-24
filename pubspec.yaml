@@ -27,9 +27,9 @@ dependencies:
   cupertino_icons: ^1.0.8
 
   # Firebase packages
-  firebase_core: ^2.10.0
-  firebase_auth: ^4.5.0
-  cloud_firestore: ^4.0.0
+  firebase_core: ^4.6.0
+  firebase_auth: ^6.3.0
+  cloud_firestore: ^6.2.0
 
 dev_dependencies:
   flutter_test:
