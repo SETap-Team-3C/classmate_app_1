@@ -48,6 +48,14 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       body: const Center(
+        child: Text('Welcome to Classmate App'),
+      ),
+      bottomNavigationBar: Container(
+        height: 60,
+        color: Colors.grey,
+        child: const Center(
+          child: Icon(Icons.mail, size: 45, color: Colors.white),
+        ),
       ),
     );
   }
