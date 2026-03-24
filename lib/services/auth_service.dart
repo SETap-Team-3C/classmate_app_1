@@ -1,9 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  FirebaseAuth? get _auth {
+    if (Firebase.apps.isEmpty) return null;
+    return FirebaseAuth.instance;
+  }
+
+  FirebaseFirestore? get _db {
+    if (Firebase.apps.isEmpty) return null;
+    return FirebaseFirestore.instance;
+  }
 
   // 🔐 SIGNUP
   Future<String?> signup({
@@ -12,13 +20,21 @@ class AuthService {
     required String password,
   }) async {
     try {
-      UserCredential userCredential = await _auth
-          .createUserWithEmailAndPassword(email: email, password: password);
+      final auth = _auth;
+      final db = _db;
+      if (auth == null || db == null) {
+        return 'Firebase is not configured for this build.';
+      }
+
+      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
       String uid = userCredential.user!.uid;
 
       // 💾 Store user in Firestore
-      await _db.collection('users').doc(uid).set({
+      await db.collection('users').doc(uid).set({
         'uid': uid,
         'name': name,
         'email': email,
@@ -39,7 +55,12 @@ class AuthService {
     required String password,
   }) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      final auth = _auth;
+      if (auth == null) {
+        return 'Firebase is not configured for this build.';
+      }
+
+      await auth.signInWithEmailAndPassword(email: email, password: password);
       return null;
     } on FirebaseAuthException catch (e) {
       return e.message;
@@ -50,11 +71,15 @@ class AuthService {
 
   // 🚪 LOGOUT
   Future<void> logout() async {
-    await _auth.signOut();
+    final auth = _auth;
+    if (auth == null) return;
+    await auth.signOut();
   }
 
   // 👤 CURRENT USER
   User? getCurrentUser() {
-    return _auth.currentUser;
+    final auth = _auth;
+    if (auth == null) return null;
+    return auth.currentUser;
   }
 }
