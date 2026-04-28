@@ -1,17 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
+import 'dart:async' show TimeoutException;
 
 class AuthService {
-  FirebaseAuth? get _auth {
-    if (Firebase.apps.isEmpty) return null;
-    return FirebaseAuth.instance;
-  }
+  FirebaseAuth get _auth => FirebaseAuth.instance;
 
-  FirebaseFirestore? get _db {
-    if (Firebase.apps.isEmpty) return null;
-    return FirebaseFirestore.instance;
-  }
+  FirebaseFirestore get _db => FirebaseFirestore.instance;
 
   // 🔐 SIGNUP
   Future<String?> signup({
@@ -20,32 +15,28 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final auth = _auth;
-      final db = _db;
-      if (auth == null || db == null) {
-        return 'Firebase is not configured for this build.';
-      }
-
-      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      debugPrint('Attempting signup for email: $email');
+      UserCredential userCredential = await _auth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       String uid = userCredential.user!.uid;
 
       // 💾 Store user in Firestore
-      await db.collection('users').doc(uid).set({
+      await _db.collection('users').doc(uid).set({
         'uid': uid,
         'name': name,
         'email': email,
         'createdAt': Timestamp.now(),
       });
 
+      debugPrint('Signup successful for uid: $uid');
       return null;
     } on FirebaseAuthException catch (e) {
-      return e.message;
+      debugPrint('Firebase auth signup error: ${e.code} - ${e.message}');
+      return e.message ?? e.code;
     } catch (e) {
-      return "Signup failed";
+      debugPrint('Signup error: $e');
+      return "Signup failed: $e";
     }
   }
 
@@ -55,31 +46,37 @@ class AuthService {
     required String password,
   }) async {
     try {
-      final auth = _auth;
-      if (auth == null) {
-        return 'Firebase is not configured for this build.';
-      }
+      debugPrint('Attempting login with email: $email');
 
-      await auth.signInWithEmailAndPassword(email: email, password: password);
+      // Try to sign in with a timeout
+      final userCredential = await _auth
+          .signInWithEmailAndPassword(email: email, password: password)
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException('Login request timed out'),
+          );
+
+      debugPrint('Login successful for user: ${userCredential.user?.email}');
       return null;
+    } on TimeoutException catch (e) {
+      debugPrint('Login timeout: $e');
+      return 'Request timed out - Check your internet connection';
     } on FirebaseAuthException catch (e) {
-      return e.message;
+      debugPrint('Firebase auth error: ${e.code} - ${e.message}');
+      return e.message ?? e.code;
     } catch (e) {
-      return "Login failed";
+      debugPrint('Login error: $e');
+      return "Login failed: $e";
     }
   }
 
   // 🚪 LOGOUT
   Future<void> logout() async {
-    final auth = _auth;
-    if (auth == null) return;
-    await auth.signOut();
+    await _auth.signOut();
   }
 
   // 👤 CURRENT USER
   User? getCurrentUser() {
-    final auth = _auth;
-    if (auth == null) return null;
-    return auth.currentUser;
+    return _auth.currentUser;
   }
 }
