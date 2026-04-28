@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/message.dart';
 import '../services/chat_service.dart';
@@ -74,16 +75,68 @@ class _ChatPageState extends State<ChatPage> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
-                    child: Center(
-                      child: Text(
-                        widget.receiverName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
+                    child: widget.showTestEmptyState
+                        ? Center(
+                            child: Text(
+                              widget.receiverName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          )
+                        : StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(widget.receiverId)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData || !snapshot.data!.exists) {
+                                return Center(
+                                  child: Text(
+                                    widget.receiverName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final data = snapshot.data!.data() as Map<String, dynamic>?;
+                              final isOnline = data?['isOnline'] as bool? ?? false;
+                              final lastSeen = data?['lastSeen'] as Timestamp?;
+
+                              return Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    widget.receiverName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  Text(
+                                    isOnline
+                                        ? 'Online'
+                                        : lastSeen != null
+                                        ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
+                                        : 'Offline',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isOnline
+                                          ? Colors.green
+                                          : Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                   ),
                   const SizedBox(width: 48),
                 ],
@@ -182,43 +235,51 @@ class _ChatPageState extends State<ChatPage> {
                         }
                       }
 
-                      return ListView(
-                        children: messages.asMap().entries.map((entry) {
-                          final message = entry.value;
-                          final messageId = message.id;
-                          final isCurrentUser =
-                              message.senderId == _auth!.currentUser!.uid;
-                          final isRead = message.read;
-                          final readAt = message.readAt;
-
-                          return Column(
-                            crossAxisAlignment: isCurrentUser
-                                ? CrossAxisAlignment.end
-                                : CrossAxisAlignment.start,
-                            children: [
-                              if (isCurrentUser)
-                                MessageBubble(
-                                  messageId: messageId,
-                                  text: message.text,
-                                  isCurrentUser: true,
-                                  isRead: isRead,
-                                  readStatusText: isRead
-                                      ? 'seen ${TimeFormatter.formatTimeAgo(readAt)}'
-                                      : 'unseen',
-                                  onDelete: () =>
-                                      _chatService!.deleteMessage(messageId),
-                                )
-                              else
-                                MessageBubble(
-                                  messageId: messageId,
-                                  text: message.text,
-                                  isCurrentUser: false,
-                                  isRead: isRead,
-                                  readStatusText: '',
-                                ),
-                            ],
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          // Trigger refresh by re-fetching messages
+                          await Future.delayed(
+                            const Duration(milliseconds: 500),
                           );
-                        }).toList(),
+                        },
+                        child: ListView(
+                          children: messages.asMap().entries.map((entry) {
+                            final message = entry.value;
+                            final messageId = message.id;
+                            final isCurrentUser =
+                                message.senderId == _auth!.currentUser!.uid;
+                            final isRead = message.read;
+                            final readAt = message.readAt;
+
+                            return Column(
+                              crossAxisAlignment: isCurrentUser
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                if (isCurrentUser)
+                                  MessageBubble(
+                                    messageId: messageId,
+                                    text: message.text,
+                                    isCurrentUser: true,
+                                    isRead: isRead,
+                                    readStatusText: isRead
+                                        ? 'seen ${TimeFormatter.formatTimeAgo(readAt)}'
+                                        : 'unseen',
+                                    onDelete: () =>
+                                        _chatService!.deleteMessage(messageId),
+                                  )
+                                else
+                                  MessageBubble(
+                                    messageId: messageId,
+                                    text: message.text,
+                                    isCurrentUser: false,
+                                    isRead: isRead,
+                                    readStatusText: '',
+                                  ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       );
                     },
                   ),

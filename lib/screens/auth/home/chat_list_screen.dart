@@ -201,44 +201,72 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ),
               ),
               Expanded(
-                child: ListView.separated(
-                  itemCount: filteredUsers.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final user = filteredUsers[index].data();
-                    final uid = (user['uid'] ?? filteredUsers[index].id)
-                        .toString();
-                    final name = (user['name'] ?? 'No Name').toString();
-                    final email = (user['email'] ?? '').toString();
-
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: EnhancedAvatar(name: name, radius: 24),
-                      title: Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text(
-                        email,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ChatPage(receiverId: uid, receiverName: name),
-                          ),
-                        );
-                      },
-                    );
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    // Trigger refresh
+                    await Future.delayed(const Duration(milliseconds: 500));
                   },
+                  child: ListView.separated(
+                    itemCount: filteredUsers.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final user = filteredUsers[index].data();
+                      final uid = (user['uid'] ?? filteredUsers[index].id)
+                          .toString();
+                      final name = (user['name'] ?? 'No Name').toString();
+                      final email = (user['email'] ?? '').toString();
+                      final isOnline = user['isOnline'] as bool? ?? false;
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        leading: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            EnhancedAvatar(name: name, radius: 24),
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isOnline ? Colors.green : Colors.grey,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        title: Text(
+                          name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Text(
+                          isOnline ? 'Online' : email,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isOnline ? Colors.green : null,
+                            fontWeight: isOnline ? FontWeight.w500 : null,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ChatPage(receiverId: uid, receiverName: name),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
