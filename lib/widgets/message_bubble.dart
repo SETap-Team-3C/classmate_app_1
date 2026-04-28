@@ -81,7 +81,35 @@ class MessageBubble extends StatelessWidget {
                   onLongPress: isCurrentUser && onDelete != null
                       ? () => _confirmDelete(context)
                       : null,
-                  child: Text(text, style: const TextStyle(fontSize: 16)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(text, style: const TextStyle(fontSize: 16)),
+                      if (isCurrentUser)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                isRead ? Icons.done_all : Icons.done,
+                                size: 14,
+                                color: isRead ? Colors.blue : Colors.grey,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                isRead ? 'Seen' : 'Sent',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: isRead ? Colors.blue : Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ),
               if (isCurrentUser && onDelete != null)
@@ -118,7 +146,7 @@ class MessageBubble extends StatelessWidget {
             ],
           ),
         ),
-        if (isCurrentUser)
+        if (isCurrentUser && readStatusText.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(right: 12, top: 2),
             child: Text(
