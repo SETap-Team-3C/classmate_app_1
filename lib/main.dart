@@ -11,9 +11,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
+    debugPrint('Initializing Firebase...');
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    debugPrint('Firebase initialized successfully');
 
     await FirebaseAnalytics.instance.logEvent(
       name: 'copilot_startup_test',
@@ -21,9 +23,9 @@ void main() async {
         'platform': DefaultFirebaseOptions.currentPlatform.projectId,
       },
     );
+    debugPrint('Analytics event logged');
   } catch (e) {
-    // This prevents the app from crashing if Firebase isn't configured yet
-    debugPrint("Firebase initialization failed: $e");
+    debugPrint("Firebase initialization error: $e");
   }
 
   runApp(const ClassmateApp());
@@ -38,9 +40,27 @@ class ClassmateApp extends StatelessWidget {
       title: 'Classmate',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: (FirebaseAuth.instance.currentUser != null)
-          ? const ChatListScreen()
-          : const LoginScreen(),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          // While loading, show a splash screen or loading indicator
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          // If user is logged in, show ChatListScreen
+          if (snapshot.hasData && snapshot.data != null) {
+            debugPrint('User logged in: ${snapshot.data?.email}');
+            return const ChatListScreen();
+          }
+
+          // If user is logged out, show LoginScreen
+          debugPrint('User logged out');
+          return const LoginScreen();
+        },
+      ),
     );
   }
 }
