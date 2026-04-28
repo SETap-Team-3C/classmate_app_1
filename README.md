@@ -1,16 +1,34 @@
 # classmate_app_1
 
-A new Flutter project.
+## Firestore Setup For Messaging
 
-## Getting Started
+Deploy Firestore rules and indexes:
 
-This project is a starting point for a Flutter application.
+```powershell
+firebase.cmd deploy --project classmate-app-b63b4 --only firestore:rules,firestore:indexes
+```
 
-A few resources to get you started if this is your first Flutter project:
+If prompted to delete extra indexes, choose `No` unless you intentionally want to remove them.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Seed Demo Data (Two Users + One Message)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Run:
+
+```powershell
+dart run tool/seed_demo_data.dart
+```
+
+This script will:
+- create or reuse two accounts
+- create/update `users` docs for both
+- create/update one chat document
+- insert one test message from Alice to Bob
+
+Optional environment overrides:
+
+```powershell
+$env:FIREBASE_PROJECT_ID = "classmates1project"
+$env:FIREBASE_API_KEY = "your-web-api-key"
+$env:DEMO_PASSWORD = "YourStrongPassword123!"
+dart run tool/seed_demo_data.dart
+```
