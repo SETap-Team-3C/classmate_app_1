@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/message.dart';
 import '../services/chat_service.dart';
@@ -74,16 +75,57 @@ class _ChatPageState extends State<ChatPage> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
-                    child: Center(
-                      child: Text(
-                        widget.receiverName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
+                    child: widget.showTestEmptyState
+                        ? Center(
+                            child: Text(
+                              widget.receiverName,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          )
+                        : StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('users')
+                                .doc(widget.receiverId)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              final isOnline = snapshot.data
+                                      ?.get('isOnline') as bool? ??
+                                  false;
+                              final lastSeen =
+                                  snapshot.data?.get('lastSeen') as Timestamp?;
+
+                              return Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    widget.receiverName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  Text(
+                                    isOnline
+                                        ? 'Online'
+                                        : lastSeen != null
+                                            ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
+                                            : 'Offline',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: isOnline
+                                          ? Colors.green
+                                          : Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
                   ),
                   const SizedBox(width: 48),
                 ],

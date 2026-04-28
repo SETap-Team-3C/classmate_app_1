@@ -209,13 +209,31 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           .toString();
                       final name = (user['name'] ?? 'No Name').toString();
                       final email = (user['email'] ?? '').toString();
+                      final isOnline = user['isOnline'] as bool? ?? false;
 
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 8,
                         ),
-                        leading: EnhancedAvatar(name: name, radius: 24),
+                        leading: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            EnhancedAvatar(name: name, radius: 24),
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isOnline ? Colors.green : Colors.grey,
+                                border: Border.all(
+                                  color: Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                         title: Text(
                           name,
                           style: const TextStyle(
@@ -224,8 +242,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           ),
                         ),
                         subtitle: Text(
-                          email,
-                          style: const TextStyle(fontSize: 13),
+                          isOnline ? 'Online' : email,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isOnline ? Colors.green : null,
+                            fontWeight: isOnline ? FontWeight.w500 : null,
+                          ),
                         ),
                         onTap: () {
                           Navigator.push(
