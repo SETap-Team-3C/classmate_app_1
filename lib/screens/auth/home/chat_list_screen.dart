@@ -210,10 +210,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      leading: EnhancedAvatar(
-                        name: name,
-                        radius: 24,
-                      ),
+                      leading: EnhancedAvatar(name: name, radius: 24),
                       title: Text(
                         name,
                         style: const TextStyle(
