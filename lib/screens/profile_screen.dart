@@ -51,7 +51,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final userData = snapshot.data!.data() as Map<String, dynamic>;
         final name = userData['name'] ?? 'Unknown';
         final email = userData['email'] ?? '';
-        final username = userData['username'] ?? 'user${widget.userId.substring(0, 5)}';
+        final username =
+            userData['username'] ?? 'user${widget.userId.substring(0, 5)}';
         final isOnline = userData['isOnline'] ?? false;
         final lastSeen = userData['lastSeen'] as Timestamp?;
 
@@ -80,14 +81,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
-                      EnhancedAvatar(
-                        name: name,
-                        radius: 60,
-                      ),
-                      OnlineIndicator(
-                        isOnline: isOnline,
-                        size: 24,
-                      ),
+                      EnhancedAvatar(name: name, radius: 60),
+                      OnlineIndicator(isOnline: isOnline, size: 24),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -105,10 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Username
                   Text(
                     '@$username',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 16),
 
@@ -138,11 +130,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isOnline
                               ? 'Online'
                               : lastSeen != null
-                                  ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
-                                  : 'Offline',
+                              ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
+                              : 'Offline',
                           style: TextStyle(
-                            color:
-                                isOnline ? Colors.green[700] : Colors.grey[600],
+                            color: isOnline
+                                ? Colors.green[700]
+                                : Colors.grey[600],
                             fontWeight: FontWeight.w500,
                           ),
                         ),
