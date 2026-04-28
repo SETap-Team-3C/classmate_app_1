@@ -37,7 +37,16 @@ service cloud.firestore {
           || request.auth.uid == resource.data.receiverId
           || isChatParticipant(resource.data.chatId));
 
-      allow update: if signedIn() && request.auth.uid == resource.data.senderId;
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.receiverId
+        && request.resource.data.senderId == resource.data.senderId
+        && request.resource.data.receiverId == resource.data.receiverId
+        && request.resource.data.chatId == resource.data.chatId
+        && request.resource.data.text == resource.data.text
+        && request.resource.data.timestamp == resource.data.timestamp
+        && request.resource.data.read == true
+        && resource.data.read == false;
+
       allow delete: if signedIn() && request.auth.uid == resource.data.senderId;
     }
   }
