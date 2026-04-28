@@ -44,6 +44,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
         title: const AppLogo(iconSize: 24),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              // Settings button action
+            },
+          ),
           if (_isSigningOut)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
