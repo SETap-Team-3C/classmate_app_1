@@ -185,7 +185,9 @@ class _ChatPageState extends State<ChatPage> {
                       return RefreshIndicator(
                         onRefresh: () async {
                           // Trigger refresh by re-fetching messages
-                          await Future.delayed(const Duration(milliseconds: 500));
+                          await Future.delayed(
+                            const Duration(milliseconds: 500),
+                          );
                         },
                         child: ListView(
                           children: messages.asMap().entries.map((entry) {
