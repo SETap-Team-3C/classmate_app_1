@@ -26,43 +26,74 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _analytics.logEvent(name: 'screen_opened', parameters: {'screen': 'login'});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _logScreenOpened();
+    });
+  }
+
+  Future<void> _logScreenOpened() async {
+    try {
+      await _analytics
+          .logEvent(name: 'screen_opened', parameters: {'screen': 'login'})
+          .timeout(const Duration(seconds: 5));
+      print('Analytics event logged successfully');
+    } catch (e) {
+      print('Analytics logging failed: $e');
+      // Don't block UI for analytics
+    }
   }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await _analytics.logEvent(
-      name: 'login_attempt',
-      parameters: {'has_email': email.isNotEmpty},
-    );
-
     setState(() => isLoading = true);
-    final error = await _authService.login(email: email, password: password);
-    if (!mounted) return;
-    setState(() => isLoading = false);
 
-    if (error == null) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const ChatListScreen()),
+    try {
+      await _analytics.logEvent(
+        name: 'login_attempt',
+        parameters: {'has_email': email.isNotEmpty ? 'true' : 'false'},
       );
-      return;
+
+      print('Starting login with email: $email');
+
+      // Add timeout to prevent infinite freeze
+      final error = await _authService
+          .login(email: email, password: password)
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () =>
+                'Login request timed out. Check your internet connection.',
+          );
+
+      if (!mounted) return;
+      setState(() => isLoading = false);
+
+      if (error == null) {
+        print('Login successful, navigating to chat list');
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ChatListScreen()),
+        );
+        return;
+      }
+
+      // Show detailed error
+      print('Login error: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error), duration: const Duration(seconds: 5)),
+      );
+    } catch (e) {
+      print('Login exception: $e');
+      if (!mounted) return;
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          duration: const Duration(seconds: 5),
+        ),
+      );
     }
-
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-  }
-
-  Future<void> _logTestButtonTap() async {
-    await _analytics.logEvent(
-      name: 'test_button_tap',
-      parameters: {'screen': 'login'},
-    );
-
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Test analytics event sent')));
   }
 
   @override
@@ -113,11 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                   child: const Text("Don't have an account? Sign Up"),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: _logTestButtonTap,
-                  child: const Text('Send Test Analytics Event'),
                 ),
               ],
             ),
