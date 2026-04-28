@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
@@ -18,7 +19,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
-  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+  FirebaseAnalytics? _analytics;
 
   String email = '';
   String password = '';
@@ -34,8 +35,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _logScreenOpened() async {
     try {
+      if (Firebase.apps.isEmpty) return;
+      _analytics ??= FirebaseAnalytics.instance;
       await _analytics
-          .logEvent(name: 'screen_opened', parameters: {'screen': 'login'})
+          ?.logEvent(name: 'screen_opened', parameters: {'screen': 'login'})
           .timeout(const Duration(seconds: 5));
       print('Analytics event logged successfully');
     } catch (e) {
@@ -50,10 +53,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = true);
 
     try {
-      await _analytics.logEvent(
-        name: 'login_attempt',
-        parameters: {'has_email': email.isNotEmpty ? 'true' : 'false'},
-      );
+      if (Firebase.apps.isNotEmpty) {
+        _analytics ??= FirebaseAnalytics.instance;
+        await _analytics?.logEvent(
+          name: 'login_attempt',
+          parameters: {'has_email': email.isNotEmpty ? 'true' : 'false'},
+        );
+      }
 
       print('Starting login with email: $email');
 
