@@ -36,6 +36,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   firebase_auth_mocks: ^0.15.1
+  flutter_launcher_icons: ^0.14.4
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -48,8 +49,26 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # assets:
-  #   - assets/
+  assets:
+    - assets/icon/app_logo.png
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: assets/icon/app_logo.png
+  min_sdk_android: 21
+  web:
+    generate: true
+    image_path: assets/icon/app_logo.png
+    background_color: "#ffffff"
+    theme_color: "#2563EB"
+  windows:
+    generate: true
+    image_path: assets/icon/app_logo.png
+    icon_size: 48
+  macos:
+    generate: true
+    image_path: assets/icon/app_logo.png
 
 # Notes: To generate platform-specific Firebase options (firebase_options.dart)
 # install and use the FlutterFire CLI:
