@@ -5,11 +5,9 @@ class UserService {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
 
-  UserService({
-    FirebaseAuth? auth,
-    FirebaseFirestore? firestore,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore ?? FirebaseFirestore.instance;
+  UserService({FirebaseAuth? auth, FirebaseFirestore? firestore})
+    : _auth = auth ?? FirebaseAuth.instance,
+      _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// Update user online status
   Future<void> setUserOnline(bool isOnline) async {
@@ -37,11 +35,7 @@ class UserService {
 
   /// Get user last seen timestamp
   Stream<DateTime?> getUserLastSeen(String userId) {
-    return _firestore
-        .collection('users')
-        .doc(userId)
-        .snapshots()
-        .map((doc) {
+    return _firestore.collection('users').doc(userId).snapshots().map((doc) {
       final timestamp = doc.data()?['lastSeen'] as Timestamp?;
       return timestamp?.toDate();
     });
