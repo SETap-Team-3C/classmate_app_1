@@ -1,4 +1,4 @@
-import 'package:classmate_app_1/screens/chat_page.dart';
+import 'package:classmate_app_1/widgets/message_bubble.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,9 +13,12 @@ void main() {
     await tester.pumpWidget(
       wrapForTest(
         Scaffold(
-          body: MessageWithDeleteOption(
+          body: MessageBubble(
             messageId: 'm1',
             text: 'Delete me',
+            isCurrentUser: true,
+            isRead: false,
+            readStatusText: 'unseen',
             onDelete: () async {
               deleted = true;
             },
@@ -29,7 +32,10 @@ void main() {
     await tester.tap(find.text('Delete').first);
     await tester.pumpAndSettle();
 
-    expect(find.text('Are you sure you want to delete your message?'), findsOneWidget);
+    expect(
+      find.text('Are you sure you want to delete your message?'),
+      findsOneWidget,
+    );
     await tester.tap(find.widgetWithText(TextButton, 'Delete'));
     await tester.pumpAndSettle();
 
