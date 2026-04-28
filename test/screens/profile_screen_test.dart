@@ -7,10 +7,7 @@ void main() {
   testWidgets('ProfileScreen displays user info', (WidgetTester tester) async {
     await tester.pumpWidget(
       wrapForTest(
-        const ProfileScreen(
-          userId: 'test-user-id',
-          isCurrentUser: false,
-        ),
+        const ProfileScreen(userId: 'test-user-id', isCurrentUser: false),
       ),
     );
 
@@ -20,4 +17,3 @@ void main() {
     // The test will now load the profile screen with the required userId parameter
   });
 }
-
