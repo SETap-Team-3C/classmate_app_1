@@ -26,7 +26,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore => widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore =>
+      widget.firestore ?? FirebaseFirestore.instance;
 
   Future<void> _signOut() async {
     await _auth.signOut();
@@ -46,24 +47,17 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ProfileScreen(
-                      userId: userId,
-                      isCurrentUser: true,
-                    ),
+                    builder: (_) =>
+                        ProfileScreen(userId: userId, isCurrentUser: true),
                   ),
                 );
               }
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _signOut,
-          ),
+          IconButton(icon: const Icon(Icons.logout), onPressed: _signOut),
         ],
       ),
-      body: const Center(
-        child: Text('Welcome to Classmate App'),
-      ),
+      body: const Center(child: Text('Welcome to Classmate App')),
       bottomNavigationBar: Container(
         height: 60,
         color: Colors.grey,
@@ -76,11 +70,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: widget.messagesScreenBuilder ??
+                      builder:
+                          widget.messagesScreenBuilder ??
                           (_) => MessagesScreen(
-                                auth: _auth,
-                                firestore: _firestore,
-                              ),
+                            auth: _auth,
+                            firestore: _firestore,
+                          ),
                     ),
                   );
                 },
@@ -89,10 +84,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 0,
                 top: 0,
                 child: StreamBuilder<int>(
-                  stream: widget.unreadCountStream ??
+                  stream:
+                      widget.unreadCountStream ??
                       _firestore
                           .collection('messages')
-                          .where('receiverId', isEqualTo: _auth.currentUser?.uid)
+                          .where(
+                            'receiverId',
+                            isEqualTo: _auth.currentUser?.uid,
+                          )
                           .where('read', isEqualTo: false)
                           .snapshots()
                           .map((snapshot) => snapshot.docs.length),
