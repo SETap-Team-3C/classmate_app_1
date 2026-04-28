@@ -4,8 +4,22 @@ import 'package:flutter/material.dart';
 
 import '../../chat_page.dart';
 
-class ChatListScreen extends StatelessWidget {
+class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
+
+  @override
+  State<ChatListScreen> createState() => _ChatListScreenState();
+}
+
+class _ChatListScreenState extends State<ChatListScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,55 +53,123 @@ class ChatListScreen extends StatelessWidget {
           }
 
           final users = snapshot.data?.docs ?? const [];
-          if (users.isEmpty) {
+          final query = _query.trim().toLowerCase();
+
+          final filteredUsers = users.where((doc) {
+            final user = doc.data();
+            final uid = (user['uid'] ?? doc.id).toString();
+
+            if (uid == currentUser?.uid) {
+              return false;
+            }
+
+            if (query.isEmpty) {
+              return true;
+            }
+
+            final name = (user['name'] ?? '').toString().toLowerCase();
+            final email = (user['email'] ?? '').toString().toLowerCase();
+            final username = (user['usernameLower'] ?? user['username'] ?? '')
+                .toString()
+                .toLowerCase();
+
+            return name.contains(query) ||
+                email.contains(query) ||
+                username.contains(query);
+          }).toList();
+
+          if (users.isEmpty && query.isEmpty) {
             return const Center(child: Text('No users found'));
           }
 
-          return ListView.separated(
-            itemCount: users.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final user = users[index].data();
-              final uid = (user['uid'] ?? users[index].id).toString();
+          if (filteredUsers.isEmpty) {
+            return Center(
+              child: Text(
+                query.isEmpty ? 'No users found' : 'No matching users found',
+              ),
+            );
+          }
 
-              if (uid == currentUser?.uid) {
-                return const SizedBox.shrink();
-              }
-
-              final name = (user['name'] ?? 'No Name').toString();
-              final email = (user['email'] ?? '').toString();
-
-              return ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                leading: CircleAvatar(
-                  radius: 24,
-                  child: Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-                title: Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                subtitle: Text(email, style: const TextStyle(fontSize: 13)),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          ChatPage(receiverId: uid, receiverName: name),
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    setState(() {
+                      _query = value;
+                    });
+                  },
+                  textInputAction: TextInputAction.search,
+                  decoration: InputDecoration(
+                    hintText: 'Search by name, username, or email',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: _query.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                _query = '';
+                              });
+                            },
+                            icon: const Icon(Icons.close),
+                          ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                  );
-                },
-              );
-            },
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: filteredUsers.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final user = filteredUsers[index].data();
+                    final uid = (user['uid'] ?? filteredUsers[index].id)
+                        .toString();
+                    final name = (user['name'] ?? 'No Name').toString();
+                    final email = (user['email'] ?? '').toString();
+
+                    return ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      leading: CircleAvatar(
+                        radius: 24,
+                        child: Text(
+                          name.isNotEmpty ? name[0].toUpperCase() : '?',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ),
+                      title: Text(
+                        name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      subtitle: Text(
+                        email,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ChatPage(receiverId: uid, receiverName: name),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           );
         },
       ),
