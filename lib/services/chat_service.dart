@@ -21,7 +21,10 @@ class ChatService {
     try {
       final user = _auth.currentUser!;
       final chatId = _buildChatId(user.uid, receiverId);
-      final senderDoc = await _firestore.collection('users').doc(user.uid).get();
+      final senderDoc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
       final receiverDoc = await _firestore
           .collection('users')
           .doc(receiverId)

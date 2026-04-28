@@ -92,8 +92,8 @@ class _ChatPageState extends State<ChatPage> {
                                 .doc(widget.receiverId)
                                 .snapshots(),
                             builder: (context, snapshot) {
-                              final isOnline = snapshot.data
-                                      ?.get('isOnline') as bool? ??
+                              final isOnline =
+                                  snapshot.data?.get('isOnline') as bool? ??
                                   false;
                               final lastSeen =
                                   snapshot.data?.get('lastSeen') as Timestamp?;
@@ -113,8 +113,8 @@ class _ChatPageState extends State<ChatPage> {
                                     isOnline
                                         ? 'Online'
                                         : lastSeen != null
-                                            ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
-                                            : 'Offline',
+                                        ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
+                                        : 'Offline',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: isOnline
