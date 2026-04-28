@@ -1,125 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import '../models/message.dart';
 import '../services/chat_service.dart';
-
-class MessageWithDeleteOption extends StatefulWidget {
-  final String messageId;
-  final String text;
-  final ChatService? chatService;
-  final Future<void> Function()? onDelete;
-
-  const MessageWithDeleteOption({
-    Key? key,
-    required this.messageId,
-    required this.text,
-    this.chatService,
-    this.onDelete,
-  }) : super(key: key);
-
-  @override
-  State<MessageWithDeleteOption> createState() => _MessageWithDeleteOptionState();
-}
-
-class _MessageWithDeleteOptionState extends State<MessageWithDeleteOption> {
-  Future<void> _deleteMessage() async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Message'),
-        content: const Text('Are you sure you want to delete your message?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Back'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (shouldDelete != true) return;
-
-    try {
-      if (widget.onDelete != null) {
-        await widget.onDelete!.call();
-      } else if (widget.chatService != null) {
-        await widget.chatService!.deleteMessage(widget.messageId);
-      }
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Message deleted')),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not delete message: $error')),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: Stack(
-        alignment: Alignment.topRight,
-        children: [
-          Container(
-            margin: const EdgeInsets.symmetric(
-              vertical: 4,
-              horizontal: 8,
-            ),
-            padding: const EdgeInsets.fromLTRB(12, 12, 36, 12),
-            decoration: BoxDecoration(
-              color: Colors.blue[300],
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: GestureDetector(
-              onLongPress: _deleteMessage,
-              child: Text(
-                widget.text,
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-          Positioned(
-            right: 6,
-            top: 6,
-            child: PopupMenuButton<String>(
-              tooltip: 'Message options',
-              onSelected: (String value) async {
-                if (value == 'delete') {
-                  await _deleteMessage();
-                }
-              },
-              itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                const PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete, color: Colors.red),
-                      SizedBox(width: 8),
-                      Text('Delete'),
-                    ],
-                  ),
-                ),
-              ],
-              child: const Icon(
-                Icons.more_vert,
-                color: Colors.black87,
-                size: 18,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+import '../widgets/message_bubble.dart';
 
 class ChatPage extends StatefulWidget {
   final String receiverId;
@@ -161,14 +46,12 @@ class _ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
-  void _sendMessage() {
-    if (_messageController.text.isEmpty) return;
+  Future<void> _sendMessage() async {
+    final messageText = _messageController.text.trim();
+    if (messageText.isEmpty) return;
     if (_chatService == null) return;
 
-    _chatService!.sendMessage(
-      widget.receiverId,
-      _messageController.text,
-    );
+    await _chatService!.sendMessage(widget.receiverId, messageText);
 
     _messageController.clear();
   }
@@ -229,125 +112,106 @@ class _ChatPageState extends State<ChatPage> {
                 ? const Center(
                     child: Text('No messages yet. Start the conversation.'),
                   )
-                : StreamBuilder<QuerySnapshot>(
-              stream: _chatService!.getMessages(
-                _auth!.currentUser!.uid,
-                widget.receiverId,
-              ),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        'Could not load chat: ${snapshot.error}',
-                        textAlign: TextAlign.center,
-                      ),
+                : StreamBuilder<List<Message>>(
+                    stream: _chatService!.getMessages(
+                      _auth!.currentUser!.uid,
+                      widget.receiverId,
                     ),
-                  );
-                }
-
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                if (!snapshot.hasData) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                }
-
-                if (snapshot.data!.docs.isEmpty) {
-                  return const Center(
-                    child: Text('No messages yet. Start the conversation.'),
-                  );
-                }
-
-                final messages = snapshot.data!.docs.toList();
-                messages.sort((a, b) {
-                  final aTimestamp = (a.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
-                  final bTimestamp = (b.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
-                  final aMillis = aTimestamp?.millisecondsSinceEpoch ?? 0;
-                  final bMillis = bTimestamp?.millisecondsSinceEpoch ?? 0;
-                  return aMillis.compareTo(bMillis);
-                });
-
-                // Mark incoming messages as read
-                for (final msg in messages) {
-                  final data = msg.data() as Map<String, dynamic>;
-                  final isCurrentUser = data['senderId'] == _auth!.currentUser!.uid;
-                  final isRead = data['read'] ?? false;
-
-                  if (!isCurrentUser && !isRead) {
-                    _chatService!.markMessageAsRead(msg.id, _auth!.currentUser!.uid);
-                  }
-                }
-
-                return ListView(
-                  children: messages.asMap().entries.map(
-                    (entry) {
-                      final index = entry.key;
-                      final doc = entry.value;
-                      final messageId = doc.id;
-                      final data = doc.data() as Map<String, dynamic>;
-                      final isCurrentUser =
-                          data['senderId'] == _auth!.currentUser!.uid;
-                      final isRead = data['read'] ?? false;
-                      final readAt = data['readAt'] as Timestamp?;
-                      final isLastMessage = index == messages.length - 1;
-
-                      return Column(
-                        crossAxisAlignment: isCurrentUser
-                            ? CrossAxisAlignment.end
-                            : CrossAxisAlignment.start,
-                        children: [
-                          if (isCurrentUser)
-                            MessageWithDeleteOption(
-                              messageId: messageId,
-                              text: data['text'],
-                              chatService: _chatService,
-                            )
-                          else
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(
-                                  vertical: 4,
-                                  horizontal: 8,
-                                ),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[300],
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  data['text'],
-                                  style: const TextStyle(fontSize: 16),
-                                ),
-                              ),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Text(
+                              'Could not load chat: ${snapshot.error}',
+                              textAlign: TextAlign.center,
                             ),
-                          if (isCurrentUser && isLastMessage)
-                            Padding(
-                              padding: const EdgeInsets.only(right: 12, top: 2),
-                              child: Text(
-                                isRead
-                                    ? 'seen ${_formatTimeAgo(readAt)}'
-                                    : 'unseen',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.grey[600],
+                          ),
+                        );
+                      }
+
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+
+                      final messages = snapshot.data!;
+
+                      if (messages.isEmpty) {
+                        return const Center(
+                          child: Text(
+                            'No messages yet. Start the conversation.',
+                          ),
+                        );
+                      }
+
+                      messages.sort((a, b) {
+                        final aTimestamp = a.timestamp;
+                        final bTimestamp = b.timestamp;
+                        final aMillis = aTimestamp?.millisecondsSinceEpoch ?? 0;
+                        final bMillis = bTimestamp?.millisecondsSinceEpoch ?? 0;
+                        return aMillis.compareTo(bMillis);
+                      });
+
+                      // Mark incoming messages as read
+                      for (final msg in messages) {
+                        final isCurrentUser =
+                            msg.senderId == _auth!.currentUser!.uid;
+                        final isRead = msg.read;
+
+                        if (!isCurrentUser && !isRead) {
+                          _chatService!.markMessageAsRead(
+                            msg.id,
+                            _auth!.currentUser!.uid,
+                          );
+                        }
+                      }
+
+                      return ListView(
+                        children: messages.asMap().entries.map((entry) {
+                          final index = entry.key;
+                          final message = entry.value;
+                          final messageId = message.id;
+                          final isCurrentUser =
+                              message.senderId == _auth!.currentUser!.uid;
+                          final isRead = message.read;
+                          final readAt = message.readAt;
+                          final isLastMessage = index == messages.length - 1;
+
+                          return Column(
+                            crossAxisAlignment: isCurrentUser
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
+                            children: [
+                              if (isCurrentUser)
+                                MessageBubble(
+                                  messageId: messageId,
+                                  text: message.text,
+                                  isCurrentUser: true,
+                                  isRead: isRead,
+                                  readStatusText: isRead
+                                      ? 'seen ${_formatTimeAgo(readAt)}'
+                                      : 'unseen',
+                                  onDelete: () =>
+                                      _chatService!.deleteMessage(messageId),
+                                )
+                              else
+                                MessageBubble(
+                                  messageId: messageId,
+                                  text: message.text,
+                                  isCurrentUser: false,
+                                  isRead: isRead,
+                                  readStatusText: '',
                                 ),
-                              ),
-                            ),
-                        ],
+                            ],
+                          );
+                        }).toList(),
                       );
                     },
-                  ).toList(),
-                );
-              },
-            ),
+                  ),
           ),
           Padding(
             padding: const EdgeInsets.all(8.0),
