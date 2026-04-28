@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/message.dart';
 import '../services/chat_service.dart';
+import '../core/utils/time_formatter.dart';
 import '../widgets/message_bubble.dart';
 
 class ChatPage extends StatefulWidget {
@@ -54,19 +54,6 @@ class _ChatPageState extends State<ChatPage> {
     await _chatService!.sendMessage(widget.receiverId, messageText);
 
     _messageController.clear();
-  }
-
-  String _formatTimeAgo(Timestamp? timestamp) {
-    if (timestamp == null) return '';
-    final now = DateTime.now();
-    final messageTime = timestamp.toDate();
-    final difference = now.difference(messageTime);
-
-    if (difference.inMinutes < 1) return 'now';
-    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
-    if (difference.inHours < 24) return '${difference.inHours}h ago';
-    if (difference.inDays < 7) return '${difference.inDays}d ago';
-    return 'older';
   }
 
   @override
@@ -141,9 +128,34 @@ class _ChatPageState extends State<ChatPage> {
                       final messages = snapshot.data!;
 
                       if (messages.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'No messages yet. Start the conversation.',
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.chat_bubble_outline,
+                                size: 48,
+                                color: Colors.grey,
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'No messages yet',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Start a conversation with ${widget.receiverName}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
                         );
                       }
@@ -172,14 +184,12 @@ class _ChatPageState extends State<ChatPage> {
 
                       return ListView(
                         children: messages.asMap().entries.map((entry) {
-                          final index = entry.key;
                           final message = entry.value;
                           final messageId = message.id;
                           final isCurrentUser =
                               message.senderId == _auth!.currentUser!.uid;
                           final isRead = message.read;
                           final readAt = message.readAt;
-                          final isLastMessage = index == messages.length - 1;
 
                           return Column(
                             crossAxisAlignment: isCurrentUser
@@ -193,7 +203,7 @@ class _ChatPageState extends State<ChatPage> {
                                   isCurrentUser: true,
                                   isRead: isRead,
                                   readStatusText: isRead
-                                      ? 'seen ${_formatTimeAgo(readAt)}'
+                                      ? 'seen ${TimeFormatter.formatTimeAgo(readAt)}'
                                       : 'unseen',
                                   onDelete: () =>
                                       _chatService!.deleteMessage(messageId),
