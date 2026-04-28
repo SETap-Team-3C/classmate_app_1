@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
+import '../../widets/app_logo.dart';
 import '../../widets/custom_textfield.dart';
 import 'home/chat_list_screen.dart';
 import 'signup_screen.dart';
@@ -50,9 +51,12 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const Text(
-                  'Classmate',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                const AppLogo(
+                  iconSize: 34,
+                  textStyle: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 const Text('Welcome back'),

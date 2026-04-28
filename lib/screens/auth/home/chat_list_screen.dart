@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../../../widets/app_logo.dart';
 import '../../chat_page.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -27,7 +28,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Classmate'),
+        title: const AppLogo(iconSize: 24),
         centerTitle: true,
         actions: [
           IconButton(
