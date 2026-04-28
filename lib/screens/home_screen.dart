@@ -41,10 +41,18 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.person),
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
+              final userId = FirebaseAuth.instance.currentUser?.uid;
+              if (userId != null) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ProfileScreen(
+                      userId: userId,
+                      isCurrentUser: true,
+                    ),
+                  ),
+                );
+              }
             },
           ),
           IconButton(
