@@ -3,8 +3,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'firebase_options.dart';
-import 'screens/auth/login_screen.dart';
 import 'screens/auth/home/chat_list_screen.dart';
+import 'screens/auth/home/landing_screen.dart';
 
 void main() async {
   // Ensures Flutter is ready before Firebase starts
@@ -56,9 +56,9 @@ class ClassmateApp extends StatelessWidget {
             return const ChatListScreen();
           }
 
-          // If user is logged out, show LoginScreen
+          // If user is logged out, show the landing page.
           debugPrint('User logged out');
-          return const LoginScreen();
+          return const LandingScreen();
         },
       ),
     );
