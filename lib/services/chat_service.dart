@@ -83,6 +83,16 @@ class ChatService {
   }
 
   Future<void> deleteMessage(String messageId) async {
-    await _firestore.collection('messages').doc(messageId).delete();
+    await _firestore.collection('messages').doc(messageId).update({
+      'isDeleted': true,
+      'text': '[This message was deleted]',
+    });
+  }
+
+  Future<void> editMessage(String messageId, String newText) async {
+    await _firestore.collection('messages').doc(messageId).update({
+      'text': newText,
+      'editedAt': FieldValue.serverTimestamp(),
+    });
   }
 }

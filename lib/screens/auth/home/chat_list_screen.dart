@@ -4,6 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
 import '../../../widets/app_logo.dart';
+import '../../../widets/enhanced_avatar.dart';
 import '../../chat_page.dart';
 import '../login_screen.dart';
 
@@ -194,50 +195,50 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ),
               ),
               Expanded(
-                child: ListView.separated(
-                  itemCount: filteredUsers.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final user = filteredUsers[index].data();
-                    final uid = (user['uid'] ?? filteredUsers[index].id)
-                        .toString();
-                    final name = (user['name'] ?? 'No Name').toString();
-                    final email = (user['email'] ?? '').toString();
-
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: CircleAvatar(
-                        radius: 24,
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : '?',
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                      title: Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text(
-                        email,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ChatPage(receiverId: uid, receiverName: name),
-                          ),
-                        );
-                      },
-                    );
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    // Trigger refresh
+                    await Future.delayed(const Duration(milliseconds: 500));
                   },
+                  child: ListView.separated(
+                    itemCount: filteredUsers.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final user = filteredUsers[index].data();
+                      final uid = (user['uid'] ?? filteredUsers[index].id)
+                          .toString();
+                      final name = (user['name'] ?? 'No Name').toString();
+                      final email = (user['email'] ?? '').toString();
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        leading: EnhancedAvatar(name: name, radius: 24),
+                        title: Text(
+                          name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Text(
+                          email,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ChatPage(receiverId: uid, receiverName: name),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
