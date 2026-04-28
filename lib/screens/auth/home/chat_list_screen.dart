@@ -4,6 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
 import '../../../widets/app_logo.dart';
+import '../../../widets/enhanced_avatar.dart';
 import '../../chat_page.dart';
 import '../login_screen.dart';
 
@@ -209,12 +210,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                         horizontal: 16,
                         vertical: 8,
                       ),
-                      leading: CircleAvatar(
+                      leading: EnhancedAvatar(
+                        name: name,
                         radius: 24,
-                        child: Text(
-                          name.isNotEmpty ? name[0].toUpperCase() : '?',
-                          style: const TextStyle(fontSize: 16),
-                        ),
                       ),
                       title: Text(
                         name,
