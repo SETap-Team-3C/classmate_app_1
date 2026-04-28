@@ -4,6 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
 import '../../chat_page.dart';
+import '../login_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -13,6 +14,8 @@ class ChatListScreen extends StatefulWidget {
 }
 
 class _ChatListScreenState extends State<ChatListScreen> {
+  bool _isSigningOut = false;
+
   @override
   void initState() {
     super.initState();
@@ -31,12 +34,70 @@ class _ChatListScreenState extends State<ChatListScreen> {
         title: const Text('Classmate'),
         centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () async {
-              await FirebaseAuth.instance.signOut();
-            },
-          ),
+          if (_isSigningOut)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                try {
+                  // Show confirmation dialog
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Logout'),
+                      content: const Text('Are you sure you want to logout?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('Logout'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed != true) return;
+
+                  if (!mounted) return;
+                  setState(() => _isSigningOut = true);
+
+                  print('Signing out...');
+
+                  // Sign out
+                  await FirebaseAuth.instance.signOut();
+                  print('Signed out successfully');
+
+                  if (!mounted) return;
+
+                  // Navigate back to login screen
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                  print('Navigated to login screen');
+                } catch (e) {
+                  print('Logout error: $e');
+                  if (!mounted) return;
+                  setState(() => _isSigningOut = false);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error logging out: $e')),
+                  );
+                }
+              },
+            ),
         ],
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
