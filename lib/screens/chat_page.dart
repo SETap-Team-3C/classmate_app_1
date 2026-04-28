@@ -92,11 +92,22 @@ class _ChatPageState extends State<ChatPage> {
                                 .doc(widget.receiverId)
                                 .snapshots(),
                             builder: (context, snapshot) {
-                              final isOnline =
-                                  snapshot.data?.get('isOnline') as bool? ??
-                                  false;
-                              final lastSeen =
-                                  snapshot.data?.get('lastSeen') as Timestamp?;
+                              if (!snapshot.hasData || !snapshot.data!.exists) {
+                                return Center(
+                                  child: Text(
+                                    widget.receiverName,
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final data = snapshot.data!.data() as Map<String, dynamic>?;
+                              final isOnline = data?['isOnline'] as bool? ?? false;
+                              final lastSeen = data?['lastSeen'] as Timestamp?;
 
                               return Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
