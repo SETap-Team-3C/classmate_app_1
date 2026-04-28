@@ -182,43 +182,49 @@ class _ChatPageState extends State<ChatPage> {
                         }
                       }
 
-                      return ListView(
-                        children: messages.asMap().entries.map((entry) {
-                          final message = entry.value;
-                          final messageId = message.id;
-                          final isCurrentUser =
-                              message.senderId == _auth!.currentUser!.uid;
-                          final isRead = message.read;
-                          final readAt = message.readAt;
+                      return RefreshIndicator(
+                        onRefresh: () async {
+                          // Trigger refresh by re-fetching messages
+                          await Future.delayed(const Duration(milliseconds: 500));
+                        },
+                        child: ListView(
+                          children: messages.asMap().entries.map((entry) {
+                            final message = entry.value;
+                            final messageId = message.id;
+                            final isCurrentUser =
+                                message.senderId == _auth!.currentUser!.uid;
+                            final isRead = message.read;
+                            final readAt = message.readAt;
 
-                          return Column(
-                            crossAxisAlignment: isCurrentUser
-                                ? CrossAxisAlignment.end
-                                : CrossAxisAlignment.start,
-                            children: [
-                              if (isCurrentUser)
-                                MessageBubble(
-                                  messageId: messageId,
-                                  text: message.text,
-                                  isCurrentUser: true,
-                                  isRead: isRead,
-                                  readStatusText: isRead
-                                      ? 'seen ${TimeFormatter.formatTimeAgo(readAt)}'
-                                      : 'unseen',
-                                  onDelete: () =>
-                                      _chatService!.deleteMessage(messageId),
-                                )
-                              else
-                                MessageBubble(
-                                  messageId: messageId,
-                                  text: message.text,
-                                  isCurrentUser: false,
-                                  isRead: isRead,
-                                  readStatusText: '',
-                                ),
-                            ],
-                          );
-                        }).toList(),
+                            return Column(
+                              crossAxisAlignment: isCurrentUser
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
+                              children: [
+                                if (isCurrentUser)
+                                  MessageBubble(
+                                    messageId: messageId,
+                                    text: message.text,
+                                    isCurrentUser: true,
+                                    isRead: isRead,
+                                    readStatusText: isRead
+                                        ? 'seen ${TimeFormatter.formatTimeAgo(readAt)}'
+                                        : 'unseen',
+                                    onDelete: () =>
+                                        _chatService!.deleteMessage(messageId),
+                                  )
+                                else
+                                  MessageBubble(
+                                    messageId: messageId,
+                                    text: message.text,
+                                    isCurrentUser: false,
+                                    isRead: isRead,
+                                    readStatusText: '',
+                                  ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       );
                     },
                   ),
