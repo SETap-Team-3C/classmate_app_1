@@ -75,10 +75,10 @@ class ChatService {
         .collection("messages")
         .where("chatId", isEqualTo: chatId)
         .snapshots()
-        .map(
-          (snapshot) =>
-              snapshot.docs.map((doc) => Message.fromDocument(doc)).toList(),
-        );
+        .map((snapshot) {
+          final all = snapshot.docs.map((doc) => Message.fromDocument(doc)).toList();
+          return all.where((m) => !(m.deletedFor?.contains(userId) ?? false)).toList();
+        });
   }
 
   Future<int> getUnreadCount(String chatId, String currentUserId) async {
@@ -103,6 +103,17 @@ class ChatService {
     }
   }
 
+  Future<void> deleteMessageForMe(String messageId, String userId) async {
+    try {
+      await _firestore.collection('messages').doc(messageId).update({
+        'deletedFor': FieldValue.arrayUnion([userId]),
+      });
+    } catch (e) {
+      ErrorHandler.logError(e, context: 'deleteMessageForMe');
+      rethrow;
+    }
+  }
+
   Future<void> editMessage(String messageId, String newText) async {
     try {
       await _firestore.collection('messages').doc(messageId).update({
@@ -113,5 +124,42 @@ class ChatService {
       ErrorHandler.logError(e, context: 'editMessage');
       rethrow;
     }
+  }
+
+  /// Toggle star for a message for the given userId. Adds or removes
+  /// the userId from the message document's `starredBy` array field.
+  Future<void> toggleStar(String messageId, String userId) async {
+    try {
+      final docRef = _firestore.collection('messages').doc(messageId);
+      final snapshot = await docRef.get();
+      if (!snapshot.exists) return;
+
+      final data = snapshot.data() as Map<String, dynamic>?;
+      final current = data?['starredBy'] is List
+          ? List<String>.from((data!['starredBy'] as List).map((e) => e.toString()))
+          : <String>[];
+
+      if (current.contains(userId)) {
+        await docRef.update({
+          'starredBy': FieldValue.arrayRemove([userId]),
+        });
+      } else {
+        await docRef.update({
+          'starredBy': FieldValue.arrayUnion([userId]),
+        });
+      }
+    } catch (e) {
+      ErrorHandler.logError(e, context: 'toggleStar');
+      rethrow;
+    }
+  }
+
+  /// Stream of messages starred by [userId]. Useful for a starred messages view.
+  Stream<List<Message>> getStarredMessages(String userId) {
+    return _firestore
+        .collection('messages')
+        .where('starredBy', arrayContains: userId)
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => Message.fromDocument(d)).toList());
   }
 }

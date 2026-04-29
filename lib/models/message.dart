@@ -12,6 +12,8 @@ class Message {
   final String? readBy;
   final Timestamp? editedAt;
   final bool isDeleted;
+  final List<String>? starredBy;
+  final List<String>? deletedFor;
 
   Message({
     this.id = '',
@@ -25,6 +27,8 @@ class Message {
     this.readBy,
     this.editedAt,
     this.isDeleted = false,
+    this.starredBy,
+    this.deletedFor,
   });
 
   factory Message.fromMap(String id, Map<String, dynamic> data) {
@@ -44,6 +48,12 @@ class Message {
           ? data['editedAt'] as Timestamp
           : null,
       isDeleted: data['isDeleted'] == true,
+        starredBy: data['starredBy'] is List
+          ? List<String>.from(data['starredBy'].map((e) => e.toString()))
+          : <String>[],
+        deletedFor: data['deletedFor'] is List
+          ? List<String>.from(data['deletedFor'].map((e) => e.toString()))
+          : <String>[],
     );
   }
 
@@ -65,6 +75,12 @@ class Message {
       'readBy': readBy,
       'editedAt': null,
       'isDeleted': false,
+      'starredBy': starredBy ?? <String>[],
+      'deletedFor': deletedFor ?? <String>[],
     };
+  }
+
+  bool isStarredBy(String userId) {
+    return (starredBy ?? <String>[]).contains(userId);
   }
 }
