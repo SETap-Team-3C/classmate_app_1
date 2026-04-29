@@ -89,6 +89,12 @@ class _ChatPageState extends State<ChatPage> {
                     stream: _chatService.getMessages(currentUser.uid, widget.receiverId),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
+                        final err = snapshot.error;
+                        // If Firestore permission denied, show a friendly empty state
+                        if (err is FirebaseException && err.code == 'permission-denied') {
+                          return const Center(child: Text('No messages yet.'));
+                        }
+
                         return Center(child: Text('Error: ${snapshot.error}'));
                       }
 
