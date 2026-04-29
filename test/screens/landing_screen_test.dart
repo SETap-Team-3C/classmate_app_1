@@ -12,11 +12,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Classmate'), findsOneWidget);
-    expect(find.text('Continue'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
 
-    await tester.tap(find.text('Continue'));
+    await tester.tap(find.text('Login'));
     await tester.pumpAndSettle();
 
     expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Login'), findsWidgets);
   });
 }
