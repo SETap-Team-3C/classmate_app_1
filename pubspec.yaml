@@ -52,25 +52,25 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/icon/app_logo.png
+    - assets/app_logo.png
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/icon/app_logo.png
+  image_path: assets/app_logo.png
   min_sdk_android: 21
   web:
     generate: true
-    image_path: assets/icon/app_logo.png
+    image_path: assets/app_logo.png
     background_color: "#ffffff"
     theme_color: "#2563EB"
   windows:
     generate: true
-    image_path: assets/icon/app_logo.png
+    image_path: assets/app_logo.png
     icon_size: 48
   macos:
     generate: true
-    image_path: assets/icon/app_logo.png
+    image_path: assets/app_logo.png
 
 # Notes: To generate platform-specific Firebase options (firebase_options.dart)
 # install and use the FlutterFire CLI:
