@@ -6,7 +6,10 @@ class MessageBubble extends StatelessWidget {
   final bool isCurrentUser;
   final bool isRead;
   final String readStatusText;
-  final Future<void> Function()? onDelete;
+  final bool isStarred;
+  final VoidCallback? onStarToggle;
+  final Future<void> Function()? onDeleteForMe;
+  final Future<void> Function()? onDeleteForEveryone;
 
   const MessageBubble({
     super.key,
@@ -15,17 +18,25 @@ class MessageBubble extends StatelessWidget {
     required this.isCurrentUser,
     required this.isRead,
     required this.readStatusText,
-    this.onDelete,
+    this.onDeleteForMe,
+    this.onDeleteForEveryone,
+    this.isStarred = false,
+    this.onStarToggle,
   });
 
-  Future<void> _confirmDelete(BuildContext context) async {
-    if (onDelete == null) return;
+  Future<void> _confirmAndPerform(
+    BuildContext context, {
+    required String title,
+    required String confirmText,
+    required Future<void> Function()? action,
+  }) async {
+    if (action == null) return;
 
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Message'),
-        content: const Text('Are you sure you want to delete your message?'),
+        title: Text(title),
+        content: Text(confirmText),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -41,12 +52,10 @@ class MessageBubble extends StatelessWidget {
 
     if (shouldDelete != true) return;
 
-    await onDelete!.call();
+    await action.call();
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Message deleted')));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Message deleted')));
   }
 
   @override
@@ -78,9 +87,23 @@ class MessageBubble extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: GestureDetector(
-                  onLongPress: isCurrentUser && onDelete != null
-                      ? () => _confirmDelete(context)
-                      : null,
+                  onLongPress: isCurrentUser && onDeleteForEveryone != null
+                    ? () => _confirmAndPerform(
+                      context,
+                      title: 'Delete Message for Everyone',
+                      confirmText:
+                        'This will remove the message for everyone in the chat. Continue?',
+                      action: onDeleteForEveryone,
+                      )
+                    : (onDeleteForMe != null
+                      ? () => _confirmAndPerform(
+                        context,
+                        title: 'Delete Message',
+                        confirmText:
+                          'Are you sure you want to delete your message for you?',
+                        action: onDeleteForMe,
+                        )
+                      : null),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -112,30 +135,84 @@ class MessageBubble extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isCurrentUser && onDelete != null)
+              // Show options menu (delete for me, delete for everyone, star/unstar)
+              if (onDeleteForMe != null || onDeleteForEveryone != null || onStarToggle != null)
                 Positioned(
                   right: 6,
                   top: 6,
                   child: PopupMenuButton<String>(
                     tooltip: 'Message options',
-                    onSelected: (value) {
-                      if (value == 'delete') {
-                        _confirmDelete(context);
+                    onSelected: (value) async {
+                      if (value == 'delete_me' && onDeleteForMe != null) {
+                        await _confirmAndPerform(
+                          context,
+                          title: 'Delete Message',
+                          confirmText: 'Are you sure you want to delete this message for you?',
+                          action: onDeleteForMe,
+                        );
+                        return;
+                      }
+                      if (value == 'delete_everyone' && onDeleteForEveryone != null) {
+                        await _confirmAndPerform(
+                          context,
+                          title: 'Delete Message for Everyone',
+                          confirmText: 'This will remove the message for everyone in the chat. Continue?',
+                          action: onDeleteForEveryone,
+                        );
+                        return;
+                      }
+                      if (value == 'star' && onStarToggle != null) {
+                        onStarToggle?.call();
+                        return;
                       }
                     },
-                    itemBuilder: (BuildContext context) =>
-                        <PopupMenuEntry<String>>[
-                          const PopupMenuItem<String>(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text('Delete'),
-                              ],
-                            ),
+                    itemBuilder: (BuildContext context) {
+                      final items = <PopupMenuEntry<String>>[];
+
+                      if (onStarToggle != null) {
+                        items.add(PopupMenuItem<String>(
+                          value: 'star',
+                          child: Row(
+                            children: [
+                              Icon(
+                                isStarred ? Icons.star : Icons.star_border,
+                                color: isStarred ? Colors.amber : Colors.black87,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(isStarred ? 'Unstar' : 'Star'),
+                            ],
                           ),
-                        ],
+                        ));
+                      }
+
+                      if (onDeleteForMe != null) {
+                        items.add(const PopupMenuItem<String>(
+                          value: 'delete_me',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline, color: Colors.black87),
+                              SizedBox(width: 8),
+                              Text('Delete for me'),
+                            ],
+                          ),
+                        ));
+                      }
+
+                      if (isCurrentUser && onDeleteForEveryone != null) {
+                        items.add(const PopupMenuItem<String>(
+                          value: 'delete_everyone',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_forever, color: Colors.red),
+                              SizedBox(width: 8),
+                              Text('Delete for everyone'),
+                            ],
+                          ),
+                        ));
+                      }
+
+                      return items;
+                    },
                     child: const Icon(
                       Icons.more_vert,
                       color: Colors.black87,
