@@ -13,10 +13,14 @@ void main() async {
 
   try {
     debugPrint('Initializing Firebase...');
+    debugPrint('Project ID: classmates1project');
+    
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     debugPrint('Firebase initialized successfully');
+    debugPrint('Auth instance: ${FirebaseAuth.instance}');
+    debugPrint('Current user: ${FirebaseAuth.instance.currentUser}');
 
     await FirebaseAnalytics.instance.logEvent(
       name: 'copilot_startup_test',
