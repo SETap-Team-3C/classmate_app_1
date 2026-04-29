@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/theme_provider.dart';
 import '../login_screen.dart';
 
 class LandingScreen extends StatelessWidget {
-  const LandingScreen({super.key});
+  const LandingScreen({super.key, required this.themeProvider});
+
+  final ThemeProvider themeProvider;
 
   void _openLogin(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(
+        builder: (_) => LoginScreen(themeProvider: themeProvider),
+      ),
     );
   }
 
