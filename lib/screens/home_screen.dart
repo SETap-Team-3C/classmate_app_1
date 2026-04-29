@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'call_contacts_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
+import 'starred_messages_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -128,6 +129,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.star, size: 32, color: Colors.white),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => StarredMessagesScreen(
+                        auth: _auth,
+                        firestore: _firestore,
+                      ),
+                    ),
+                  );
+                },
               ),
               IconButton(
                 icon: const Icon(Icons.call, size: 32, color: Colors.white),
