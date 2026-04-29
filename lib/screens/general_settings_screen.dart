@@ -4,16 +4,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../core/theme/theme_provider.dart';
 import 'profile_settings.dart';
 
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key, required this.themeProvider});
+class GeneralSettingsScreen extends StatefulWidget {
+  const GeneralSettingsScreen({super.key, required this.themeProvider});
 
   final ThemeProvider themeProvider;
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<GeneralSettingsScreen> createState() => _GeneralSettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
   bool _notificationsEnabled = true;
   bool _soundEnabled = true;
 
@@ -44,7 +44,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AccountScreen()),
+                      MaterialPageRoute(builder: (context) => const ProfileSettings()),
                     );
                   },
                 ),
@@ -54,7 +54,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const AccountScreen()),
+                      MaterialPageRoute(builder: (context) => const ProfileSettings()),
                     );
                   },
                 ),

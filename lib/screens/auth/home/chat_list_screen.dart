@@ -55,7 +55,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (_) =>
-                      SettingsScreen(themeProvider: widget.themeProvider),
+                      GeneralSettingsScreen(themeProvider: widget.themeProvider),
                 ),
               );
             },

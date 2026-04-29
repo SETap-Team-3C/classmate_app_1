@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class AccountScreen extends StatefulWidget {
-  const AccountScreen({super.key});
+class ProfileSettings extends StatefulWidget {
+  const ProfileSettings({super.key});
 
   @override
-  State<AccountScreen> createState() => _AccountScreenState();
+  State<ProfileSettings> createState() => _ProfileSettingsState();
 }
 
-class _AccountScreenState extends State<AccountScreen> {
+class _ProfileSettingsState extends State<ProfileSettings> {
   late User? _user;
 
   @override
