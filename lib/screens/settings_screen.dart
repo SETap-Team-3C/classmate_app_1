@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/theme/theme_provider.dart';
+
 import 'profile_settings.dart';
+
+import 'edit_profile_screen.dart'; ed2069d (feat(profile): add EditProfile screen and wire from Settings)
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.themeProvider});
@@ -54,7 +57,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
+
                       MaterialPageRoute(builder: (context) => const ProfileSettings()),
+
+                      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+ ed2069d (feat(profile): add EditProfile screen and wire from Settings)
                     );
                   },
                 ),
