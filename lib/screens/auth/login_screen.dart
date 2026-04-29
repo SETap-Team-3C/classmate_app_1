@@ -123,11 +123,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Image.asset(
                       'assets/app_logo.png',
-                      width: 96,
-                      height: 96,
+                      width: 128,
+                      height: 128,
                       fit: BoxFit.contain,
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
                     const Text('Welcome back'),
                   ],
                 ),
