@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'call_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 
@@ -62,53 +63,69 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 60,
         color: Colors.grey,
         child: Center(
-          child: Stack(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.mail, size: 32, color: Colors.white),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              widget.messagesScreenBuilder ??
+                              (_) => MessagesScreen(
+                                auth: _auth,
+                                firestore: _firestore,
+                              ),
+                        ),
+                      );
+                    },
+                  ),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: StreamBuilder<int>(
+                      stream:
+                          widget.unreadCountStream ??
+                          _firestore
+                              .collection('messages')
+                              .where(
+                                'receiverId',
+                                isEqualTo: _auth.currentUser?.uid,
+                              )
+                              .where('read', isEqualTo: false)
+                              .snapshots()
+                              .map((snapshot) => snapshot.docs.length),
+                      builder: (context, snapshot) {
+                        final hasUnread = (snapshot.data ?? 0) > 0;
+                        return hasUnread
+                            ? Container(
+                                width: 16,
+                                height: 16,
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                            : const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ],
+              ),
               IconButton(
-                icon: const Icon(Icons.mail, size: 45, color: Colors.white),
+                icon: const Icon(Icons.call, size: 32, color: Colors.white),
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder:
-                          widget.messagesScreenBuilder ??
-                          (_) => MessagesScreen(
-                            auth: _auth,
-                            firestore: _firestore,
-                          ),
+                      builder: (_) => const CallScreen(userName: 'Student'),
                     ),
                   );
                 },
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: StreamBuilder<int>(
-                  stream:
-                      widget.unreadCountStream ??
-                      _firestore
-                          .collection('messages')
-                          .where(
-                            'receiverId',
-                            isEqualTo: _auth.currentUser?.uid,
-                          )
-                          .where('read', isEqualTo: false)
-                          .snapshots()
-                          .map((snapshot) => snapshot.docs.length),
-                  builder: (context, snapshot) {
-                    final hasUnread = (snapshot.data ?? 0) > 0;
-                    return hasUnread
-                        ? Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                          )
-                        : const SizedBox.shrink();
-                  },
-                ),
               ),
             ],
           ),
