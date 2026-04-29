@@ -45,7 +45,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const AppLogo(iconSize: 24),
+        title: const AppLogo(iconSize: 32, useImage: true, imagePath: 'assets/app_logo.png'),
         centerTitle: true,
         actions: [
           IconButton(
