@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import '../../core/theme/theme_provider.dart';
 import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
-import '../../widets/app_logo.dart';
+// import '../../widets/app_logo.dart'; // unused after switching to image asset
 import '../../widets/custom_textfield.dart';
 import 'home/chat_list_screen.dart';
 import 'signup_screen.dart';
@@ -118,15 +118,27 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const AppLogo(
-                  iconSize: 34,
-                  textStyle: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/app_logo.png',
+                      width: 96,
+                      height: 96,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Classmate',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text('Welcome back'),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                const Text('Welcome back'),
                 const SizedBox(height: 30),
                 CustomTextField(
                   label: 'Email',

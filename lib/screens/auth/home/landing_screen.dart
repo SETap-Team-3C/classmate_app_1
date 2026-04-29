@@ -42,8 +42,8 @@ class LandingScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 120,
-                    height: 120,
+                    width: 160,
+                    height: 160,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
                       shape: BoxShape.circle,
@@ -55,17 +55,10 @@ class LandingScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     child: Image.asset(
-                      'assets/icon/app_logo.png',
+                      'assets/app_logo.png',
                       fit: BoxFit.contain,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Classmate',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 12),
