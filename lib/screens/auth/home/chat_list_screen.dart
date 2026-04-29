@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../widets/app_logo.dart';
 import '../../../widets/enhanced_avatar.dart';
-import '../../settings_screen.dart';
+import '../../general_settings_screen.dart';
 import '../../chat_page.dart';
 import '../login_screen.dart';
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/theme/theme_provider.dart';
+import 'profile_settings.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.themeProvider});
@@ -40,14 +41,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   leading: const Icon(Icons.person),
                   title: const Text('Email'),
                   subtitle: Text(user?.email ?? 'Not available'),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AccountScreen()),
+                    );
+                  },
                 ),
                 ListTile(
                   leading: const Icon(Icons.edit),
                   title: const Text('Edit Profile'),
                   onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Edit profile coming soon')),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AccountScreen()),
                     );
                   },
                 ),
