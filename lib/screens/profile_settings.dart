@@ -10,6 +10,7 @@ class ProfileSettings extends StatefulWidget {
 
 class _ProfileSettingsState extends State<ProfileSettings> {
   late User? _user;
+  bool _showPassword = false;
 
   @override
   void initState() {
@@ -87,11 +88,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Change email feature coming soon'),
-                    ),
-                  );
+                  _showChangeEmailDialog();
                 },
                 icon: const Icon(Icons.email),
                 label: const Text('Change Email'),
@@ -123,6 +120,138 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                   foregroundColor: Colors.white,
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showChangeEmailDialog() {
+    final TextEditingController newEmailController = TextEditingController();
+    final TextEditingController confirmEmailController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
+    bool _obscurePassword = true;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Change Email'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Current Email Address (Read-only)
+                TextField(
+                  enabled: false,
+                  decoration: InputDecoration(
+                    labelText: 'Current Email',
+                    hintText: _user?.email ?? 'Not available',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  controller: TextEditingController(text: _user?.email ?? ''),
+                ),
+                const SizedBox(height: 16),
+
+                // New Email Address
+                TextField(
+                  controller: newEmailController,
+                  decoration: InputDecoration(
+                    labelText: 'New Email Address',
+                    hintText: 'Enter your new email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.email),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+
+                // Confirm New Email Address
+                TextField(
+                  controller: confirmEmailController,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm New Email',
+                    hintText: 'Re-enter your new email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.email),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 16),
+
+                // Current Password
+                TextField(
+                  controller: passwordController,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Current Password',
+                    hintText: 'Enter your current password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Validate inputs
+                if (newEmailController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter new email')),
+                  );
+                  return;
+                }
+                if (confirmEmailController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please confirm email')),
+                  );
+                  return;
+                }
+                if (newEmailController.text != confirmEmailController.text) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Emails do not match')),
+                  );
+                  return;
+                }
+                if (passwordController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please enter your password')),
+                  );
+                  return;
+                }
+
+                // TODO: Implement actual email change logic
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Email change feature coming soon')),
+                );
+                Navigator.pop(context);
+              },
+              child: const Text('Confirm'),
             ),
           ],
         ),
