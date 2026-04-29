@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../core/theme/theme_provider.dart';
+
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, required this.themeProvider});
+
+  final ThemeProvider themeProvider;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -11,11 +15,11 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _soundEnabled = true;
-  String _theme = 'light';
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
+    final isDarkMode = widget.themeProvider.isDarkMode;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings'), centerTitle: true),
@@ -98,7 +102,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ListTile(
                   leading: const Icon(Icons.palette),
                   title: const Text('Theme'),
-                  subtitle: Text(_theme == 'light' ? 'Light' : 'Dark'),
+                  subtitle: Text(isDarkMode ? 'Dark' : 'Light'),
                   onTap: () {
                     showDialog(
                       context: context,
@@ -110,18 +114,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             RadioListTile(
                               title: const Text('Light'),
                               value: 'light',
-                              groupValue: _theme,
-                              onChanged: (value) {
-                                setState(() => _theme = value!);
+                              groupValue: isDarkMode ? 'dark' : 'light',
+                              onChanged: (value) async {
+                                await widget.themeProvider.setDarkMode(false);
+                                if (!mounted) return;
+                                setState(() {});
                                 Navigator.pop(context);
                               },
                             ),
                             RadioListTile(
                               title: const Text('Dark'),
                               value: 'dark',
-                              groupValue: _theme,
-                              onChanged: (value) {
-                                setState(() => _theme = value!);
+                              groupValue: isDarkMode ? 'dark' : 'light',
+                              onChanged: (value) async {
+                                await widget.themeProvider.setDarkMode(true);
+                                if (!mounted) return;
+                                setState(() {});
                                 Navigator.pop(context);
                               },
                             ),
