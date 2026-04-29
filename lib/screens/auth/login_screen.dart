@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import '../../core/theme/theme_provider.dart';
 import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
 import '../../widets/app_logo.dart';
@@ -10,7 +11,9 @@ import 'home/chat_list_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, required this.themeProvider});
+
+  final ThemeProvider themeProvider;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -80,7 +83,9 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const ChatListScreen()),
+          MaterialPageRoute(
+            builder: (_) => ChatListScreen(themeProvider: widget.themeProvider),
+          ),
         );
         return;
       }
