@@ -3,13 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/theme_provider.dart';
 import '../../../widets/app_logo.dart';
 import '../../../widets/enhanced_avatar.dart';
+import '../../settings_screen.dart';
 import '../../chat_page.dart';
 import '../login_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
-  const ChatListScreen({super.key});
+  const ChatListScreen({super.key, required this.themeProvider});
+
+  final ThemeProvider themeProvider;
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();
@@ -47,7 +51,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () {
-              // Settings button action
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      SettingsScreen(themeProvider: widget.themeProvider),
+                ),
+              );
             },
           ),
           if (_isSigningOut)
@@ -100,7 +110,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
                   // Navigate back to login screen
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          LoginScreen(themeProvider: widget.themeProvider),
+                    ),
                     (route) => false,
                   );
                   print('Navigated to login screen');
