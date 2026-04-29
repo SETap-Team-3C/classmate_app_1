@@ -42,8 +42,8 @@ class LandingScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
-                    width: 160,
-                    height: 160,
+                    width: 200,
+                    height: 200,
                     decoration: BoxDecoration(
                       color: theme.colorScheme.surface,
                       shape: BoxShape.circle,
@@ -55,13 +55,13 @@ class LandingScreen extends StatelessWidget {
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(28),
                     child: Image.asset(
                       'assets/app_logo.png',
                       fit: BoxFit.contain,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 20),
                   Text(
                     'Connect, chat, and stay in touch with classmates.',
                     textAlign: TextAlign.center,
