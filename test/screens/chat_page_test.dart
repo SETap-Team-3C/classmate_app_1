@@ -9,18 +9,15 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      wrapForTest(
-        const ChatPage(
-          receiverId: 'u2',
-          receiverName: 'Bob',
-          showTestEmptyState: true,
-        ),
-      ),
+      wrapForTest(const ChatPage(receiverId: 'u2', receiverName: 'Bob')),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Bob'), findsOneWidget);
-    expect(find.text('No messages yet. Start the conversation.'), findsOneWidget);
+    expect(
+      find.text('No messages yet. Start the conversation.'),
+      findsOneWidget,
+    );
     expect(find.byIcon(Icons.arrow_back), findsOneWidget);
   });
 }

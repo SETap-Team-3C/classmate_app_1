@@ -76,8 +76,12 @@ class ChatService {
         .where("chatId", isEqualTo: chatId)
         .snapshots()
         .map((snapshot) {
-          final all = snapshot.docs.map((doc) => Message.fromDocument(doc)).toList();
-          return all.where((m) => !(m.deletedFor?.contains(userId) ?? false)).toList();
+          final all = snapshot.docs
+              .map((doc) => Message.fromDocument(doc))
+              .toList();
+          return all
+              .where((m) => !(m.deletedFor?.contains(userId) ?? false))
+              .toList();
         });
   }
 
@@ -134,9 +138,11 @@ class ChatService {
       final snapshot = await docRef.get();
       if (!snapshot.exists) return;
 
-      final data = snapshot.data() as Map<String, dynamic>?;
+      final data = snapshot.data();
       final current = data?['starredBy'] is List
-          ? List<String>.from((data!['starredBy'] as List).map((e) => e.toString()))
+          ? List<String>.from(
+              (data!['starredBy'] as List).map((e) => e.toString()),
+            )
           : <String>[];
 
       if (current.contains(userId)) {

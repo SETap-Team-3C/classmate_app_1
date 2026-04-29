@@ -5,11 +5,11 @@ import 'chat_page.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({
-    Key? key,
+    super.key,
     this.auth,
     this.firestore,
     this.showTestEmptyState = false,
-  }) : super(key: key);
+  });
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
@@ -357,7 +357,7 @@ class SearchUser {
 }
 
 class UserSearchBottomSheet extends StatefulWidget {
-  const UserSearchBottomSheet({
+  const UserSearchBottomSheet({super.key, 
     this.firestore,
     required this.currentUserId,
     required this.onUserSelected,

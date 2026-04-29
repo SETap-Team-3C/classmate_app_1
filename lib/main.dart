@@ -37,7 +37,7 @@ void main() async {
 }
 
 class ClassmateApp extends StatefulWidget {
-  const ClassmateApp({Key? key}) : super(key: key);
+  const ClassmateApp({super.key});
 
   @override
   State<ClassmateApp> createState() => _ClassmateAppState();

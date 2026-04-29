@@ -8,11 +8,11 @@ import 'chat_page.dart';
 
 class StarredMessagesScreen extends StatefulWidget {
   const StarredMessagesScreen({
-    Key? key,
+    super.key,
     this.auth,
     this.firestore,
     this.chatService,
-  }) : super(key: key);
+  });
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;

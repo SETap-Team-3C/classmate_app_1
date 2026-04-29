@@ -14,12 +14,12 @@ class ChatPage extends StatefulWidget {
   final FirebaseAuth? auth;
 
   const ChatPage({
-    Key? key,
+    super.key,
     required this.receiverId,
     required this.receiverName,
     this.chatService,
     this.auth,
-  }) : super(key: key);
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();

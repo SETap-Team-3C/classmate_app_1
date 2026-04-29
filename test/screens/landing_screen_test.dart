@@ -2,7 +2,7 @@ import 'package:classmate_app_1/screens/auth/home/landing_screen.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../lib/core/theme/theme_provider.dart';
+import 'package:classmate_app_1/core/theme/theme_provider.dart';
 import '../test_helpers.dart';
 
 void main() {
