@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'call_screen.dart';
+import 'call_contacts_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 
@@ -122,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => const CallScreen(userName: 'Student'),
+                      builder: (_) => const CallContactsScreen(),
                     ),
                   );
                 },
