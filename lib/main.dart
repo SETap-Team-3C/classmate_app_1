@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'firebase_options.dart';
+import 'core/theme/theme_provider.dart';
 import 'screens/auth/home/chat_list_screen.dart';
 import 'screens/auth/home/landing_screen.dart';
 
@@ -31,35 +32,47 @@ void main() async {
   runApp(const ClassmateApp());
 }
 
-class ClassmateApp extends StatelessWidget {
+class ClassmateApp extends StatefulWidget {
   const ClassmateApp({Key? key}) : super(key: key);
 
   @override
+  State<ClassmateApp> createState() => _ClassmateAppState();
+}
+
+class _ClassmateAppState extends State<ClassmateApp> {
+  final ThemeProvider _themeProvider = ThemeProvider();
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Classmate',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          // While loading, show a splash screen or loading indicator
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          }
+    return AnimatedBuilder(
+      animation: _themeProvider,
+      builder: (context, _) => MaterialApp(
+        title: 'Classmate',
+        debugShowCheckedModeBanner: false,
+        theme: _themeProvider.lightTheme,
+        darkTheme: _themeProvider.darkTheme,
+        themeMode: _themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+        home: StreamBuilder<User?>(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            // While loading, show a splash screen or loading indicator
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            }
 
-          // If user is logged in, show ChatListScreen
-          if (snapshot.hasData && snapshot.data != null) {
-            debugPrint('User logged in: ${snapshot.data?.email}');
-            return const ChatListScreen();
-          }
+            // If user is logged in, show ChatListScreen
+            if (snapshot.hasData && snapshot.data != null) {
+              debugPrint('User logged in: ${snapshot.data?.email}');
+              return ChatListScreen(themeProvider: _themeProvider);
+            }
 
-          // If user is logged out, show the landing page.
-          debugPrint('User logged out');
-          return const LandingScreen();
-        },
+            // If user is logged out, show the landing page.
+            debugPrint('User logged out');
+            return LandingScreen(themeProvider: _themeProvider);
+          },
+        ),
       ),
     );
   }
