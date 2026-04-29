@@ -128,14 +128,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       fit: BoxFit.contain,
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      'Classmate',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: 8),
                     const Text('Welcome back'),
                   ],
                 ),
