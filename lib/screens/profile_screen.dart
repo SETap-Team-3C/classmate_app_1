@@ -90,28 +90,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Name
                   Text(
                     name,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
 
                   // Username
                   Text(
                     '@$username',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                   ),
                   const SizedBox(height: 16),
 
                   // Status Indicator
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: isOnline ? Colors.green[100] : Colors.grey[200],
+                      color: isOnline ? Theme.of(context).colorScheme.secondaryContainer : Theme.of(context).colorScheme.surfaceVariant,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -121,7 +115,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: isOnline ? Colors.green : Colors.grey,
+                            color: isOnline ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -130,14 +124,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isOnline
                               ? 'Online'
                               : lastSeen != null
-                              ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
-                              : 'Offline',
-                          style: TextStyle(
-                            color: isOnline
-                                ? Colors.green[700]
-                                : Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
+                                  ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
+                                  : 'Offline',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: isOnline ? Theme.of(context).colorScheme.onSecondaryContainer : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
                       ],
                     ),
@@ -148,28 +140,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.grey[100],
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Contact Information',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Icon(Icons.email, color: Colors.grey[600]),
+                            Icon(Icons.email, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 email,
-                                style: const TextStyle(fontSize: 14),
+                                style: Theme.of(context).textTheme.bodyMedium,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -178,11 +167,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Icon(Icons.person, color: Colors.grey[600]),
+                            Icon(Icons.person, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                             const SizedBox(width: 12),
                             Text(
                               username,
-                              style: const TextStyle(fontSize: 14),
+                              style: Theme.of(context).textTheme.bodyMedium,
                             ),
                           ],
                         ),
