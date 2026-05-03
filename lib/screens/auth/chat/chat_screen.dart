@@ -20,10 +20,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
       body: Column(
         children: [
-          // 💬 Messages area (empty for now)
+          
           Expanded(child: Center(child: Text("No messages yet"))),
 
-          // ✍️ Input
+          
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Row(
