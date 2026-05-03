@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_page.dart';
+import 'new_group_screen.dart';
+import 'settings_screen.dart';
+import '../core/theme/theme_provider.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({
@@ -9,11 +12,14 @@ class MessagesScreen extends StatefulWidget {
     this.auth,
     this.firestore,
     this.showTestEmptyState = false,
+    this.showTestEmptyState = false,
+    required this.themeProvider,
   });
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
   final bool showTestEmptyState;
+  final ThemeProvider themeProvider;
 
   @override
   State<MessagesScreen> createState() => _MessagesScreenState();
@@ -118,28 +124,57 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
+  void _handleMenuSelection(String value) {
+    if (!mounted) return;
+    switch (value) {
+      case 'new_group':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => NewGroupScreen(themeProvider: widget.themeProvider),
+          ),
+        );
+        break;
+      case 'settings':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SettingsScreen(themeProvider: widget.themeProvider),
+          ),
+        );
+        break;
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddUserDialog,
+        child: const Icon(Icons.chat),
+      ),
       body: Column(
         children: [
           Container(
             height: 60,
-            color: Colors.grey,
+            color: cs.primary,
             child: Row(
               children: [
                 IconButton(
                   onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.arrow_back),
                 ),
-                const Expanded(
+                Expanded(
                   child: Center(
                     child: Text(
                       'Direct Messages',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: cs.onPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -148,7 +183,18 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 ),
                 IconButton(
                   onPressed: _showAddUserDialog,
+                  icon: const Icon(Icons.search),
+                ),
+                IconButton(
+                  onPressed: _showAddUserDialog,
                   icon: const Icon(Icons.add),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) => _handleMenuSelection(value),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: 'new_group', child: Text('New group')),
+                    const PopupMenuItem(value: 'settings', child: Text('Settings')),
+                  ],
                 ),
               ],
             ),
@@ -266,9 +312,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: cs.surface,
                                     border: Border.all(
-                                      color: Colors.grey.shade400,
+                                      color: cs.outline,
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -291,13 +337,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                       Expanded(
                                         flex: 2,
                                         child: Center(
-                                          child: Text(
+                                            child: Text(
                                             unreadText,
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: unreadCount > 0
-                                                  ? Colors.red
-                                                  : Colors.grey,
+                                                  ? cs.error
+                                                  : cs.onSurface.withOpacity(0.7),
                                               fontWeight: unreadCount > 0
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
@@ -314,12 +360,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               MainAxisAlignment.center,
                                           crossAxisAlignment:
                                               CrossAxisAlignment.end,
-                                          children: [
+                                            children: [
                                             Text(
                                               _formatTimeAgo(lastTimestamp),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.grey,
+                                                color: cs.onSurface.withOpacity(0.7),
                                               ),
                                             ),
                                           ],
