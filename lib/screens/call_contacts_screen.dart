@@ -40,7 +40,7 @@ class CallContactsScreen extends StatelessWidget {
               final userName = user['name'] ?? 'Unknown User';
               final userEmail = user['email'] ?? '';
 
-              return ListTile(
+                return ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
                 leading: CircleAvatar(
                   child: Text(userName.isNotEmpty ? userName[0] : '?'),
@@ -48,7 +48,7 @@ class CallContactsScreen extends StatelessWidget {
                 title: Text(userName),
                 subtitle: Text(userEmail),
                 trailing: IconButton(
-                  icon: const Icon(Icons.phone, color: Colors.blue),
+                  icon: Icon(Icons.phone, color: Theme.of(context).colorScheme.primary),
                   tooltip: 'Call $userName',
                   onPressed: () {
                     Navigator.of(context).push(
