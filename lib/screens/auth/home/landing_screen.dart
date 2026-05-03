@@ -49,7 +49,7 @@ class LandingScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.08),
+                          color: Theme.of(context).shadowColor.withOpacity(0.08),
                           blurRadius: 24,
                           offset: const Offset(0, 10),
                         ),
