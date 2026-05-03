@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'firebase_options.dart';
 import 'core/theme/theme_provider.dart';
-import 'screens/auth/home/chat_list_screen.dart';
+import 'screens/auth_gate.dart';
 import 'screens/auth/home/landing_screen.dart';
 
 void main() async {
@@ -56,27 +56,7 @@ class _ClassmateAppState extends State<ClassmateApp> {
         theme: _themeProvider.lightTheme,
         darkTheme: _themeProvider.darkTheme,
         themeMode: _themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-        home: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            // While loading, show a splash screen or loading indicator
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
-            }
-
-            // If user is logged in, show ChatListScreen
-            if (snapshot.hasData && snapshot.data != null) {
-              debugPrint('User logged in: ${snapshot.data?.email}');
-              return ChatListScreen(themeProvider: _themeProvider);
-            }
-
-            // If user is logged out, show the landing page.
-            debugPrint('User logged out');
-            return LandingScreen(themeProvider: _themeProvider);
-          },
-        ),
+        home: AuthGate(themeProvider: _themeProvider),
       ),
     );
   }
