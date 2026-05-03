@@ -12,6 +12,7 @@ class ChatPage extends StatefulWidget {
   final String receiverName;
   final ChatService? chatService;
   final FirebaseAuth? auth;
+  final bool showTestEmptyState;
 
   const ChatPage({
     super.key,
@@ -20,6 +21,10 @@ class ChatPage extends StatefulWidget {
     this.chatService,
     this.auth,
   });
+
+    this.showTestEmptyState = false,
+  }) : super(key: key);
+   f27cc2f (cleaned up ChatPage by removing test code)
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -64,7 +69,30 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = _auth.currentUser;
+    final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
+
+    if (widget.showTestEmptyState) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.arrow_back),
+          ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.receiverName),
+              const SizedBox(height: 2),
+              const Text(
+                'Direct Message',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        body: const Center(child: Text('No messages yet. Start the conversation.')),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
