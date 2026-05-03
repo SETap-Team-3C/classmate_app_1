@@ -42,6 +42,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -108,7 +109,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
                   if (!mounted) return;
 
-                  // Navigate back to login screen
+                  
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (_) =>
@@ -244,11 +245,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                               height: 12,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isOnline ? Colors.green : Colors.grey,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
+                                color: isOnline ? cs.secondary : cs.onSurface.withOpacity(0.4),
+                                    border: Border.all(
+                                      color: cs.background,
+                                      width: 2,
+                                    ),
                               ),
                             ),
                           ],
@@ -264,7 +265,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           isOnline ? 'Online' : email,
                           style: TextStyle(
                             fontSize: 13,
-                            color: isOnline ? Colors.green : null,
+                            color: isOnline ? cs.secondary : null,
                             fontWeight: isOnline ? FontWeight.w500 : null,
                           ),
                         ),
