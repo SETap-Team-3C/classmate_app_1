@@ -47,7 +47,9 @@ class _CallScreenState extends State<CallScreen> {
             const SizedBox(height: 32),
             FloatingActionButton.extended(
               onPressed: _toggleCall,
-              backgroundColor: _isCalling ? Colors.red : Colors.green,
+              backgroundColor: _isCalling
+                  ? Theme.of(context).colorScheme.error
+                  : Theme.of(context).colorScheme.secondary,
               icon: Icon(_isCalling ? Icons.call_end : Icons.call),
               label: Text(_isCalling ? 'End Call' : 'Start Call'),
             ),
