@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'auth/login_screen.dart';
 
 import '../core/theme/theme_provider.dart';
 
@@ -23,24 +24,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final isDarkMode = widget.themeProvider.isDarkMode;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings'), centerTitle: true),
-      body: ListView(
-        children: [
+      appBar: AppBar(title: Text('Settings', style: Theme.of(context).textTheme.titleLarge), centerTitle: true),
+      body: AnimatedBuilder(
+        animation: widget.themeProvider,
+        builder: (context, _) {
+          final isDarkMode = widget.themeProvider.isDarkMode;
+          final cs = Theme.of(context).colorScheme;
+          final tt = Theme.of(context).textTheme;
+          final muted = cs.onSurface.withOpacity(0.7);
+          return ListView(
+            children: [
           // Account Section
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Account',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
+<<<<<<< HEAD
                   leading: const Icon(Icons.person),
                   title: const Text('Email'),
                   subtitle: Text(user?.email ?? 'Not available'),
@@ -50,10 +58,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       MaterialPageRoute(builder: (context) => const ProfileSettings()),
                     );
                   },
+=======
+                  leading: Icon(Icons.person, color: muted),
+                  title: Text('Email', style: tt.bodyMedium),
+                  subtitle: Text(
+                    user?.email ?? 'Not available',
+                    style: tt.bodySmall?.copyWith(color: muted),
+                  ),
+                  onTap: () {},
+>>>>>>> 576a677 (improve settings screen theming and UI consistency)
                 ),
                 ListTile(
-                  leading: const Icon(Icons.edit),
-                  title: const Text('Edit Profile'),
+                  leading: Icon(Icons.edit, color: muted),
+                  title: Text('Edit Profile', style: tt.bodyMedium),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -76,23 +93,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Notifications',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 SwitchListTile(
-                  title: const Text('Enable Notifications'),
-                  subtitle: const Text('Receive message notifications'),
+                  title: Text('Enable Notifications', style: tt.bodyMedium),
+                  subtitle: Text('Receive message notifications', style: tt.bodySmall?.copyWith(color: muted)),
                   value: _notificationsEnabled,
+                  activeThumbColor: cs.primary,
                   onChanged: (value) {
                     setState(() => _notificationsEnabled = value);
                   },
                 ),
                 SwitchListTile(
-                  title: const Text('Sound'),
-                  subtitle: const Text('Play notification sound'),
+                  title: Text('Sound', style: tt.bodyMedium),
+                  subtitle: Text('Play notification sound', style: tt.bodySmall?.copyWith(color: muted)),
                   value: _soundEnabled,
+                  activeThumbColor: cs.primary,
                   onChanged: (value) {
                     setState(() => _soundEnabled = value);
                   },
@@ -108,42 +127,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Appearance',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
-                  leading: const Icon(Icons.palette),
-                  title: const Text('Theme'),
-                  subtitle: Text(isDarkMode ? 'Dark' : 'Light'),
+                  leading: Icon(Icons.palette, color: muted),
+                  title: Text('Theme', style: tt.bodyMedium),
+                  subtitle: Text(isDarkMode ? 'Dark' : 'Light', style: tt.bodySmall?.copyWith(color: muted)),
                   onTap: () {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('Select Theme'),
+                        title: Text('Select Theme', style: tt.titleMedium),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            RadioListTile(
+                            RadioListTile<bool>(
                               title: const Text('Light'),
-                              value: 'light',
-                              groupValue: isDarkMode ? 'dark' : 'light',
+                              value: false,
+                              groupValue: isDarkMode,
                               onChanged: (value) async {
-                                await widget.themeProvider.setDarkMode(false);
+                                if (value == null) return;
+                                await widget.themeProvider.setDarkMode(value);
                                 if (!mounted) return;
-                                setState(() {});
                                 Navigator.pop(context);
                               },
                             ),
-                            RadioListTile(
+                            RadioListTile<bool>(
                               title: const Text('Dark'),
-                              value: 'dark',
-                              groupValue: isDarkMode ? 'dark' : 'light',
+                              value: true,
+                              groupValue: isDarkMode,
                               onChanged: (value) async {
-                                await widget.themeProvider.setDarkMode(true);
+                                if (value == null) return;
+                                await widget.themeProvider.setDarkMode(value);
                                 if (!mounted) return;
-                                setState(() {});
                                 Navigator.pop(context);
                               },
                             ),
@@ -164,19 +183,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Privacy',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
-                  leading: const Icon(Icons.lock),
-                  title: const Text('Privacy Policy'),
+                  leading: Icon(Icons.lock, color: muted),
+                  title: Text('Privacy Policy', style: tt.bodyMedium),
                   onTap: () {},
                 ),
                 ListTile(
-                  leading: const Icon(Icons.description),
-                  title: const Text('Terms of Service'),
+                  leading: Icon(Icons.description, color: muted),
+                  title: Text('Terms of Service', style: tt.bodyMedium),
                   onTap: () {},
                 ),
               ],
@@ -187,7 +206,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Logout Button
           Padding(
             padding: const EdgeInsets.all(16),
-            child: ElevatedButton.icon(
+              child: ElevatedButton.icon(
               onPressed: () async {
                 showDialog(
                   context: context,
@@ -197,29 +216,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
+                        child: Text('Cancel', style: tt.bodyMedium),
                       ),
                       TextButton(
                         onPressed: () async {
                           await FirebaseAuth.instance.signOut();
                           if (!mounted) return;
-                          Navigator.pop(context);
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (_) => LoginScreen(themeProvider: widget.themeProvider),
+                            ),
+                            (route) => false,
+                          );
                         },
-                        child: const Text('Logout'),
+                        child: Text('Logout', style: tt.bodyMedium),
                       ),
                     ],
                   ),
                 );
               },
-              icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
+              icon: Icon(Icons.logout, color: Theme.of(context).colorScheme.onError),
+              label: Text('Logout', style: tt.bodyMedium),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
               ),
             ),
           ),
         ],
+      );
+        },
       ),
     );
   }
