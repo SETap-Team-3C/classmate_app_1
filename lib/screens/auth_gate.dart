@@ -1,12 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'auth_screen.dart';
+import '../core/theme/theme_provider.dart';
 import 'home_screen.dart';
 
 class AuthGate extends StatelessWidget {
-  const AuthGate({super.key, this.auth});
+  const AuthGate({super.key, this.auth, this.themeProvider});
 
   final FirebaseAuth? auth;
+  final ThemeProvider? themeProvider;
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +24,7 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return const HomeScreen(title: 'Classmate Home');
+          return HomeScreen(title: 'Classmate Home', themeProvider: themeProvider ?? ThemeProvider());
         }
 
         return const AuthScreen();
