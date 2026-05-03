@@ -5,6 +5,9 @@ import 'call_contacts_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
 import 'starred_messages_screen.dart';
+import 'notification_screen.dart';
+import 'communities_screen.dart';
+import '../core/theme/theme_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -14,6 +17,7 @@ class HomeScreen extends StatefulWidget {
     this.firestore,
     this.messagesScreenBuilder,
     this.unreadCountStream,
+    this.themeProvider,
   });
 
   final String title;
@@ -21,6 +25,7 @@ class HomeScreen extends StatefulWidget {
   final FirebaseFirestore? firestore;
   final WidgetBuilder? messagesScreenBuilder;
   final Stream<int>? unreadCountStream;
+  final ThemeProvider? themeProvider;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -28,8 +33,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore =>
-      widget.firestore ?? FirebaseFirestore.instance;
+  // Firestore may be accessed via widget.firestore when provided.
 
   Future<void> _signOut() async {
     await _auth.signOut();
@@ -48,9 +52,10 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 32,
               height: 32,
               fit: BoxFit.contain,
+              bundle: DefaultAssetBundle.of(context),
             ),
             const SizedBox(width: 8),
-            Text(widget.title),
+            Flexible(child: Text(widget.title)),
           ],
         ),
         actions: [
@@ -72,93 +77,93 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(icon: const Icon(Icons.logout), onPressed: _signOut),
         ],
       ),
-      body: const Center(child: Text('Welcome to Classmate App')),
-      bottomNavigationBar: Container(
-        height: 60,
-        color: Colors.grey,
-        child: Center(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.mail, size: 32, color: Colors.white),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              widget.messagesScreenBuilder ??
-                              (_) => MessagesScreen(
-                                auth: _auth,
-                                firestore: _firestore,
-                              ),
-                        ),
-                      );
-                    },
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: StreamBuilder<int>(
-                      stream:
-                          widget.unreadCountStream ??
-                          _firestore
-                              .collection('messages')
-                              .where(
-                                'receiverId',
-                                isEqualTo: _auth.currentUser?.uid,
-                              )
-                              .where('read', isEqualTo: false)
-                              .snapshots()
-                              .map((snapshot) => snapshot.docs.length),
-                      builder: (context, snapshot) {
-                        final hasUnread = (snapshot.data ?? 0) > 0;
-                        return hasUnread
-                            ? Container(
-                                width: 16,
-                                height: 16,
-                                decoration: const BoxDecoration(
-                                  color: Colors.red,
-                                  shape: BoxShape.circle,
-                                ),
-                              )
-                            : const SizedBox.shrink();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              IconButton(
-                icon: const Icon(Icons.star, size: 32, color: Colors.white),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => StarredMessagesScreen(
-                        auth: _auth,
-                        firestore: _firestore,
-                      ),
-                    ),
-                  );
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.call, size: 32, color: Colors.white),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CallContactsScreen(),
-                    ),
-                  );
-                },
-              ),
-            ],
+      body: _buildBody(context),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        type: BottomNavigationBarType.fixed,
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.update),
+            label: 'Updates',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.call),
+            label: 'Calls',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.group),
+            label: 'Communities',
+          ),
+          BottomNavigationBarItem(
+            icon: _buildChatsIcon(),
+            label: 'Chats',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'You',
+          ),
+        ],
+        onTap: (idx) {
+          setState(() => _currentIndex = idx);
+        },
+      ),
+    );
+  }
+
+  int _currentIndex = 3;
+
+  Widget _buildBody(BuildContext context) {
+    final currentUser = widget.auth?.currentUser ?? FirebaseAuth.instance.currentUser;
+    final pages = <Widget>[
+      const NotificationScreen(),
+      const CallContactsScreen(),
+      const CommunitiesScreen(),
+      widget.messagesScreenBuilder != null
+          ? widget.messagesScreenBuilder!(context)
+          : MessagesScreen(
+              auth: widget.auth,
+              firestore: widget.firestore,
+              themeProvider: widget.themeProvider ?? ThemeProvider(),
+            ),
+      ProfileScreen(userId: currentUser?.uid ?? '', isCurrentUser: true),
+    ];
+
+    return pages[_currentIndex];
+  }
+
+  Widget _buildChatsIcon() {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.mail),
+        Positioned(
+          right: -6,
+          top: -6,
+          child: StreamBuilder<int>(
+            stream: widget.unreadCountStream ??
+                widget.firestore
+                    ?.collection('messages')
+                    .where('receiverId', isEqualTo: widget.auth?.currentUser?.uid)
+                    .where('read', isEqualTo: false)
+                    .snapshots()
+                    .map((s) => s.docs.length) ??
+                const Stream<int>.empty(),
+            builder: (context, snapshot) {
+              final cs = Theme.of(context).colorScheme;
+              final count = snapshot.data ?? 0;
+              if (count <= 0) return const SizedBox.shrink();
+              return Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: cs.secondary, shape: BoxShape.circle),
+                child: Text(
+                  count > 9 ? '9+' : '$count',
+                  style: TextStyle(fontSize: 10, color: cs.onSecondary),
+                ),
+              );
+            },
           ),
         ),
-      ),
+      ],
     );
   }
 }
