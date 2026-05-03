@@ -118,7 +118,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildBottomNavItem({required IconData icon, required String label, required int index, int badgeCount = 0}) {
     final selected = _bottomIndex == index;
-    final color = selected ? Theme.of(context).colorScheme.primary : Colors.grey[600];
+    final cs = Theme.of(context).colorScheme;
+    final color = selected ? cs.primary : cs.onSurface.withOpacity(0.6);
 
     return Expanded(
       child: InkWell(
@@ -142,15 +143,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.green,
+                          color: cs.secondary,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 1.5),
+                          border: Border.all(color: cs.onSecondary, width: 1.5),
                         ),
                         constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                         child: Center(
                           child: Text(
                             badgeCount > 99 ? '99+' : badgeCount.toString(),
-                            style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: cs.onSecondary, fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ),
@@ -214,7 +215,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
-          border: Border(top: BorderSide(color: Colors.grey.shade300)),
+          border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outline)),
         ),
         height: 64,
         child: Row(
