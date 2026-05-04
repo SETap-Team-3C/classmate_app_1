@@ -7,6 +7,8 @@ import '../core/theme/theme_provider.dart';
 import 'profile_settings.dart';
 
 import 'edit_profile_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'terms_of_service_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.themeProvider});
@@ -175,12 +177,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ListTile(
                   leading: Icon(Icons.lock, color: muted),
                   title: Text('Privacy Policy', style: tt.bodyMedium),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+                    );
+                  },
                 ),
                 ListTile(
                   leading: Icon(Icons.description, color: muted),
                   title: Text('Terms of Service', style: tt.bodyMedium),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const TermsOfServiceScreen()),
+                    );
+                  },
                 ),
               ],
             ),
