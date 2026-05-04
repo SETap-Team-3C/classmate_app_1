@@ -8,13 +8,15 @@ class OnlineIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final borderColor = theme.scaffoldBackgroundColor;
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isOnline ? Colors.green : Colors.grey,
-        border: Border.all(color: Colors.white, width: 2),
+        color: isOnline ? Colors.green : theme.colorScheme.onSurface.withOpacity(0.4),
+        border: Border.all(color: borderColor, width: (size / 8).clamp(1.0, 4.0)),
       ),
     );
   }
