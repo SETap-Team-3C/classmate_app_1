@@ -6,7 +6,7 @@ import '../core/theme/theme_provider.dart';
 
 import 'profile_settings.dart';
 
-import 'edit_profile_screen.dart'; ed2069d (feat(profile): add EditProfile screen and wire from Settings)
+import 'edit_profile_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.themeProvider});
@@ -48,17 +48,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 const SizedBox(height: 12),
                 ListTile(
-<<<<<<< HEAD
-                  leading: const Icon(Icons.person),
-                  title: const Text('Email'),
-                  subtitle: Text(user?.email ?? 'Not available'),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ProfileSettings()),
-                    );
-                  },
-=======
                   leading: Icon(Icons.person, color: muted),
                   title: Text('Email', style: tt.bodyMedium),
                   subtitle: Text(
@@ -66,7 +55,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: tt.bodySmall?.copyWith(color: muted),
                   ),
                   onTap: () {},
->>>>>>> 576a677 (improve settings screen theming and UI consistency)
                 ),
                 ListTile(
                   leading: Icon(Icons.edit, color: muted),
@@ -74,11 +62,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-
-                      MaterialPageRoute(builder: (context) => const ProfileSettings()),
-
-                      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
- ed2069d (feat(profile): add EditProfile screen and wire from Settings)
+                      MaterialPageRoute(builder: (context) => const EditProfileScreen()),
                     );
                   },
                 ),

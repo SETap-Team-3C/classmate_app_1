@@ -8,13 +8,12 @@ import '../core/theme/theme_provider.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({
-    super.key,
+    Key? key,
     this.auth,
     this.firestore,
     this.showTestEmptyState = false,
-    this.showTestEmptyState = false,
     required this.themeProvider,
-  });
+  }) : super(key: key);
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
