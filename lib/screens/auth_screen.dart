@@ -3,11 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({
-    super.key,
-    this.auth,
-    this.firestore,
-  });
+  const AuthScreen({super.key, this.auth, this.firestore});
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
@@ -24,7 +20,8 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isLoading = false;
 
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore => widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore =>
+      widget.firestore ?? FirebaseFirestore.instance;
 
   bool _isValidUsername(String username) {
     final usernameRegex = RegExp(r'^[A-Za-z0-9](?:[A-Za-z0-9_]*[A-Za-z0-9])?$');
@@ -49,7 +46,9 @@ class _AuthScreenState extends State<AuthScreen> {
     final password = _passwordController.text.trim();
     final username = _nameController.text.trim();
 
-    if (identifier.isEmpty || password.isEmpty || (!_isLogin && username.isEmpty)) {
+    if (identifier.isEmpty ||
+        password.isEmpty ||
+        (!_isLogin && username.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields.')),
       );
@@ -93,7 +92,8 @@ class _AuthScreenState extends State<AuthScreen> {
             );
           }
 
-          emailForLogin = (usernameQuery.docs.first.data()['email'] ?? '').toString();
+          emailForLogin = (usernameQuery.docs.first.data()['email'] ?? '')
+              .toString();
           if (emailForLogin.isEmpty) {
             throw FirebaseAuthException(
               code: 'invalid-email',
@@ -115,10 +115,7 @@ class _AuthScreenState extends State<AuthScreen> {
         final fallbackName = emailForLogin.split('@').first;
         final resolvedName = existingName.isEmpty ? fallbackName : existingName;
 
-        await _firestore
-            .collection('users')
-            .doc(credential.user!.uid)
-            .set({
+        await _firestore.collection('users').doc(credential.user!.uid).set({
           'name': resolvedName,
           'email': emailForLogin,
           'usernameLower': resolvedName.toLowerCase(),
@@ -142,8 +139,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
         final usernameLower = username.toLowerCase();
 
-        final credential =
-            await _auth.createUserWithEmailAndPassword(
+        final credential = await _auth.createUserWithEmailAndPassword(
           email: identifier,
           password: password,
         );
@@ -168,10 +164,7 @@ class _AuthScreenState extends State<AuthScreen> {
             );
           }
 
-          await _firestore
-              .collection('users')
-              .doc(credential.user!.uid)
-              .set({
+          await _firestore.collection('users').doc(credential.user!.uid).set({
             'name': username,
             'email': identifier,
             'usernameLower': usernameLower,
@@ -249,8 +242,9 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
             TextField(
               controller: _identifierController,
-              keyboardType:
-                  _isLogin ? TextInputType.text : TextInputType.emailAddress,
+              keyboardType: _isLogin
+                  ? TextInputType.text
+                  : TextInputType.emailAddress,
               decoration: InputDecoration(
                 labelText: _isLogin ? 'Username | Email' : 'Email',
               ),
@@ -271,9 +265,7 @@ class _AuthScreenState extends State<AuthScreen> {
             TextButton(
               onPressed: () => setState(() => _isLogin = !_isLogin),
               child: Text(
-                _isLogin
-                    ? 'Create a new account'
-                    : 'I already have an account',
+                _isLogin ? 'Create a new account' : 'I already have an account',
               ),
             ),
           ],
