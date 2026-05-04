@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
-                        ProfileScreen(userId: userId, isCurrentUser: true),
+                          ProfileScreen(userId: userId, isCurrentUser: true, themeProvider: widget.themeProvider),
                   ),
                 );
               }
@@ -125,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
               firestore: widget.firestore,
               themeProvider: widget.themeProvider ?? ThemeProvider(),
             ),
-      ProfileScreen(userId: currentUser?.uid ?? '', isCurrentUser: true),
+      ProfileScreen(userId: currentUser?.uid ?? '', isCurrentUser: true, themeProvider: widget.themeProvider),
     ];
 
     return pages[_currentIndex];
