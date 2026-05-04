@@ -228,10 +228,9 @@ class _AuthScreenState extends State<AuthScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withOpacity(0.20),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.20),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
