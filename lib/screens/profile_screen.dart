@@ -3,15 +3,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:classmate_app_1/widets/enhanced_avatar.dart';
 import 'package:classmate_app_1/widets/online_indicator.dart';
 import 'package:classmate_app_1/core/utils/time_formatter.dart';
+import '../core/theme/theme_provider.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String userId;
   final bool isCurrentUser;
+  final ThemeProvider? themeProvider;
 
   const ProfileScreen({
     super.key,
     required this.userId,
     this.isCurrentUser = false,
+    this.themeProvider,
   });
 
   @override
@@ -65,7 +69,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     IconButton(
                       icon: const Icon(Icons.settings),
                       onPressed: () {
-                        Navigator.pushNamed(context, '/settings');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SettingsScreen(
+                              themeProvider: widget.themeProvider ?? ThemeProvider(),
+                            ),
+                          ),
+                        );
                       },
                     ),
                   ]
