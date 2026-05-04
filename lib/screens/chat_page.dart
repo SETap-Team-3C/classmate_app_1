@@ -20,11 +20,8 @@ class ChatPage extends StatefulWidget {
     required this.receiverName,
     this.chatService,
     this.auth,
-  });
-
     this.showTestEmptyState = false,
-  }) : super(key: key);
-   (cleaned up ChatPage by removing test code)
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
