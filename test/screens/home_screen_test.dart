@@ -3,6 +3,7 @@ import 'package:classmate_app_1/screens/messages_screen.dart';
 import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:classmate_app_1/core/theme/theme_provider.dart';
 
 import '../test_helpers.dart';
 
@@ -21,8 +22,9 @@ void main() {
           title: 'Classmate Home',
           auth: auth,
           unreadCountStream: const Stream<int>.empty(),
-          messagesScreenBuilder: (_) => const MessagesScreen(
+          messagesScreenBuilder: (_) => MessagesScreen(
             showTestEmptyState: true,
+            themeProvider: ThemeProvider(),
           ),
         ),
       ),

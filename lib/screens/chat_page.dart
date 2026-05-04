@@ -24,7 +24,7 @@ class ChatPage extends StatefulWidget {
 
     this.showTestEmptyState = false,
   }) : super(key: key);
-   f27cc2f (cleaned up ChatPage by removing test code)
+   (cleaned up ChatPage by removing test code)
 
   @override
   State<ChatPage> createState() => _ChatPageState();
