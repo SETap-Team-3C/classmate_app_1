@@ -130,8 +130,7 @@ class ChatService {
     }
   }
 
-  /// Toggle star for a message for the given userId. Adds or removes
-  /// the userId from the message document's `starredBy` array field.
+
   Future<void> toggleStar(String messageId, String userId) async {
     try {
       final docRef = _firestore.collection('messages').doc(messageId);
@@ -160,7 +159,7 @@ class ChatService {
     }
   }
 
-  /// Stream of messages starred by [userId]. Useful for a starred messages view.
+  
   Stream<List<Message>> getStarredMessages(String userId) {
     return _firestore
         .collection('messages')
