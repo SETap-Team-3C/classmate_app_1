@@ -42,7 +42,7 @@ class EnhancedAvatar extends StatelessWidget {
         style: TextStyle(
           fontSize: radius * 0.8,
           fontWeight: FontWeight.bold,
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.onPrimary,
         ),
       ),
     );
