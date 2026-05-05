@@ -19,7 +19,7 @@ void main() {
             isCurrentUser: true,
             isRead: false,
             readStatusText: 'unseen',
-            onDelete: () async {
+            onDeleteForMe: () async {
               deleted = true;
             },
           ),
