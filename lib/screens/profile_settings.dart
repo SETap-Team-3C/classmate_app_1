@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/user_service.dart';
 
 class ProfileSettings extends StatefulWidget {
@@ -14,11 +15,20 @@ class _ProfileSettingsState extends State<ProfileSettings> {
   late User? _user;
   final UserService _userService = UserService();
   bool _isLoadingProfilePicture = false;
+  String _selectedLanguage = 'English';
 
   @override
   void initState() {
     super.initState();
     _user = FirebaseAuth.instance.currentUser;
+    _loadLanguagePreference();
+  }
+
+  Future<void> _loadLanguagePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _selectedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    });
   }
 
   @override
@@ -133,6 +143,24 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                   },
                   icon: const Icon(Icons.lock),
                   label: const Text('Change Password'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Change Language Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    _showChangeLanguageDialog();
+                  },
+                  icon: const Icon(Icons.language),
+                  label: const Text('Change Language'),
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     backgroundColor: Colors.blue,
@@ -688,6 +716,65 @@ class _ProfileSettingsState extends State<ProfileSettings> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showChangeLanguageDialog() {
+    final List<String> languages = [
+      'English',
+      'Spanish',
+      'French',
+      'German',
+      'Italian',
+      'Portuguese',
+      'Dutch',
+      'Chinese',
+      'Japanese',
+      'Korean'
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Language'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: languages
+                .map(
+                  (language) => RadioListTile<String>(
+                    title: Text(language),
+                    value: language,
+                    groupValue: _selectedLanguage,
+                    onChanged: (value) {
+                      if (value != null) {
+                        _setLanguage(value);
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _setLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedLanguage', language);
+    setState(() {
+      _selectedLanguage = language;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Language changed to $language')),
     );
   }
 }
