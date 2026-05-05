@@ -1,5 +1,11 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../models/message.dart';
 import '../core/utils/error_handler.dart';
@@ -7,10 +13,12 @@ import '../core/utils/error_handler.dart';
 class ChatService {
   ChatService({FirebaseFirestore? firestore, FirebaseAuth? auth})
     : _firestore = firestore ?? FirebaseFirestore.instance,
-      _auth = auth ?? FirebaseAuth.instance;
+      _auth = auth ?? FirebaseAuth.instance,
+      _storage = FirebaseStorage.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
+  final FirebaseStorage _storage;
 
   String _buildChatId(String userA, String userB) {
     final ids = [userA, userB]..sort();
@@ -18,46 +26,228 @@ class ChatService {
   }
 
   Future<void> sendMessage(String receiverId, String message) async {
+    return sendTextMessage(receiverId, message);
+  }
+
+  Future<void> sendTextMessage(String receiverId, String message) async {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return;
+
     try {
-      final user = _auth.currentUser!;
-      final chatId = _buildChatId(user.uid, receiverId);
-      final senderDoc = await _firestore
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      final receiverDoc = await _firestore
-          .collection('users')
-          .doc(receiverId)
-          .get();
-      final senderName = (senderDoc.data()?['name'] ?? user.displayName ?? '')
-          .toString();
-      final receiverName = (receiverDoc.data()?['name'] ?? '').toString();
-
-      final batch = _firestore.batch();
+      final prepared = await _prepareMessageContext(receiverId);
       final messageDoc = _firestore.collection('messages').doc();
-      final chatDoc = _firestore.collection('chats').doc(chatId);
-      final messageData = Message(
+      final messageModel = Message(
         id: messageDoc.id,
-        chatId: chatId,
-        senderId: user.uid,
+        chatId: prepared.chatId,
+        senderId: prepared.user.uid,
         receiverId: receiverId,
-        text: message,
-      ).toCreateMap();
+        messageType: MessageType.text,
+        text: trimmed,
+      );
 
-      batch.set(messageDoc, messageData);
-
-      batch.set(chatDoc, {
-        'participants': [user.uid, receiverId],
-        'usernames': {user.uid: senderName, receiverId: receiverName},
-        'lastMessage': message,
-        'lastTimestamp': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-
-      await batch.commit();
+      await _commitMessage(
+        messageDoc: messageDoc,
+        message: messageModel,
+        chatId: prepared.chatId,
+        senderUid: prepared.user.uid,
+        receiverId: receiverId,
+        senderName: prepared.senderName,
+        receiverName: prepared.receiverName,
+      );
     } catch (e) {
       ErrorHandler.logError(e, context: 'sendMessage');
       rethrow;
     }
+  }
+
+  Future<void> sendImageMessage(
+    String receiverId,
+    XFile imageFile, {
+    String caption = '',
+    ValueChanged<double>? onUploadProgress,
+  }) async {
+    UploadTask? uploadTask;
+    Reference? storageRef;
+    StreamSubscription<TaskSnapshot>? uploadSubscription;
+
+    try {
+      final prepared = await _prepareMessageContext(receiverId);
+      await _ensureChatDocument(
+        chatId: prepared.chatId,
+        senderUid: prepared.user.uid,
+        receiverId: receiverId,
+        senderName: prepared.senderName,
+        receiverName: prepared.receiverName,
+      );
+      debugPrint(
+        '[sendImageMessage] ensured chat doc exists for ${prepared.chatId}',
+      );
+
+      final messageDoc = _firestore.collection('messages').doc();
+      final bytes = await imageFile.readAsBytes();
+      final safeName = _sanitizeFileName(imageFile.name.isNotEmpty
+          ? imageFile.name
+          : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final contentType = _inferImageContentType(safeName);
+
+      debugPrint(
+        '[sendImageMessage] start: chatId=${prepared.chatId}, receiver=$receiverId, '
+        'file=$safeName, bytes=${bytes.length}, contentType=$contentType',
+      );
+
+      final storagePath =
+          'chat_uploads/${prepared.chatId}/${messageDoc.id}/$safeName';
+      storageRef = _storage.ref(storagePath);
+      debugPrint('[sendImageMessage] uploading to: $storagePath');
+
+      uploadTask = storageRef.putData(
+        bytes,
+        SettableMetadata(contentType: contentType),
+      );
+
+      uploadSubscription = uploadTask.snapshotEvents.listen((snapshot) {
+        if (onUploadProgress != null && snapshot.totalBytes > 0) {
+          onUploadProgress(snapshot.bytesTransferred / snapshot.totalBytes);
+        }
+
+        if (snapshot.totalBytes > 0) {
+          final progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes * 100)
+                  .toStringAsFixed(1);
+          debugPrint(
+            '[sendImageMessage] upload progress: $progress% '
+            '(${snapshot.bytesTransferred}/${snapshot.totalBytes})',
+          );
+        }
+      });
+
+      await uploadTask;
+      debugPrint('[sendImageMessage] upload complete');
+
+      final downloadUrl = await storageRef.getDownloadURL();
+      debugPrint('[sendImageMessage] download URL generated: $downloadUrl');
+
+      final messageModel = Message(
+        id: messageDoc.id,
+        chatId: prepared.chatId,
+        senderId: prepared.user.uid,
+        receiverId: receiverId,
+        messageType: MessageType.image,
+        text: caption.trim(),
+        fileUrl: downloadUrl,
+        fileName: safeName,
+        mimeType: contentType,
+        fileSize: bytes.length,
+      );
+
+      debugPrint('[sendImageMessage] writing message doc: ${messageDoc.id}');
+      await _commitMessage(
+        messageDoc: messageDoc,
+        message: messageModel,
+        chatId: prepared.chatId,
+        senderUid: prepared.user.uid,
+        receiverId: receiverId,
+        senderName: prepared.senderName,
+        receiverName: prepared.receiverName,
+      );
+      debugPrint('[sendImageMessage] firestore write complete');
+    } catch (e) {
+      debugPrint('[sendImageMessage] ERROR: $e');
+      debugPrint('[sendImageMessage] ERROR type: ${e.runtimeType}');
+      if (e is FirebaseException) {
+        debugPrint(
+          '[sendImageMessage] FirebaseException code=${e.code}, message=${e.message}, plugin=${e.plugin}',
+        );
+      }
+      if (storageRef != null) {
+        try {
+          await storageRef.delete();
+          debugPrint('[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}');
+        } catch (_) {
+          // Ignore cleanup errors.
+        }
+      }
+      ErrorHandler.logError(e, context: 'sendImageMessage');
+      rethrow;
+    } finally {
+      await uploadSubscription?.cancel();
+    }
+  }
+
+  Future<void> _ensureChatDocument({
+    required String chatId,
+    required String senderUid,
+    required String receiverId,
+    required String senderName,
+    required String receiverName,
+  }) async {
+    await _firestore.collection('chats').doc(chatId).set({
+      'participants': [senderUid, receiverId],
+      'usernames': {senderUid: senderName, receiverId: receiverName},
+      'lastTimestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<_MessageContext> _prepareMessageContext(String receiverId) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw FirebaseAuthException(
+        code: 'not-authenticated',
+        message: 'User must be signed in to send messages.',
+      );
+    }
+
+    final chatId = _buildChatId(user.uid, receiverId);
+    final senderDoc = await _firestore.collection('users').doc(user.uid).get();
+    final receiverDoc = await _firestore.collection('users').doc(receiverId).get();
+    final senderName = (senderDoc.data()?['name'] ?? user.displayName ?? '')
+        .toString();
+    final receiverName = (receiverDoc.data()?['name'] ?? '').toString();
+
+    return _MessageContext(
+      user: user,
+      chatId: chatId,
+      senderName: senderName,
+      receiverName: receiverName,
+    );
+  }
+
+  Future<void> _commitMessage({
+    required DocumentReference<Map<String, dynamic>> messageDoc,
+    required Message message,
+    required String chatId,
+    required String senderUid,
+    required String receiverId,
+    required String senderName,
+    required String receiverName,
+  }) async {
+    final batch = _firestore.batch();
+    batch.set(messageDoc, message.toCreateMap());
+    batch.set(
+      _firestore.collection('chats').doc(chatId),
+      {
+        'participants': [senderUid, receiverId],
+        'usernames': {senderUid: senderName, receiverId: receiverName},
+        'lastMessage': message.previewText,
+        'lastTimestamp': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+    await batch.commit();
+  }
+
+  String _sanitizeFileName(String fileName) {
+    return fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+  }
+
+  String _inferImageContentType(String fileName) {
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    if (lower.endsWith('.heic')) return 'image/heic';
+    if (lower.endsWith('.heif')) return 'image/heif';
+    return 'image/jpeg';
   }
 
   Future<void> markMessageAsRead(String messageId, String readBy) async {
@@ -167,4 +357,18 @@ class ChatService {
         .snapshots()
         .map((snap) => snap.docs.map((d) => Message.fromDocument(d)).toList());
   }
+}
+
+class _MessageContext {
+  _MessageContext({
+    required this.user,
+    required this.chatId,
+    required this.senderName,
+    required this.receiverName,
+  });
+
+  final User user;
+  final String chatId;
+  final String senderName;
+  final String receiverName;
 }
