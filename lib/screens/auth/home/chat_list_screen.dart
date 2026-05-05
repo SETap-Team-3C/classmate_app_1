@@ -81,11 +81,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () async {
-                try {
-                  // capture navigator/messenger before awaiting
-                  final navigator = Navigator.of(context);
-                  final messenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
 
+                try {
                   // Show confirmation dialog
                   final confirmed = await showDialog<bool>(
                     context: context,

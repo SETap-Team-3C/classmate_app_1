@@ -32,9 +32,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'Dutch',
     'Chinese',
     'Japanese',
+    'Korean',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLanguagePreference();
+  }
+
+  Future<void> _loadLanguagePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _selectedLanguage = prefs.getString('selectedLanguage') ?? 'English';
+    });
+  }
+
+  Future<void> _setLanguage(String language) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('selectedLanguage', language);
+    if (!mounted) return;
+    setState(() {
+      _selectedLanguage = language;
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Language changed to $language')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Settings', style: Theme.of(context).textTheme.titleLarge),
+        centerTitle: true,
+      ),
+      body: AnimatedBuilder(
+        animation: widget.themeProvider,
+        builder: (context, _) {
+          final isDarkMode = widget.themeProvider.isDarkMode;
+          final cs = Theme.of(context).colorScheme;
+          final tt = Theme.of(context).textTheme;
+          final muted = cs.onSurface.withOpacity(0.7);
           return ListView(
             children: [
-              // Account Section
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -42,9 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'Account',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     ListTile(
@@ -72,8 +114,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(),
-
-              // Notifications Section
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -81,9 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'Notifications',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     SwitchListTile(
@@ -114,8 +152,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(),
-
-              // Appearance Section
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -123,9 +159,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'Appearance',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     ListTile(
@@ -149,9 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   groupValue: isDarkMode,
                                   onChanged: (value) async {
                                     if (value == null) return;
-                                    await widget.themeProvider.setDarkMode(
-                                      value,
-                                    );
+                                    await widget.themeProvider.setDarkMode(value);
                                     if (!mounted) return;
                                     Navigator.pop(context);
                                   },
@@ -162,9 +194,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   groupValue: isDarkMode,
                                   onChanged: (value) async {
                                     if (value == null) return;
-                                    await widget.themeProvider.setDarkMode(
-                                      value,
-                                    );
+                                    await widget.themeProvider.setDarkMode(value);
                                     if (!mounted) return;
                                     Navigator.pop(context);
                                   },
@@ -192,10 +222,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text(
-                              'Select Language',
-                              style: tt.titleMedium,
-                            ),
+                            title: Text('Select Language', style: tt.titleMedium),
                             content: SizedBox(
                               width: double.maxFinite,
                               child: ListView(
@@ -230,53 +257,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(),
-
-              // Privacy Section
-                      ),
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(
-                              'Select Language',
-                              style: tt.titleMedium,
-                            ),
-                            content: SizedBox(
-                              width: double.maxFinite,
-                              child: ListView(
-                                shrinkWrap: true,
-                                children: _languages
-                                    .map(
-                                      (language) => RadioListTile<String>(
-                                        title: Text(language),
-                                        value: language,
-                                        groupValue: _selectedLanguage,
-                                        onChanged: (value) {
-                                          if (value == null) return;
-                                          Navigator.pop(context);
-                                          _setLanguage(value);
-                                        },
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('Cancel'),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(),
-
-              // Privacy Section
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -284,9 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'Privacy',
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 12),
                     ListTile(
@@ -317,8 +295,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const Divider(),
-
-              // Logout Button
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
