@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../core/theme/theme_provider.dart';
 
 class NewGroupScreen extends StatefulWidget {
-  const NewGroupScreen({Key? key, required this.themeProvider}) : super(key: key);
+  const NewGroupScreen({super.key, required this.themeProvider});
 
   final ThemeProvider themeProvider;
 
@@ -36,7 +36,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     }
     if (currentUser == null) return;
 
-    final members = [_auth.currentUser!.uid, ..._selected.toList()];
+    final members = [_auth.currentUser!.uid, ..._selected];
 
     try {
       await _firestore.collection('groups').add({
@@ -47,15 +47,15 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Group created')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Group created')));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create group: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to create group: $e')));
     }
   }
 
@@ -92,9 +92,9 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final docs = snapshot.data?.docs ?? [];
-                final users = docs
-                    .where((d) => d.id != currentUser?.uid)
-                    .map((d) {
+                final users = docs.where((d) => d.id != currentUser?.uid).map((
+                  d,
+                ) {
                   final data = d.data() as Map<String, dynamic>;
                   return MapEntry(d.id, (data['name'] ?? 'User').toString());
                 }).toList();

@@ -46,7 +46,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const AppLogo(iconSize: 32, useImage: true, imagePath: 'assets/app_logo.png'),
+        title: const AppLogo(
+          iconSize: 32,
+          useImage: true,
+          imagePath: 'assets/app_logo.png',
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -55,8 +59,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) =>
-                      GeneralSettingsScreen(themeProvider: widget.themeProvider),
+                  builder: (_) => GeneralSettingsScreen(
+                    themeProvider: widget.themeProvider,
+                  ),
                 ),
               );
             },
@@ -76,6 +81,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () async {
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
                 try {
                   // Show confirmation dialog
                   final confirmed = await showDialog<bool>(
@@ -101,28 +108,22 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   if (!mounted) return;
                   setState(() => _isSigningOut = true);
 
-                  print('Signing out...');
-
                   // Sign out
                   await FirebaseAuth.instance.signOut();
-                  print('Signed out successfully');
 
                   if (!mounted) return;
 
-                  
-                  Navigator.of(context).pushAndRemoveUntil(
+                  navigator.pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (_) =>
                           LoginScreen(themeProvider: widget.themeProvider),
                     ),
                     (route) => false,
                   );
-                  print('Navigated to login screen');
                 } catch (e) {
-                  print('Logout error: $e');
                   if (!mounted) return;
                   setState(() => _isSigningOut = false);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(content: Text('Error logging out: $e')),
                   );
                 }
@@ -245,11 +246,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
                               height: 12,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isOnline ? cs.secondary : cs.onSurface.withOpacity(0.4),
-                                    border: Border.all(
-                                      color: cs.background,
-                                      width: 2,
-                                    ),
+                                color: isOnline
+                                    ? cs.secondary
+                                    : cs.onSurface.withValues(alpha: 0.4),
+                                border: Border.all(
+                                  color: cs.surfaceContainer,
+                                  width: 2,
+                                ),
                               ),
                             ),
                           ],

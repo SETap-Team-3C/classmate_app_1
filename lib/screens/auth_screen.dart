@@ -55,6 +55,7 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
 
     try {
@@ -180,11 +181,11 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } on FirebaseAuthException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(error.message ?? 'Authentication failed.')),
       );
     } on FirebaseException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(error.message ?? 'Authentication failed.')),
       );
     } finally {
@@ -230,7 +231,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       BoxShadow(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.20),
+                        ).colorScheme.primary.withValues(alpha: 0.20),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),

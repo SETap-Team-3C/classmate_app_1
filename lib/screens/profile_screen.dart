@@ -73,7 +73,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => SettingsScreen(
-                              themeProvider: widget.themeProvider ?? ThemeProvider(),
+                              themeProvider:
+                                  widget.themeProvider ?? ThemeProvider(),
                             ),
                           ),
                         );
@@ -101,22 +102,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   // Name
                   Text(
                     name,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
 
                   // Username
                   Text(
                     '@$username',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                   const SizedBox(height: 16),
 
                   // Status Indicator
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
-                      color: isOnline ? Theme.of(context).colorScheme.secondaryContainer : Theme.of(context).colorScheme.surfaceVariant,
+                      color: isOnline
+                          ? Theme.of(context).colorScheme.secondaryContainer
+                          : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -126,7 +140,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: isOnline ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+                            color: isOnline
+                                ? Theme.of(context).colorScheme.secondary
+                                : Theme.of(context).colorScheme.onSurface
+                                      .withValues(alpha: 0.4),
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -135,10 +152,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           isOnline
                               ? 'Online'
                               : lastSeen != null
-                                  ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
-                                  : 'Offline',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: isOnline ? Theme.of(context).colorScheme.onSecondaryContainer : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                              ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
+                              : 'Offline',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: isOnline
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.onSecondaryContainer
+                                    : Theme.of(context).colorScheme.onSurface
+                                          .withValues(alpha: 0.7),
                                 fontWeight: FontWeight.w500,
                               ),
                         ),
@@ -159,12 +182,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Text(
                           'Contact Information',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 16),
                         Row(
                           children: [
-                            Icon(Icons.email, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                            Icon(
+                              Icons.email,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -178,7 +207,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(height: 12),
                         Row(
                           children: [
-                            Icon(Icons.person, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                            Icon(
+                              Icons.person,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                             const SizedBox(width: 12),
                             Text(
                               username,

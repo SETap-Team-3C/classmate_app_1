@@ -9,6 +9,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   firebase_core
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   firebase_storage
 =======
   url_launcher_windows
@@ -16,6 +17,10 @@ list(APPEND FLUTTER_PLUGIN_LIST
 =======
   url_launcher_windows
 >>>>>>> 15b7d0c790c990635a49d21c590eb0be943f3e83
+=======
+  firebase_storage
+  url_launcher_windows
+>>>>>>> 4a00f2587222bc04c6ac9de0a90d9d1ad0f53e3c
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

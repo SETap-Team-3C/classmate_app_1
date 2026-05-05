@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ThemeProvider extends ChangeNotifier {
   bool _isDarkMode = false;
   SharedPreferences? _prefs;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   bool get isDarkMode => _isDarkMode;
 
@@ -13,6 +17,28 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _initTheme() async {
     _prefs = await SharedPreferences.getInstance();
+    
+    // First, try to load from Firestore (server source of truth)
+    final user = _auth.currentUser;
+    if (user != null) {
+      try {
+        final doc = await _firestore.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+          final themePreference = doc.data()?['isDarkMode'];
+          if (themePreference is bool) {
+            _isDarkMode = themePreference;
+            // Update local SharedPreferences to match Firestore
+            await _prefs?.setBool('isDarkMode', _isDarkMode);
+            notifyListeners();
+            return;
+          }
+        }
+      } catch (e) {
+        print('Error loading theme from Firestore: $e');
+      }
+    }
+    
+    // Fallback to local SharedPreferences
     _isDarkMode = _prefs?.getBool('isDarkMode') ?? false;
     notifyListeners();
   }
@@ -21,17 +47,34 @@ class ThemeProvider extends ChangeNotifier {
     return _prefs ??= await SharedPreferences.getInstance();
   }
 
+  /// Save theme preference to both local storage and Firestore
+  Future<void> _saveThemePreference(bool isDarkMode) async {
+    try {
+      final prefs = await _getPrefs();
+      await prefs.setBool('isDarkMode', isDarkMode);
+      
+      // Also save to Firestore for cross-device persistence
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestore.collection('users').doc(user.uid).set({
+          'isDarkMode': isDarkMode,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      print('Error saving theme preference: $e');
+    }
+  }
+
   Future<void> toggleTheme() async {
     _isDarkMode = !_isDarkMode;
-    final prefs = await _getPrefs();
-    await prefs.setBool('isDarkMode', _isDarkMode);
+    await _saveThemePreference(_isDarkMode);
     notifyListeners();
   }
 
   Future<void> setDarkMode(bool value) async {
     _isDarkMode = value;
-    final prefs = await _getPrefs();
-    await prefs.setBool('isDarkMode', _isDarkMode);
+    await _saveThemePreference(_isDarkMode);
     notifyListeners();
   }
 

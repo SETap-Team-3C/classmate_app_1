@@ -97,7 +97,9 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bubbleColor = isCurrentUser ? cs.primaryContainer : cs.surfaceVariant;
+    final bubbleColor = isCurrentUser
+        ? cs.primaryContainer
+        : cs.surfaceContainerHighest;
 
     return Column(
       crossAxisAlignment: isCurrentUser
@@ -171,7 +173,7 @@ class MessageBubble extends StatelessWidget {
                                   size: 14,
                                   color: isRead
                                       ? cs.primary
-                                      : cs.onSurface.withOpacity(0.7),
+                                      : cs.onSurface.withValues(alpha: 0.7),
                                 ),
                                 const SizedBox(width: 2),
                                 Text(
@@ -180,7 +182,7 @@ class MessageBubble extends StatelessWidget {
                                     fontSize: 10,
                                     color: isRead
                                         ? cs.primary
-                                        : cs.onSurface.withOpacity(0.7),
+                                        : cs.onSurface.withValues(alpha: 0.7),
                                     fontWeight: FontWeight.w500,
                                     decoration: isRead
                                         ? TextDecoration.underline
@@ -320,7 +322,7 @@ class MessageBubble extends StatelessWidget {
               readStatusText,
               style: TextStyle(
                 fontSize: 10,
-                color: cs.onSurface.withOpacity(0.7),
+                color: cs.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ),
