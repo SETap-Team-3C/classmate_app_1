@@ -268,13 +268,20 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                   return;
                 }
 
+<<<<<<< HEAD
                 // TODO: Implement actual email change logic
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Email change feature coming soon'),
                   ),
+=======
+                // Implement actual email change logic
+                _changeEmail(
+                  context,
+                  newEmailController.text,
+                  passwordController.text,
+>>>>>>> 6d71bf984356c596bcea5ebc021d84871ef04b2f
                 );
-                Navigator.pop(context);
               },
               child: const Text('Confirm'),
             ),
@@ -282,6 +289,108 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         ),
       ),
     );
+  }
+
+  Future<void> _changeEmail(BuildContext context, String newEmail, String password) async {
+    try {
+      if (_user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+        return;
+      }
+
+      // Reauthenticate user with current password
+      final credential = EmailAuthProvider.credential(
+        email: _user!.email!,
+        password: password,
+      );
+
+      await _user!.reauthenticateWithCredential(credential);
+
+      // Update email
+      await _user!.verifyBeforeUpdateEmail(newEmail);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Verification email sent to your new email address'),
+            duration: Duration(seconds: 3),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Failed to change email';
+      if (e.code == 'wrong-password') {
+        errorMessage = 'Incorrect password';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Invalid email format';
+      } else if (e.code == 'email-already-in-use') {
+        errorMessage = 'Email already in use';
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<void> _changePassword(BuildContext context, String currentPassword, String newPassword) async {
+    try {
+      if (_user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
+        return;
+      }
+
+      // Reauthenticate user with current password
+      final credential = EmailAuthProvider.credential(
+        email: _user!.email!,
+        password: currentPassword,
+      );
+
+      await _user!.reauthenticateWithCredential(credential);
+
+      // Update password
+      await _user!.updatePassword(newPassword);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password changed successfully'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage = 'Invalid password, please try again';
+      if (e.code == 'wrong-password') {
+        errorMessage = 'Incorrect current password';
+      } else if (e.code == 'weak-password') {
+        errorMessage = 'New password is too weak';
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    }
   }
 
   void _showChangePasswordDialog() {
@@ -421,13 +530,20 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                   return;
                 }
 
+<<<<<<< HEAD
                 // TODO: Implement actual password change logic
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Password change feature coming soon'),
                   ),
+=======
+                // Implement actual password change logic
+                _changePassword(
+                  context,
+                  currentPasswordController.text,
+                  newPasswordController.text,
+>>>>>>> 6d71bf984356c596bcea5ebc021d84871ef04b2f
                 );
-                Navigator.pop(context);
               },
               child: const Text('Confirm'),
             ),
