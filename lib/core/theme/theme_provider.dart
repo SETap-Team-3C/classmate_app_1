@@ -17,7 +17,7 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _initTheme() async {
     _prefs = await SharedPreferences.getInstance();
-    
+
     // First, try to load from Firestore (server source of truth)
     final user = _auth.currentUser;
     if (user != null) {
@@ -34,10 +34,10 @@ class ThemeProvider extends ChangeNotifier {
           }
         }
       } catch (e) {
-        print('Error loading theme from Firestore: $e');
+        debugPrint('Error loading theme from Firestore: $e');
       }
     }
-    
+
     // Fallback to local SharedPreferences
     _isDarkMode = _prefs?.getBool('isDarkMode') ?? false;
     notifyListeners();
@@ -52,7 +52,7 @@ class ThemeProvider extends ChangeNotifier {
     try {
       final prefs = await _getPrefs();
       await prefs.setBool('isDarkMode', isDarkMode);
-      
+
       // Also save to Firestore for cross-device persistence
       final user = _auth.currentUser;
       if (user != null) {
@@ -62,7 +62,7 @@ class ThemeProvider extends ChangeNotifier {
         }, SetOptions(merge: true));
       }
     } catch (e) {
-      print('Error saving theme preference: $e');
+      debugPrint('Error saving theme preference: $e');
     }
   }
 

@@ -94,57 +94,57 @@ class UserService {
   Future<String?> uploadProfilePicture(XFile imageFile) async {
     final user = _auth.currentUser;
     if (user == null) {
-      print('❌ No user logged in');
+      debugPrint('❌ No user logged in');
       return null;
     }
 
     try {
-      print('📸 Reading image file: ${imageFile.name}');
+      debugPrint('📸 Reading image file: ${imageFile.name}');
       final bytes = await imageFile.readAsBytes();
-      print('✅ Image bytes read: ${bytes.length} bytes');
+      debugPrint('✅ Image bytes read: ${bytes.length} bytes');
 
       final fileName =
           'profile_pictures/${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      print('📁 Storage path: $fileName');
-      print('👤 User ID: ${user.uid}');
+      debugPrint('📁 Storage path: $fileName');
+      debugPrint('👤 User ID: ${user.uid}');
 
       final storageRef = _storage.ref().child(fileName);
 
-      print('📤 Uploading bytes to Firebase Storage...');
+      debugPrint('📤 Uploading bytes to Firebase Storage...');
       try {
         final uploadTask = storageRef.putData(
           bytes,
           SettableMetadata(contentType: 'image/jpeg'),
         );
 
-        print('⏳ Waiting for upload to complete...');
+        debugPrint('⏳ Waiting for upload to complete...');
         await uploadTask;
-        print('✅ Upload complete');
+        debugPrint('✅ Upload complete');
       } catch (uploadError) {
-        print('❌ Upload error: $uploadError');
-        print('❌ Upload error type: ${uploadError.runtimeType}');
+        debugPrint('❌ Upload error: $uploadError');
+        debugPrint('❌ Upload error type: ${uploadError.runtimeType}');
         rethrow;
       }
 
-      print('🔗 Getting download URL...');
+      debugPrint('🔗 Getting download URL...');
       final downloadUrl = await storageRef.getDownloadURL();
-      print('✅ Download URL: $downloadUrl');
+      debugPrint('✅ Download URL: $downloadUrl');
 
-      print('👤 Updating user photo URL in Firebase Auth...');
+      debugPrint('👤 Updating user photo URL in Firebase Auth...');
       await user.updatePhotoURL(downloadUrl);
-      print('✅ Auth updated');
+      debugPrint('✅ Auth updated');
 
-      print('📝 Updating Firestore user document...');
+      debugPrint('📝 Updating Firestore user document...');
       await _firestore.collection('users').doc(user.uid).update({
         'profilePictureUrl': downloadUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      print('✅ Firestore updated');
+      debugPrint('✅ Firestore updated');
 
       return downloadUrl;
     } catch (e) {
-      print('❌ Error uploading profile picture: $e');
-      print('❌ Error type: ${e.runtimeType}');
+      debugPrint('❌ Error uploading profile picture: $e');
+      debugPrint('❌ Error type: ${e.runtimeType}');
       return null;
     }
   }
@@ -167,7 +167,7 @@ class UserService {
 
       return true;
     } catch (e) {
-      print('Error updating username: $e');
+      debugPrint('Error updating username: $e');
       return false;
     }
   }
