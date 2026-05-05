@@ -195,7 +195,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             TextField(
                               controller: _searchController,
                               onChanged: (value) {
-                                setState(() => _searchQuery = value.toLowerCase());
+                                setState(
+                                  () => _searchQuery = value.toLowerCase(),
+                                );
                               },
                               decoration: InputDecoration(
                                 hintText: 'Search chats by name...',

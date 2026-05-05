@@ -105,8 +105,15 @@ class _ChatPageState extends State<ChatPage> {
                       .doc(widget.receiverId)
                       .snapshots(),
                   builder: (context, snapshot) {
-                    final isOnline =
-                        snapshot.data?.get('isOnline') as bool? ?? false;
+                    bool isOnline = false;
+                    if (snapshot.hasData && snapshot.data != null) {
+                      try {
+                        isOnline =
+                            snapshot.data?.get('isOnline') as bool? ?? false;
+                      } catch (e) {
+                        isOnline = false;
+                      }
+                    }
                     return Container(
                       width: 8,
                       height: 8,
@@ -126,8 +133,14 @@ class _ChatPageState extends State<ChatPage> {
                   .doc(widget.receiverId)
                   .snapshots(),
               builder: (context, snapshot) {
-                final isTyping =
-                    snapshot.data?.get('isTyping') as bool? ?? false;
+                bool isTyping = false;
+                if (snapshot.hasData && snapshot.data != null) {
+                  try {
+                    isTyping = snapshot.data?.get('isTyping') as bool? ?? false;
+                  } catch (e) {
+                    isTyping = false;
+                  }
+                }
                 return Text(
                   isTyping ? 'typing...' : 'Direct Message',
                   style: TextStyle(
