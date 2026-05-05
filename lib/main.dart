@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'firebase_options.dart';
 import 'screens/auth/login_screen.dart';
-import 'screens/auth/home/chat_list_screen.dart';
+import 'screens/feed_screen.dart';
 
 void main() async {
   // Ensures Flutter is ready before Firebase starts
@@ -39,7 +39,14 @@ class ClassmateApp extends StatelessWidget {
     return MaterialApp(
       title: 'Classmate',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      theme: ThemeData(
+        primarySwatch: Colors.deepPurple,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          secondary: const Color(0xFFE1BEE7), // Light purple
+        ),
+      ),
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
@@ -50,10 +57,10 @@ class ClassmateApp extends StatelessWidget {
             );
           }
 
-          // If user is logged in, show ChatListScreen
+          // If user is logged in, show FeedScreen
           if (snapshot.hasData && snapshot.data != null) {
             debugPrint('User logged in: ${snapshot.data?.email}');
-            return const ChatListScreen();
+            return const FeedScreen();
           }
 
           // If user is logged out, show LoginScreen

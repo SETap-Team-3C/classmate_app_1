@@ -42,6 +42,68 @@ service cloud.firestore {
         && request.resource.data.readBy == null;
     }
 
+    function validPostCreateSchema() {
+      return request.resource.data.keys().hasAll([
+          'userId',
+          'userName',
+          'userPhotoUrl',
+          'text',
+          'imageUrl',
+          'createdAt',
+          'likeCount',
+          'commentCount',
+          'isPinned',
+          'pinnedAt'
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userName is string
+        && request.resource.data.userPhotoUrl is string
+        && request.resource.data.text is string
+        && request.resource.data.imageUrl is string
+        && request.resource.data.likeCount == 0
+        && request.resource.data.commentCount == 0
+        && request.resource.data.isPinned == false
+        && request.resource.data.pinnedAt == null;
+    }
+
+    function validPostUpdateSchema() {
+      return request.resource.data.userId == resource.data.userId
+        && request.resource.data.userName is string
+        && request.resource.data.userPhotoUrl is string
+        && request.resource.data.text is string
+        && request.resource.data.imageUrl is string
+        && request.resource.data.isPinned is bool;
+    }
+
+    function validCommentCreateSchema(collectionName, postId) {
+      return request.resource.data.keys().hasAll([
+          'userId',
+          'userName',
+          'text',
+          'createdAt',
+          'parentCommentId'
+        ])
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userName is string
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && (
+          request.resource.data.parentCommentId == null
+          || (
+            request.resource.data.parentCommentId is string
+            && exists(
+              /databases/$(database)/documents/$(collectionName)/$(postId)/comments/$(request.resource.data.parentCommentId)
+            )
+          )
+        );
+    }
+
+    function isPostOwner(collectionName, postId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/$(collectionName)/$(postId))
+        && get(/databases/$(database)/documents/$(collectionName)/$(postId)).data.userId == request.auth.uid;
+    }
+
     match /users/{userId} {
       allow read: if signedIn();
       allow create, update, delete: if isSelf(userId);
@@ -79,6 +141,117 @@ service cloud.firestore {
         && request.resource.data.readAt is timestamp;
 
       allow delete: if signedIn() && request.auth.uid == resource.data.senderId;
+    }
+
+    match /posts/{postId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && validPostCreateSchema();
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.userId
+        && validPostUpdateSchema();
+      allow delete: if signedIn() && request.auth.uid == resource.data.userId;
+
+      match /likes/{likeId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if signedIn()
+          && request.auth.uid == resource.data.userId;
+      }
+
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && validCommentCreateSchema('posts', postId);
+        allow update: if signedIn()
+          && (
+            request.auth.uid == resource.data.userId
+            || isPostOwner('posts', postId)
+          );
+        allow delete: if signedIn()
+          && request.auth.uid == resource.data.userId;
+
+        match /likes/{likeId} {
+          allow read: if signedIn();
+          allow create: if signedIn()
+            && request.resource.data.userId == request.auth.uid;
+          allow delete: if signedIn()
+            && request.auth.uid == resource.data.userId;
+        }
+      }
+    }
+
+    match /posts_mates/{postId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && validPostCreateSchema();
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.userId
+        && validPostUpdateSchema();
+      allow delete: if signedIn() && request.auth.uid == resource.data.userId;
+
+      match /likes/{likeId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if signedIn()
+          && request.auth.uid == resource.data.userId;
+      }
+
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && validCommentCreateSchema('posts_mates', postId);
+        allow update: if signedIn()
+          && (
+            request.auth.uid == resource.data.userId
+            || isPostOwner('posts_mates', postId)
+          );
+        allow delete: if signedIn()
+          && request.auth.uid == resource.data.userId;
+
+        match /likes/{likeId} {
+          allow read: if signedIn();
+          allow create: if signedIn()
+            && request.resource.data.userId == request.auth.uid;
+          allow delete: if signedIn()
+            && request.auth.uid == resource.data.userId;
+        }
+      }
+    }
+
+    match /posts_class/{postId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && validPostCreateSchema();
+      allow update: if signedIn()
+        && request.auth.uid == resource.data.userId
+        && validPostUpdateSchema();
+      allow delete: if signedIn() && request.auth.uid == resource.data.userId;
+
+      match /likes/{likeId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.userId == request.auth.uid;
+        allow delete: if signedIn()
+          && request.auth.uid == resource.data.userId;
+      }
+
+      match /comments/{commentId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && validCommentCreateSchema('posts_class', postId);
+        allow update: if signedIn()
+          && (
+            request.auth.uid == resource.data.userId
+            || isPostOwner('posts_class', postId)
+          );
+        allow delete: if signedIn()
+          && request.auth.uid == resource.data.userId;
+
+        match /likes/{likeId} {
+          allow read: if signedIn();
+          allow create: if signedIn()
+            && request.resource.data.userId == request.auth.uid;
+          allow delete: if signedIn()
+            && request.auth.uid == resource.data.userId;
+        }
+      }
     }
   }
 }

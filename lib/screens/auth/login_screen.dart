@@ -5,7 +5,7 @@ import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
 import '../../widets/app_logo.dart';
 import '../../widets/custom_textfield.dart';
-import 'home/chat_list_screen.dart';
+import '../feed_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -70,11 +70,11 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => isLoading = false);
 
       if (error == null) {
-        print('Login successful, navigating to chat list');
+        print('Login successful, navigating to feed');
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const ChatListScreen()),
+          MaterialPageRoute(builder: (_) => const FeedScreen()),
         );
         return;
       }

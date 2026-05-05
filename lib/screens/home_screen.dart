@@ -36,74 +36,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _signOut,
-          ),
-        ],
+        leading: const SizedBox.shrink(),
+        title: const SizedBox.shrink(),
+        elevation: 0,
       ),
-      body: const Center(
-        child: Text('Welcome to Classmate App'),
-      ),
-      bottomNavigationBar: Container(
-        height: 60,
-        color: Colors.grey,
-        child: Center(
-          child: Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.mail, size: 45, color: Colors.white),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: widget.messagesScreenBuilder ??
-                          (_) => MessagesScreen(
-                                auth: _auth,
-                                firestore: _firestore,
-                              ),
-                    ),
-                  );
-                },
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: StreamBuilder<int>(
-                  stream: widget.unreadCountStream ??
-                      _firestore
-                          .collection('messages')
-                          .where('receiverId', isEqualTo: _auth.currentUser?.uid)
-                          .where('read', isEqualTo: false)
-                          .snapshots()
-                          .map((snapshot) => snapshot.docs.length),
-                  builder: (context, snapshot) {
-                    final hasUnread = (snapshot.data ?? 0) > 0;
-                    return hasUnread
-                        ? Container(
-                            width: 16,
-                            height: 16,
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              shape: BoxShape.circle,
-                            ),
-                          )
-                        : const SizedBox.shrink();
-                  },
-                ),
-              ),
-            ],
+      body: Container(
+        color: Colors.white,
+        child: const Center(
+          child: Text(
+            'Feed',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
           ),
         ),
       ),

@@ -127,7 +127,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         children: [
           Container(
             height: 60,
-            color: Colors.grey,
+            color: Colors.deepPurple,
             child: Row(
               children: [
                 IconButton(
@@ -268,7 +268,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     border: Border.all(
-                                      color: Colors.grey.shade400,
+                                      color: const Color(0xFFE1BEE7),
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -297,7 +297,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               fontSize: 12,
                                               color: unreadCount > 0
                                                   ? Colors.red
-                                                  : Colors.grey,
+                                                  : const Color(0xFFE1BEE7),
                                               fontWeight: unreadCount > 0
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
@@ -319,7 +319,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               _formatTimeAgo(lastTimestamp),
                                               style: const TextStyle(
                                                 fontSize: 12,
-                                                color: Colors.grey,
+                                                color: Color(0xFFE1BEE7),
                                               ),
                                             ),
                                           ],

@@ -62,7 +62,7 @@ class _ChatPageState extends State<ChatPage> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: Container(
-          color: Colors.grey[400],
+          color: Colors.deepPurple,
           child: SafeArea(
             bottom: false,
             child: SizedBox(
@@ -70,7 +70,7 @@ class _ChatPageState extends State<ChatPage> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Expanded(
@@ -80,7 +80,7 @@ class _ChatPageState extends State<ChatPage> {
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       ),
                     ),
@@ -135,7 +135,7 @@ class _ChatPageState extends State<ChatPage> {
                               const Icon(
                                 Icons.chat_bubble_outline,
                                 size: 48,
-                                color: Colors.grey,
+                                color: Color(0xFFE1BEE7),
                               ),
                               const SizedBox(height: 16),
                               const Text(
@@ -143,7 +143,7 @@ class _ChatPageState extends State<ChatPage> {
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.grey,
+                                  color: Color(0xFFE1BEE7),
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -152,7 +152,7 @@ class _ChatPageState extends State<ChatPage> {
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   fontSize: 14,
-                                  color: Colors.grey,
+                                  color: Color(0xFFE1BEE7),
                                 ),
                               ),
                             ],
