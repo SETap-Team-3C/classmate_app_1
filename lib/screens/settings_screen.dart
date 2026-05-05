@@ -56,9 +56,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _selectedLanguage = language;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Language changed to $language')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Language changed to $language')));
   }
 
   @override
@@ -86,7 +86,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'Account',
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ListTile(
@@ -121,7 +123,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'Notifications',
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     SwitchListTile(
@@ -159,7 +163,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'Appearance',
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ListTile(
@@ -169,46 +175,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         isDarkMode ? 'Dark' : 'Light',
                         style: tt.bodySmall?.copyWith(color: muted),
                       ),
-                      onTap: () {
-                        showDialog(
+                      onTap: () async {
+                        final selected = await showDialog<bool>(
                           context: context,
-                          builder: (context) => AlertDialog(
+                          builder: (dialogContext) => AlertDialog(
                             title: Text('Select Theme', style: tt.titleMedium),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                RadioListTile<bool>(
-                                  title: const Text('Light'),
-                                  value: false,
-                                  groupValue: isDarkMode,
-                                  onChanged: (value) async {
-                                    if (value == null) return;
-                                    await widget.themeProvider.setDarkMode(value);
-                                    if (!mounted) return;
-                                    Navigator.pop(context);
-                                  },
+                                ListTile(
+                                  leading: Icon(
+                                    isDarkMode
+                                        ? Icons.radio_button_unchecked
+                                        : Icons.check_circle,
+                                    color: muted,
+                                  ),
+                                  title: Text('Light', style: tt.bodyMedium),
+                                  onTap: () =>
+                                      Navigator.of(dialogContext).pop(false),
                                 ),
-                                RadioListTile<bool>(
-                                  title: const Text('Dark'),
-                                  value: true,
-                                  groupValue: isDarkMode,
-                                  onChanged: (value) async {
-                                    if (value == null) return;
-                                    await widget.themeProvider.setDarkMode(value);
-                                    if (!mounted) return;
-                                    Navigator.pop(context);
-                                  },
+                                ListTile(
+                                  leading: Icon(
+                                    isDarkMode
+                                        ? Icons.check_circle
+                                        : Icons.radio_button_unchecked,
+                                    color: muted,
+                                  ),
+                                  title: Text('Dark', style: tt.bodyMedium),
+                                  onTap: () =>
+                                      Navigator.of(dialogContext).pop(true),
                                 ),
                               ],
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
                                 child: const Text('Cancel'),
                               ),
                             ],
                           ),
                         );
+
+                        if (selected == null) return;
+                        await widget.themeProvider.setDarkMode(selected);
+                        if (!mounted) return;
+                        setState(() {});
                       },
                     ),
                     ListTile(
@@ -218,26 +230,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _selectedLanguage,
                         style: tt.bodySmall?.copyWith(color: muted),
                       ),
-                      onTap: () {
-                        showDialog(
+                      onTap: () async {
+                        final selected = await showDialog<String>(
                           context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text('Select Language', style: tt.titleMedium),
+                          builder: (dialogContext) => AlertDialog(
+                            title: Text(
+                              'Select Language',
+                              style: tt.titleMedium,
+                            ),
                             content: SizedBox(
                               width: double.maxFinite,
                               child: ListView(
                                 shrinkWrap: true,
                                 children: _languages
                                     .map(
-                                      (language) => RadioListTile<String>(
-                                        title: Text(language),
-                                        value: language,
-                                        groupValue: _selectedLanguage,
-                                        onChanged: (value) {
-                                          if (value == null) return;
-                                          Navigator.pop(context);
-                                          _setLanguage(value);
-                                        },
+                                      (language) => ListTile(
+                                        leading: Icon(
+                                          _selectedLanguage == language
+                                              ? Icons.check_circle
+                                              : Icons.radio_button_unchecked,
+                                          color: muted,
+                                        ),
+                                        title: Text(
+                                          language,
+                                          style: tt.bodyMedium,
+                                        ),
+                                        onTap: () => Navigator.of(
+                                          dialogContext,
+                                        ).pop(language),
                                       ),
                                     )
                                     .toList(),
@@ -245,12 +265,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
                                 child: const Text('Cancel'),
                               ),
                             ],
                           ),
                         );
+
+                        if (selected == null) return;
+                        _setLanguage(selected);
                       },
                     ),
                   ],
@@ -264,7 +288,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Text(
                       'Privacy',
-                      style: tt.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     ListTile(
@@ -299,34 +325,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 padding: const EdgeInsets.all(16),
                 child: ElevatedButton.icon(
                   onPressed: () async {
-                    showDialog(
+                    final shouldLogout = await showDialog<bool>(
                       context: context,
-                      builder: (context) => AlertDialog(
+                      builder: (dialogContext) => AlertDialog(
                         title: const Text('Logout'),
                         content: const Text('Are you sure you want to logout?'),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(false),
                             child: Text('Cancel', style: tt.bodyMedium),
                           ),
                           TextButton(
-                            onPressed: () async {
-                              final nav = Navigator.of(context);
-                              await FirebaseAuth.instance.signOut();
-                              if (!mounted) return;
-                              nav.pushAndRemoveUntil(
-                                MaterialPageRoute(
-                                  builder: (_) => LoginScreen(
-                                    themeProvider: widget.themeProvider,
-                                  ),
-                                ),
-                                (route) => false,
-                              );
-                            },
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(true),
                             child: Text('Logout', style: tt.bodyMedium),
                           ),
                         ],
                       ),
+                    );
+
+                    if (shouldLogout != true) return;
+                    await FirebaseAuth.instance.signOut();
+                    if (!mounted) return;
+                    if (!context.mounted) return;
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            LoginScreen(themeProvider: widget.themeProvider),
+                      ),
+                      (route) => false,
                     );
                   },
                   icon: Icon(
