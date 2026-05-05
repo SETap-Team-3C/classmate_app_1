@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
+import '../services/user_service.dart';
 
 class ProfileSettings extends StatefulWidget {
   const ProfileSettings({super.key});
@@ -10,7 +12,8 @@ class ProfileSettings extends StatefulWidget {
 
 class _ProfileSettingsState extends State<ProfileSettings> {
   late User? _user;
-  bool _showPassword = false;
+  final UserService _userService = UserService();
+  bool _isLoadingProfilePicture = false;
 
   @override
   void initState() {
@@ -21,103 +24,124 @@ class _ProfileSettingsState extends State<ProfileSettings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Edit Profile'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
-        child: Column(
-          children: [
-            // Profile Picture
-            Center(
-              child: Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.grey[300],
-                    backgroundImage: _user?.photoURL != null
-                        ? NetworkImage(_user!.photoURL!)
-                        : null,
-                    child: _user?.photoURL == null
-                        ? Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Colors.grey[600],
-                          )
-                        : null,
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Change profile picture coming soon'),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Profile Picture
+              Center(
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage: _user?.photoURL != null
+                          ? NetworkImage(_user!.photoURL!)
+                          : null,
+                      child: _user?.photoURL == null
+                          ? Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.grey[600],
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: _isLoadingProfilePicture
+                            ? null
+                            : _pickAndUploadProfilePicture,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.blue,
+                            border: Border.all(color: Colors.white, width: 3),
                           ),
-                        );
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.blue,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 3,
-                          ),
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Icon(
-                            Icons.edit,
-                            color: Colors.white,
-                            size: 20,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: _isLoadingProfilePicture
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.edit,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
                           ),
                         ),
                       ),
                     ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 48),
+
+              // Change Username Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    _showChangeUsernameDialog();
+                  },
+                  icon: const Icon(Icons.person),
+                  label: const Text('Change Username'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
                   ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 48),
-
-            // Change Email Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  _showChangeEmailDialog();
-                },
-                icon: const Icon(Icons.email),
-                label: const Text('Change Email'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Change Password Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  _showChangePasswordDialog();
-                },
-                icon: const Icon(Icons.lock),
-                label: const Text('Change Password'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
+              // Change Email Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    _showChangeEmailDialog();
+                  },
+                  icon: const Icon(Icons.email),
+                  label: const Text('Change Email'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 16),
+
+              // Change Password Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    _showChangePasswordDialog();
+                  },
+                  icon: const Icon(Icons.lock),
+                  label: const Text('Change Password'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -125,7 +149,8 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
   void _showChangeEmailDialog() {
     final TextEditingController newEmailController = TextEditingController();
-    final TextEditingController confirmEmailController = TextEditingController();
+    final TextEditingController confirmEmailController =
+        TextEditingController();
     final TextEditingController passwordController = TextEditingController();
     bool _obscurePassword = true;
 
@@ -195,7 +220,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -243,7 +270,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
                 // TODO: Implement actual email change logic
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Email change feature coming soon')),
+                  const SnackBar(
+                    content: Text('Email change feature coming soon'),
+                  ),
                 );
                 Navigator.pop(context);
               },
@@ -256,9 +285,11 @@ class _ProfileSettingsState extends State<ProfileSettings> {
   }
 
   void _showChangePasswordDialog() {
-    final TextEditingController currentPasswordController = TextEditingController();
+    final TextEditingController currentPasswordController =
+        TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
-    final TextEditingController confirmPasswordController = TextEditingController();
+    final TextEditingController confirmPasswordController =
+        TextEditingController();
     bool _obscureCurrentPassword = true;
     bool _obscureNewPassword = true;
     bool _obscureConfirmPassword = true;
@@ -285,7 +316,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureCurrentPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -310,7 +343,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureNewPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -335,7 +370,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
@@ -358,7 +395,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                 // Validate inputs
                 if (currentPasswordController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter your current password')),
+                    const SnackBar(
+                      content: Text('Please enter your current password'),
+                    ),
                   );
                   return;
                 }
@@ -374,7 +413,8 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                   );
                   return;
                 }
-                if (newPasswordController.text != confirmPasswordController.text) {
+                if (newPasswordController.text !=
+                    confirmPasswordController.text) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Passwords do not match')),
                   );
@@ -383,7 +423,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
                 // TODO: Implement actual password change logic
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Password change feature coming soon')),
+                  const SnackBar(
+                    content: Text('Password change feature coming soon'),
+                  ),
                 );
                 Navigator.pop(context);
               },
@@ -394,5 +436,150 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       ),
     );
   }
-}
 
+  Future<void> _pickAndUploadProfilePicture() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 500,
+        maxHeight: 500,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() {
+        _isLoadingProfilePicture = true;
+      });
+
+      final downloadUrl = await _userService.uploadProfilePicture(pickedFile);
+
+      if (downloadUrl != null) {
+        // Refresh the user object to show updated photo
+        await _user?.reload();
+        setState(() {
+          _user = FirebaseAuth.instance.currentUser;
+          _isLoadingProfilePicture = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated successfully')),
+        );
+      } else {
+        setState(() {
+          _isLoadingProfilePicture = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to upload profile picture')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingProfilePicture = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  void _showChangeUsernameDialog() {
+    final TextEditingController usernameController = TextEditingController(
+      text: _user?.displayName ?? '',
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Change Username'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: usernameController,
+                decoration: InputDecoration(
+                  labelText: 'New Username',
+                  hintText: 'Enter your new username',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  prefixIcon: const Icon(Icons.person),
+                ),
+                maxLength: 50,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (usernameController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a username')),
+                );
+                return;
+              }
+
+              if (usernameController.text.length < 3) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Username must be at least 3 characters'),
+                  ),
+                );
+                return;
+              }
+
+              Navigator.pop(context);
+
+              // Show loading indicator
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) =>
+                    const Center(child: CircularProgressIndicator()),
+              );
+
+              try {
+                final success = await _userService.updateUsername(
+                  usernameController.text,
+                );
+
+                Navigator.pop(context); // Close loading dialog
+
+                if (success) {
+                  // Refresh the user object
+                  await _user?.reload();
+                  setState(() {
+                    _user = FirebaseAuth.instance.currentUser;
+                  });
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Username updated successfully'),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Failed to update username')),
+                  );
+                }
+              } catch (e) {
+                Navigator.pop(context); // Close loading dialog
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('Error: $e')));
+              }
+            },
+            child: const Text('Update'),
+          ),
+        ],
+      ),
+    );
+  }
+}
