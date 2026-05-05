@@ -268,19 +268,11 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                   return;
                 }
 
-<<<<<<< HEAD
                 // TODO: Implement actual email change logic
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Email change feature coming soon'),
                   ),
-=======
-                // Implement actual email change logic
-                _changeEmail(
-                  context,
-                  newEmailController.text,
-                  passwordController.text,
->>>>>>> 6d71bf984356c596bcea5ebc021d84871ef04b2f
                 );
               },
               child: const Text('Confirm'),
@@ -291,12 +283,16 @@ class _ProfileSettingsState extends State<ProfileSettings> {
     );
   }
 
-  Future<void> _changeEmail(BuildContext context, String newEmail, String password) async {
+  Future<void> _changeEmail(
+    BuildContext context,
+    String newEmail,
+    String password,
+  ) async {
     try {
       if (_user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
         return;
       }
 
@@ -330,25 +326,29 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         errorMessage = 'Email already in use';
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     }
   }
 
-  Future<void> _changePassword(BuildContext context, String currentPassword, String newPassword) async {
+  Future<void> _changePassword(
+    BuildContext context,
+    String currentPassword,
+    String newPassword,
+  ) async {
     try {
       if (_user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
         return;
       }
 
@@ -380,15 +380,15 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         errorMessage = 'New password is too weak';
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     }
   }
@@ -530,19 +530,11 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                   return;
                 }
 
-<<<<<<< HEAD
                 // TODO: Implement actual password change logic
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Password change feature coming soon'),
                   ),
-=======
-                // Implement actual password change logic
-                _changePassword(
-                  context,
-                  currentPasswordController.text,
-                  newPasswordController.text,
->>>>>>> 6d71bf984356c596bcea5ebc021d84871ef04b2f
                 );
               },
               child: const Text('Confirm'),
