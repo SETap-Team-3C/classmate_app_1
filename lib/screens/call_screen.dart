@@ -1,9 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CallScreen extends StatefulWidget {
-  const CallScreen({super.key, required this.userName});
+  const CallScreen({
+    super.key,
+    required this.userName,
+    this.userPhone,
+    this.launchFn,
+  });
 
   final String userName;
+  final String? userPhone;
+  final Future<bool> Function(Uri uri)? launchFn;
+
+  static Future<bool> _defaultLaunch(Uri uri) {
+    return launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
 
   @override
   State<CallScreen> createState() => _CallScreenState();
@@ -12,14 +24,42 @@ class CallScreen extends StatefulWidget {
 class _CallScreenState extends State<CallScreen> {
   bool _isCalling = false;
 
-  void _toggleCall() {
-    setState(() {
-      _isCalling = !_isCalling;
-    });
+  Future<void> _toggleCall() async {
+    if (_isCalling) {
+      setState(() {
+        _isCalling = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Call ended')));
+      return;
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(_isCalling ? 'Call started' : 'Call ended')),
-    );
+    final phone = widget.userPhone?.trim() ?? '';
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No phone number found for this contact')),
+      );
+      return;
+    }
+
+    final uri = Uri(scheme: 'tel', path: phone);
+    final launched = await (widget.launchFn ?? CallScreen._defaultLaunch)(uri);
+
+    if (!mounted) return;
+
+    if (launched) {
+      setState(() {
+        _isCalling = true;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Opening dialer for $phone')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the dialer')),
+      );
+    }
   }
 
   @override
@@ -44,6 +84,25 @@ class _CallScreenState extends State<CallScreen> {
               widget.userName,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
             ),
+            if ((widget.userPhone ?? '').isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                widget.userPhone!,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'This opens the phone dialer using the saved contact number.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
             const SizedBox(height: 32),
             FloatingActionButton.extended(
               onPressed: _toggleCall,
@@ -51,7 +110,7 @@ class _CallScreenState extends State<CallScreen> {
                   ? Theme.of(context).colorScheme.error
                   : Theme.of(context).colorScheme.secondary,
               icon: Icon(_isCalling ? Icons.call_end : Icons.call),
-              label: Text(_isCalling ? 'End Call' : 'Start Call'),
+              label: Text(_isCalling ? 'End Call' : 'Open Dialer'),
             ),
           ],
         ),

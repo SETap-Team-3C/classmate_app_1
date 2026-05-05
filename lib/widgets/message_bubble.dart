@@ -26,6 +26,33 @@ class MessageBubble extends StatelessWidget {
     this.onStarToggle,
   });
 
+  void _showReadReceiptDetails(BuildContext context, String readStatusText) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Message Read'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Read receipt:'),
+            const SizedBox(height: 12),
+            Text(
+              readStatusText,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _confirmAndPerform(
     BuildContext context, {
     required String title,
@@ -48,7 +75,9 @@ class MessageBubble extends StatelessWidget {
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(
               'Delete',
-              style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.error,
+              ),
             ),
           ),
         ],
@@ -60,7 +89,9 @@ class MessageBubble extends StatelessWidget {
     await action.call();
 
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Message deleted')));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Message deleted')));
   }
 
   @override
@@ -94,53 +125,70 @@ class MessageBubble extends StatelessWidget {
                 ),
                 child: GestureDetector(
                   onLongPress: isCurrentUser && onDeleteForEveryone != null
-                    ? () => _confirmAndPerform(
-                      context,
-                      title: 'Delete Message for Everyone',
-                      confirmText:
-                        'This will remove the message for everyone in the chat. Continue?',
-                      action: onDeleteForEveryone,
-                      )
-                    : (onDeleteForMe != null
                       ? () => _confirmAndPerform(
-                        context,
-                        title: 'Delete Message',
-                        confirmText:
-                          'Are you sure you want to delete your message for you?',
-                        action: onDeleteForMe,
+                          context,
+                          title: 'Delete Message for Everyone',
+                          confirmText:
+                              'This will remove the message for everyone in the chat. Continue?',
+                          action: onDeleteForEveryone,
                         )
-                      : null),
+                      : (onDeleteForMe != null
+                            ? () => _confirmAndPerform(
+                                context,
+                                title: 'Delete Message',
+                                confirmText:
+                                    'Are you sure you want to delete your message for you?',
+                                action: onDeleteForMe,
+                              )
+                            : null),
                   child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          text,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: isCurrentUser ? cs.onPrimaryContainer : cs.onSurface,
-                          ),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        text,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: isCurrentUser
+                              ? cs.onPrimaryContainer
+                              : cs.onSurface,
                         ),
+                      ),
                       if (isCurrentUser)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isRead ? Icons.done_all : Icons.done,
-                                size: 14,
-                                color: isRead ? cs.primary : cs.onSurface.withOpacity(0.7),
-                              ),
-                              const SizedBox(width: 2),
-                              Text(
-                                isRead ? 'Seen' : 'Sent',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: isRead ? cs.primary : cs.onSurface.withOpacity(0.7),
-                                  fontWeight: FontWeight.w500,
+                          child: GestureDetector(
+                            onTap: isRead
+                                ? () => _showReadReceiptDetails(
+                                    context,
+                                    readStatusText,
+                                  )
+                                : null,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  isRead ? Icons.done_all : Icons.done,
+                                  size: 14,
+                                  color: isRead
+                                      ? cs.primary
+                                      : cs.onSurface.withOpacity(0.7),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 2),
+                                Text(
+                                  isRead ? 'Seen' : 'Sent',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: isRead
+                                        ? cs.primary
+                                        : cs.onSurface.withOpacity(0.7),
+                                    fontWeight: FontWeight.w500,
+                                    decoration: isRead
+                                        ? TextDecoration.underline
+                                        : null,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                     ],
@@ -148,7 +196,10 @@ class MessageBubble extends StatelessWidget {
                 ),
               ),
               // Show options menu (delete for me, delete for everyone, star/unstar)
-              if (onDeleteForMe != null || onDeleteForEveryone != null || onStarToggle != null || onDelete != null)
+              if (onDeleteForMe != null ||
+                  onDeleteForEveryone != null ||
+                  onStarToggle != null ||
+                  onDelete != null)
                 Positioned(
                   right: 6,
                   top: 6,
@@ -159,16 +210,19 @@ class MessageBubble extends StatelessWidget {
                         await _confirmAndPerform(
                           context,
                           title: 'Delete Message',
-                          confirmText: 'Are you sure you want to delete your message?',
+                          confirmText:
+                              'Are you sure you want to delete your message?',
                           action: onDeleteForMe,
                         );
                         return;
                       }
-                      if (value == 'delete_everyone' && onDeleteForEveryone != null) {
+                      if (value == 'delete_everyone' &&
+                          onDeleteForEveryone != null) {
                         await _confirmAndPerform(
                           context,
                           title: 'Delete Message for Everyone',
-                          confirmText: 'This will remove the message for everyone in the chat. Continue?',
+                          confirmText:
+                              'This will remove the message for everyone in the chat. Continue?',
                           action: onDeleteForEveryone,
                         );
                         return;
@@ -181,7 +235,8 @@ class MessageBubble extends StatelessWidget {
                         await _confirmAndPerform(
                           context,
                           title: 'Delete Message',
-                          confirmText: 'Are you sure you want to delete your message?',
+                          confirmText:
+                              'Are you sure you want to delete your message?',
                           action: onDelete,
                         );
                         return;
@@ -191,62 +246,68 @@ class MessageBubble extends StatelessWidget {
                       final items = <PopupMenuEntry<String>>[];
 
                       if (onStarToggle != null) {
-                        items.add(PopupMenuItem<String>(
-                          value: 'star',
-                          child: Row(
-                            children: [
-                              Icon(
-                                isStarred ? Icons.star : Icons.star_border,
-                                color: isStarred ? cs.secondary : cs.onSurface,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(isStarred ? 'Unstar' : 'Star'),
-                            ],
+                        items.add(
+                          PopupMenuItem<String>(
+                            value: 'star',
+                            child: Row(
+                              children: [
+                                Icon(
+                                  isStarred ? Icons.star : Icons.star_border,
+                                  color: isStarred
+                                      ? cs.secondary
+                                      : cs.onSurface,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(isStarred ? 'Unstar' : 'Star'),
+                              ],
+                            ),
                           ),
-                        ));
+                        );
                       }
 
                       if (onDeleteForMe != null) {
-                        items.add(PopupMenuItem<String>(
-                          value: 'delete_me',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline, color: cs.onSurface),
-                              const SizedBox(width: 8),
-                              const Text('Delete for me'),
-                            ],
+                        items.add(
+                          PopupMenuItem<String>(
+                            value: 'delete_me',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_outline, color: cs.onSurface),
+                                const SizedBox(width: 8),
+                                const Text('Delete for me'),
+                              ],
+                            ),
                           ),
-                        ));
+                        );
                       }
 
                       // Single 'Delete' entry for older tests that rely on a single callback.
                       if (onDelete != null) {
-                        items.add(const PopupMenuItem<String>(
-                          value: 'delete_generic',
-                          child: Text('Delete'),
-                        ));
+                        items.add(
+                          const PopupMenuItem<String>(
+                            value: 'delete_generic',
+                            child: Text('Delete'),
+                          ),
+                        );
                       }
 
                       if (isCurrentUser && onDeleteForEveryone != null) {
-                        items.add(PopupMenuItem<String>(
-                          value: 'delete_everyone',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_forever, color: cs.error),
-                              const SizedBox(width: 8),
-                              const Text('Delete for everyone'),
-                            ],
+                        items.add(
+                          PopupMenuItem<String>(
+                            value: 'delete_everyone',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete_forever, color: cs.error),
+                                const SizedBox(width: 8),
+                                const Text('Delete for everyone'),
+                              ],
+                            ),
                           ),
-                        ));
+                        );
                       }
 
                       return items;
                     },
-                    child: Icon(
-                      Icons.more_vert,
-                      color: cs.onSurface,
-                      size: 18,
-                    ),
+                    child: Icon(Icons.more_vert, color: cs.onSurface, size: 18),
                   ),
                 ),
             ],
@@ -257,7 +318,10 @@ class MessageBubble extends StatelessWidget {
             padding: const EdgeInsets.only(right: 12, top: 2),
             child: Text(
               readStatusText,
-              style: TextStyle(fontSize: 10, color: cs.onSurface.withOpacity(0.7)),
+              style: TextStyle(
+                fontSize: 10,
+                color: cs.onSurface.withOpacity(0.7),
+              ),
             ),
           ),
       ],
