@@ -3,13 +3,17 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/theme_provider.dart';
 import '../../../widets/app_logo.dart';
 import '../../../widets/enhanced_avatar.dart';
+import '../../general_settings_screen.dart';
 import '../../chat_page.dart';
 import '../login_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
-  const ChatListScreen({super.key});
+  const ChatListScreen({super.key, required this.themeProvider});
+
+  final ThemeProvider themeProvider;
 
   @override
   State<ChatListScreen> createState() => _ChatListScreenState();
@@ -38,12 +42,25 @@ class _ChatListScreenState extends State<ChatListScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = FirebaseAuth.instance.currentUser;
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
-        title: const AppLogo(iconSize: 24),
+        title: const AppLogo(iconSize: 32, useImage: true, imagePath: 'assets/app_logo.png'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      GeneralSettingsScreen(themeProvider: widget.themeProvider),
+                ),
+              );
+            },
+          ),
           if (_isSigningOut)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
@@ -91,10 +108,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   print('Signed out successfully');
 
                   if (!mounted) return;
-
-                  // Navigate back to login screen
                   Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          LoginScreen(themeProvider: widget.themeProvider),
+                    ),
                     (route) => false,
                   );
                   print('Navigated to login screen');
@@ -195,44 +213,72 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 ),
               ),
               Expanded(
-                child: ListView.separated(
-                  itemCount: filteredUsers.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final user = filteredUsers[index].data();
-                    final uid = (user['uid'] ?? filteredUsers[index].id)
-                        .toString();
-                    final name = (user['name'] ?? 'No Name').toString();
-                    final email = (user['email'] ?? '').toString();
-
-                    return ListTile(
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      leading: EnhancedAvatar(name: name, radius: 24),
-                      title: Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text(
-                        email,
-                        style: const TextStyle(fontSize: 13),
-                      ),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                ChatPage(receiverId: uid, receiverName: name),
-                          ),
-                        );
-                      },
-                    );
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    // Trigger refresh
+                    await Future.delayed(const Duration(milliseconds: 500));
                   },
+                  child: ListView.separated(
+                    itemCount: filteredUsers.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final user = filteredUsers[index].data();
+                      final uid = (user['uid'] ?? filteredUsers[index].id)
+                          .toString();
+                      final name = (user['name'] ?? 'No Name').toString();
+                      final email = (user['email'] ?? '').toString();
+                      final isOnline = user['isOnline'] as bool? ?? false;
+
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        leading: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            EnhancedAvatar(name: name, radius: 24),
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: isOnline ? cs.secondary : cs.onSurface.withOpacity(0.4),
+                                    border: Border.all(
+                                      color: cs.background,
+                                      width: 2,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        title: Text(
+                          name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Text(
+                          isOnline ? 'Online' : email,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: isOnline ? cs.secondary : null,
+                            fontWeight: isOnline ? FontWeight.w500 : null,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ChatPage(receiverId: uid, receiverName: name),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
