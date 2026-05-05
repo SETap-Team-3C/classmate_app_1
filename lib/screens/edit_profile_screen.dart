@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+  const EditProfileScreen({super.key});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -80,7 +80,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           builder: (context) => AlertDialog(
             title: const Text('Email change requested'),
             content: const Text(
-                'We saved your requested email. To complete an email change you may need to re-authenticate (sign out and sign in) or perform the change from your account settings.'),
+              'We saved your requested email. To complete an email change you may need to re-authenticate (sign out and sign in) or perform the change from your account settings.',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -92,15 +93,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Profile updated')));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save profile: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save profile: $e')));
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -116,10 +117,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   int _bottomIndex = 3; // default selected 'Chats'
 
-  Widget _buildBottomNavItem({required IconData icon, required String label, required int index, int badgeCount = 0}) {
+  Widget _buildBottomNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+    int badgeCount = 0,
+  }) {
     final selected = _bottomIndex == index;
     final cs = Theme.of(context).colorScheme;
-    final color = selected ? cs.primary : cs.onSurface.withOpacity(0.6);
+    final color = selected ? cs.primary : cs.onSurface.withValues(alpha: 0.6);
 
     return Expanded(
       child: InkWell(
@@ -147,11 +153,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(color: cs.onSecondary, width: 1.5),
                         ),
-                        constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
                         child: Center(
                           child: Text(
                             badgeCount > 99 ? '99+' : badgeCount.toString(),
-                            style: TextStyle(color: cs.onSecondary, fontSize: 10, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: cs.onSecondary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -180,7 +193,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               TextFormField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Full name'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Please enter your name' : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Please enter your name'
+                    : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
@@ -204,10 +219,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 20),
               _loading
                   ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _save,
-                      child: const Text('Save'),
-                    ),
+                  : ElevatedButton(onPressed: _save, child: const Text('Save')),
             ],
           ),
         ),
@@ -215,15 +227,26 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
-          border: Border(top: BorderSide(color: Theme.of(context).colorScheme.outline)),
+          border: Border(
+            top: BorderSide(color: Theme.of(context).colorScheme.outline),
+          ),
         ),
         height: 64,
         child: Row(
           children: [
             _buildBottomNavItem(icon: Icons.update, label: 'Updates', index: 0),
             _buildBottomNavItem(icon: Icons.call, label: 'Calls', index: 1),
-            _buildBottomNavItem(icon: Icons.group, label: 'Communities', index: 2),
-            _buildBottomNavItem(icon: Icons.chat_bubble, label: 'Chats', index: 3, badgeCount: 5),
+            _buildBottomNavItem(
+              icon: Icons.group,
+              label: 'Communities',
+              index: 2,
+            ),
+            _buildBottomNavItem(
+              icon: Icons.chat_bubble,
+              label: 'Chats',
+              index: 3,
+              badgeCount: 5,
+            ),
             _buildBottomNavItem(icon: Icons.person, label: 'You', index: 4),
           ],
         ),

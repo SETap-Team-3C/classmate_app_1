@@ -81,11 +81,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () async {
+                final navigator = Navigator.of(context);
+                final messenger = ScaffoldMessenger.of(context);
                 try {
-                  // capture navigator/messenger before awaiting
-                  final navigator = Navigator.of(context);
-                  final messenger = ScaffoldMessenger.of(context);
-
                   // Show confirmation dialog
                   final confirmed = await showDialog<bool>(
                     context: context,
@@ -250,9 +248,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                 shape: BoxShape.circle,
                                 color: isOnline
                                     ? cs.secondary
-                                    : cs.onSurface.withOpacity(0.4),
+                                    : cs.onSurface.withValues(alpha: 0.4),
                                 border: Border.all(
-                                  color: cs.background,
+                                  color: cs.surfaceContainer,
                                   width: 2,
                                 ),
                               ),

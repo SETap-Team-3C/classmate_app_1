@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
+import 'package:flutter/foundation.dart';
 
 class ErrorHandler {
   /// Converts Firebase exceptions to user-friendly messages
@@ -83,15 +84,15 @@ class ErrorHandler {
     final timestamp = DateTime.now().toString();
     final errorMessage = getErrorMessage(error);
     final contextMessage = context != null ? ' (Context: $context)' : '';
-    print('[$timestamp] Error: $errorMessage$contextMessage');
-    print('Stack trace: $error');
+    debugPrint('[$timestamp] Error: $errorMessage$contextMessage');
+    debugPrint('Stack trace: $error');
   }
 
   /// Show error in a user-friendly format
   static void showErrorMessage(String message) {
     // Implementation depends on your UI framework
     // This is a placeholder for error display logic
-    print('Error Message: $message');
+    debugPrint('Error Message: $message');
   }
 }
 

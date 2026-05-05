@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 class UserService {
   final FirebaseAuth _auth;
@@ -20,7 +21,7 @@ class UserService {
         'lastSeen': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error updating online status: $e');
+      debugPrint('Error updating online status: $e');
     }
   }
 
@@ -58,7 +59,7 @@ class UserService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      print('Error updating profile: $e');
+      debugPrint('Error updating profile: $e');
     }
   }
 
@@ -68,7 +69,7 @@ class UserService {
       final doc = await _firestore.collection('users').doc(userId).get();
       return doc.data();
     } catch (e) {
-      print('Error getting profile: $e');
+      debugPrint('Error getting profile: $e');
       return null;
     }
   }

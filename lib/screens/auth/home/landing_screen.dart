@@ -28,9 +28,9 @@ class LandingScreen extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              theme.colorScheme.primary.withOpacity(0.12),
+              theme.colorScheme.primary.withValues(alpha: 0.12),
               theme.colorScheme.surface,
-              theme.colorScheme.secondary.withOpacity(0.08),
+              theme.colorScheme.secondary.withValues(alpha: 0.08),
             ],
           ),
         ),
@@ -49,7 +49,9 @@ class LandingScreen extends StatelessWidget {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).shadowColor.withOpacity(0.08),
+                          color: Theme.of(
+                            context,
+                          ).shadowColor.withValues(alpha: 0.08),
                           blurRadius: 24,
                           offset: const Offset(0, 10),
                         ),

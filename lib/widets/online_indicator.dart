@@ -15,8 +15,13 @@ class OnlineIndicator extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: isOnline ? Colors.green : theme.colorScheme.onSurface.withOpacity(0.4),
-        border: Border.all(color: borderColor, width: (size / 8).clamp(1.0, 4.0)),
+        color: isOnline
+            ? Colors.green
+            : theme.colorScheme.onSurface.withValues(alpha: 0.4),
+        border: Border.all(
+          color: borderColor,
+          width: (size / 8).clamp(1.0, 4.0),
+        ),
       ),
     );
   }

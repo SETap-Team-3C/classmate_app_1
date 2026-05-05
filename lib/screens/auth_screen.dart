@@ -195,6 +195,7 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -230,7 +231,7 @@ class _AuthScreenState extends State<AuthScreen> {
                       BoxShadow(
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.20),
+                        ).colorScheme.primary.withValues(alpha: 0.20),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),

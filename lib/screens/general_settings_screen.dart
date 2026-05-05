@@ -44,7 +44,9 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfileSettings()),
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileSettings(),
+                      ),
                     );
                   },
                 ),
@@ -54,7 +56,9 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfileSettings()),
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileSettings(),
+                      ),
                     );
                   },
                 ),
@@ -111,6 +115,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                   title: const Text('Theme'),
                   subtitle: Text(isDarkMode ? 'Dark' : 'Light'),
                   onTap: () {
+                    final navigator = Navigator.of(context);
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
@@ -126,7 +131,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                                 await widget.themeProvider.setDarkMode(false);
                                 if (!mounted) return;
                                 setState(() {});
-                                Navigator.pop(context);
+                                navigator.pop();
                               },
                             ),
                             RadioListTile(
@@ -137,7 +142,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                                 await widget.themeProvider.setDarkMode(true);
                                 if (!mounted) return;
                                 setState(() {});
-                                Navigator.pop(context);
+                                navigator.pop();
                               },
                             ),
                           ],
@@ -182,6 +187,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
               onPressed: () async {
+                final navigator = Navigator.of(context);
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -189,14 +195,14 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                     content: const Text('Are you sure you want to logout?'),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => navigator.pop(),
                         child: const Text('Cancel'),
                       ),
                       TextButton(
                         onPressed: () async {
                           await FirebaseAuth.instance.signOut();
                           if (!mounted) return;
-                          Navigator.pop(context);
+                          navigator.pop();
                         },
                         child: const Text('Logout'),
                       ),
