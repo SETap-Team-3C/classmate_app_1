@@ -11,7 +11,11 @@
 #include <firebase_auth/firebase_auth_plugin_c_api.h>
 #include <firebase_core/firebase_core_plugin_c_api.h>
 <<<<<<< HEAD
+<<<<<<< HEAD
 #include <firebase_storage/firebase_storage_plugin_c_api.h>
+=======
+#include <url_launcher_windows/url_launcher_windows.h>
+>>>>>>> 15b7d0c790c990635a49d21c590eb0be943f3e83
 =======
 #include <url_launcher_windows/url_launcher_windows.h>
 >>>>>>> 15b7d0c790c990635a49d21c590eb0be943f3e83
@@ -26,8 +30,13 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
   FirebaseCorePluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FirebaseCorePluginCApi"));
 <<<<<<< HEAD
+<<<<<<< HEAD
   FirebaseStoragePluginCApiRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("FirebaseStoragePluginCApi"));
+=======
+  UrlLauncherWindowsRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("UrlLauncherWindows"));
+>>>>>>> 15b7d0c790c990635a49d21c590eb0be943f3e83
 =======
   UrlLauncherWindowsRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("UrlLauncherWindows"));
