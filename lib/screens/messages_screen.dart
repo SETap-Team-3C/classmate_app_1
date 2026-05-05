@@ -29,6 +29,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
   FirebaseFirestore get _firestore =>
       widget.firestore ?? FirebaseFirestore.instance;
 
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
   String _buildChatId(String userA, String userB) {
     final ids = [userA, userB]..sort();
     return '${ids[0]}_${ids[1]}';
@@ -181,7 +184,42 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   ),
                 ),
                 IconButton(
-                  onPressed: _showAddUserDialog,
+                  onPressed: () {
+                    showModalBottomSheet<void>(
+                      context: context,
+                      builder: (sheetContext) => Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: _searchController,
+                              onChanged: (value) {
+                                setState(() => _searchQuery = value.toLowerCase());
+                              },
+                              decoration: InputDecoration(
+                                hintText: 'Search chats by name...',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                prefixIcon: const Icon(Icons.search),
+                              ),
+                              autofocus: true,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() => _searchQuery = '');
+                                Navigator.pop(sheetContext);
+                              },
+                              child: const Text('Clear'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.search),
                 ),
                 IconButton(
@@ -191,8 +229,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleMenuSelection(value),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'new_group', child: Text('New group')),
-                    const PopupMenuItem(value: 'settings', child: Text('Settings')),
+                    const PopupMenuItem(
+                      value: 'new_group',
+                      child: Text('New group'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'settings',
+                      child: Text('Settings'),
+                    ),
                   ],
                 ),
               ],
@@ -244,12 +288,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
                         );
                       }
 
+                      final filteredChats = _searchQuery.isEmpty
+                          ? chats
+                          : chats.where((chat) {
+                              final chatData =
+                                  chat.data() as Map<String, dynamic>;
+                              final usernames = Map<String, dynamic>.from(
+                                chatData['usernames'] ?? {},
+                              );
+                              final names = usernames.values
+                                  .toString()
+                                  .toLowerCase();
+                              return names.contains(_searchQuery);
+                            }).toList();
+
                       return ListView.builder(
-                        itemCount: chats.length,
+                        itemCount: filteredChats.length,
                         itemBuilder: (context, index) {
                           final chatData =
-                              chats[index].data() as Map<String, dynamic>;
-                          final chatId = chats[index].id;
+                              filteredChats[index].data()
+                                  as Map<String, dynamic>;
+                          final chatId = filteredChats[index].id;
                           final participants = List<String>.from(
                             chatData['participants'] ?? [],
                           );
@@ -312,9 +371,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: cs.surface,
-                                    border: Border.all(
-                                      color: cs.outline,
-                                    ),
+                                    border: Border.all(color: cs.outline),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   padding: const EdgeInsets.symmetric(
@@ -336,13 +393,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                       Expanded(
                                         flex: 2,
                                         child: Center(
-                                            child: Text(
+                                          child: Text(
                                             unreadText,
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: unreadCount > 0
                                                   ? cs.error
-                                                  : cs.onSurface.withOpacity(0.7),
+                                                  : cs.onSurface.withOpacity(
+                                                      0.7,
+                                                    ),
                                               fontWeight: unreadCount > 0
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
@@ -359,12 +418,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               MainAxisAlignment.center,
                                           crossAxisAlignment:
                                               CrossAxisAlignment.end,
-                                            children: [
+                                          children: [
                                             Text(
                                               _formatTimeAgo(lastTimestamp),
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: cs.onSurface.withOpacity(0.7),
+                                                color: cs.onSurface.withOpacity(
+                                                  0.7,
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -402,7 +463,8 @@ class SearchUser {
 }
 
 class UserSearchBottomSheet extends StatefulWidget {
-  const UserSearchBottomSheet({super.key, 
+  const UserSearchBottomSheet({
+    super.key,
     this.firestore,
     required this.currentUserId,
     required this.onUserSelected,

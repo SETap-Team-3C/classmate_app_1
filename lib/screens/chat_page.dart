@@ -96,9 +96,48 @@ class _ChatPageState extends State<ChatPage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.receiverName),
+            Row(
+              children: [
+                Expanded(child: Text(widget.receiverName)),
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(widget.receiverId)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    final isOnline =
+                        snapshot.data?.get('isOnline') as bool? ?? false;
+                    return Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: isOnline ? Colors.green : Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 2),
-            const Text('Direct Message', style: TextStyle(fontSize: 12)),
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(widget.receiverId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                final isTyping =
+                    snapshot.data?.get('isTyping') as bool? ?? false;
+                return Text(
+                  isTyping ? 'typing...' : 'Direct Message',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isTyping ? Colors.orange : null,
+                    fontStyle: isTyping ? FontStyle.italic : FontStyle.normal,
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -216,6 +255,24 @@ class _ChatPageState extends State<ChatPage> {
                       controller: _messageController,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),
+                      onChanged: (value) async {
+                        final currentUser = _auth.currentUser;
+                        if (currentUser != null) {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(currentUser.uid)
+                              .update({'isTyping': value.isNotEmpty});
+                          if (value.isEmpty) {
+                            await Future.delayed(const Duration(seconds: 1));
+                            if (_messageController.text.isEmpty && mounted) {
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(currentUser.uid)
+                                  .update({'isTyping': false});
+                            }
+                          }
+                        }
+                      },
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
                         border: OutlineInputBorder(

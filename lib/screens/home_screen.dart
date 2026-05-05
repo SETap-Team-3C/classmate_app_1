@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'call_contacts_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
-import 'starred_messages_screen.dart';
 import 'notification_screen.dart';
 import 'communities_screen.dart';
 import '../core/theme/theme_provider.dart';
