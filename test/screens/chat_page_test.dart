@@ -20,7 +20,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Bob'), findsOneWidget);
-    expect(find.text('No messages yet. Start the conversation.'), findsOneWidget);
+    expect(
+      find.text('No messages yet. Start the conversation.'),
+      findsOneWidget,
+    );
     expect(find.byIcon(Icons.arrow_back), findsOneWidget);
   });
 }
