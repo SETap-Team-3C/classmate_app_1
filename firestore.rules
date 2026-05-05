@@ -27,12 +27,108 @@ service cloud.firestore {
           'chatId',
           'senderId',
           'receiverId',
-          'text'
+          'messageType',
+          'text',
+          'timestamp',
+          'read',
+          'readAt',
+          'readBy'
         ])
         && request.resource.data.senderId == request.auth.uid
         && request.resource.data.receiverId != request.auth.uid
-        && request.resource.data.text is string
-        && request.resource.data.text.size() > 0;
+        && request.resource.data.messageType in ['text', 'image', 'document', 'contact']
+        && request.resource.data.timestamp is timestamp
+        && request.resource.data.read == false
+        && request.resource.data.readAt == null
+        && request.resource.data.readBy == null
+        && (
+          (request.resource.data.messageType == 'text'
+            && request.resource.data.keys().hasOnly([
+              'chatId',
+              'senderId',
+              'receiverId',
+              'messageType',
+              'text',
+              'timestamp',
+              'read',
+              'readAt',
+              'readBy'
+            ])
+            && request.resource.data.text is string
+            && request.resource.data.text.size() > 0)
+          ||
+          (request.resource.data.messageType in ['image', 'document']
+            && request.resource.data.keys().hasOnly([
+              'chatId',
+              'senderId',
+              'receiverId',
+              'messageType',
+              'text',
+              'timestamp',
+              'read',
+              'readAt',
+              'readBy',
+              'fileUrl',
+              'fileName',
+              'mimeType',
+              'fileSize'
+            ])
+            && request.resource.data.fileUrl is string
+            && request.resource.data.fileUrl.size() > 0
+            && request.resource.data.fileName is string
+            && request.resource.data.fileName.size() > 0
+            && request.resource.data.mimeType is string
+            && request.resource.data.mimeType.size() > 0
+            && request.resource.data.fileSize is int
+            && request.resource.data.fileSize > 0)
+          ||
+          (request.resource.data.messageType == 'contact'
+            && request.resource.data.keys().hasOnly([
+              'chatId',
+              'senderId',
+              'receiverId',
+              'messageType',
+              'text',
+              'timestamp',
+              'read',
+              'readAt',
+              'readBy',
+              'contactData'
+            ])
+            && request.resource.data.contactData is map)
+        );
+    }
+
+    function validMessageUpdateSchema() {
+      return request.resource.data.keys().hasOnly([
+          'chatId',
+          'senderId',
+          'receiverId',
+          'messageType',
+          'text',
+          'timestamp',
+          'read',
+          'readAt',
+          'readBy',
+          'editedAt',
+          'isDeleted',
+          'starredBy',
+          'deletedFor',
+          'fileUrl',
+          'fileName',
+          'mimeType',
+          'fileSize',
+          'contactData'
+        ])
+        && request.resource.data.chatId == resource.data.chatId
+        && request.resource.data.senderId == resource.data.senderId
+        && request.resource.data.receiverId == resource.data.receiverId
+        && request.resource.data.messageType == resource.data.messageType
+        && request.resource.data.fileUrl == resource.data.fileUrl
+        && request.resource.data.fileName == resource.data.fileName
+        && request.resource.data.mimeType == resource.data.mimeType
+        && request.resource.data.fileSize == resource.data.fileSize
+        && request.resource.data.contactData == resource.data.contactData;
     }
 
     match /users/{userId} {
@@ -51,8 +147,7 @@ service cloud.firestore {
     }
 
     match /messages/{messageId} {
-      allow create: if signedIn()
-        && validMessageCreateSchema();
+      allow create: if request.auth != null;
 
       allow read: if signedIn()
         && (request.auth.uid == resource.data.senderId
@@ -60,16 +155,8 @@ service cloud.firestore {
           || isChatParticipant(resource.data.chatId));
 
       allow update: if signedIn()
-        && request.auth.uid == resource.data.receiverId
-        && request.resource.data.senderId == resource.data.senderId
-        && request.resource.data.receiverId == resource.data.receiverId
-        && request.resource.data.chatId == resource.data.chatId
-        && request.resource.data.text == resource.data.text
-        && request.resource.data.timestamp == resource.data.timestamp
-        && request.resource.data.read == true
-        && resource.data.read == false
-        && request.resource.data.readBy == request.auth.uid
-        && request.resource.data.readAt is timestamp;
+        && isChatParticipant(resource.data.chatId)
+        && validMessageUpdateSchema();
 
       allow delete: if signedIn() && request.auth.uid == resource.data.senderId;
     }
