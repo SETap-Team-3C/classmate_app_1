@@ -5,8 +5,6 @@ import 'auth/login_screen.dart';
 
 import '../core/theme/theme_provider.dart';
 
-import 'profile_settings.dart';
-
 import 'edit_profile_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
@@ -34,51 +32,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'Dutch',
     'Chinese',
     'Japanese',
-    'Korean',
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadLanguagePreference();
-  }
-
-  Future<void> _loadLanguagePreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() {
-      _selectedLanguage = prefs.getString('selectedLanguage') ?? 'English';
-    });
-  }
-
-  Future<void> _setLanguage(String language) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selectedLanguage', language);
-    if (!mounted) return;
-    setState(() {
-      _selectedLanguage = language;
-    });
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Language changed to $language')));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Settings', style: Theme.of(context).textTheme.titleLarge),
-        centerTitle: true,
-      ),
-      body: AnimatedBuilder(
-        animation: widget.themeProvider,
-        builder: (context, _) {
-          final isDarkMode = widget.themeProvider.isDarkMode;
-          final cs = Theme.of(context).colorScheme;
-          final tt = Theme.of(context).textTheme;
-          final muted = cs.onSurface.withOpacity(0.7);
           return ListView(
             children: [
               // Account Section
@@ -162,7 +115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               const Divider(),
 
-              // Theme Section
+              // Appearance Section
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -234,6 +187,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       subtitle: Text(
                         _selectedLanguage,
                         style: tt.bodySmall?.copyWith(color: muted),
+                      ),
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(
+                              'Select Language',
+                              style: tt.titleMedium,
+                            ),
+                            content: SizedBox(
+                              width: double.maxFinite,
+                              child: ListView(
+                                shrinkWrap: true,
+                                children: _languages
+                                    .map(
+                                      (language) => RadioListTile<String>(
+                                        title: Text(language),
+                                        value: language,
+                                        groupValue: _selectedLanguage,
+                                        onChanged: (value) {
+                                          if (value == null) return;
+                                          Navigator.pop(context);
+                                          _setLanguage(value);
+                                        },
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Cancel'),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(),
+
+              // Privacy Section
                       ),
                       onTap: () {
                         showDialog(

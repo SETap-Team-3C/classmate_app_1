@@ -55,6 +55,7 @@ class _AuthScreenState extends State<AuthScreen> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
 
     try {
@@ -180,11 +181,11 @@ class _AuthScreenState extends State<AuthScreen> {
         }
       }
     } on FirebaseAuthException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(error.message ?? 'Authentication failed.')),
       );
     } on FirebaseException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(error.message ?? 'Authentication failed.')),
       );
     } finally {
@@ -194,7 +195,6 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
