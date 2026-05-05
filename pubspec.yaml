@@ -32,20 +32,8 @@ dependencies:
   firebase_analytics: ^12.0.2
   firebase_storage: ^13.2.0
   shared_preferences: ^2.5.5
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-  image_picker: ^1.2.1
-=======
-  url_launcher: ^6.3.1
->>>>>>> 15b7d0c790c990635a49d21c590eb0be943f3e83
-=======
-  url_launcher: ^6.3.1
->>>>>>> 15b7d0c790c990635a49d21c590eb0be943f3e83
-=======
   image_picker: ^1.2.1
   url_launcher: ^6.3.1
->>>>>>> 4a00f2587222bc04c6ac9de0a90d9d1ad0f53e3c
 
 dev_dependencies:
   flutter_test:
