@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'call_contacts_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
-import 'starred_messages_screen.dart';
 import 'notification_screen.dart';
 import 'communities_screen.dart';
 import '../core/theme/theme_provider.dart';
@@ -67,8 +66,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) =>
-                          ProfileScreen(userId: userId, isCurrentUser: true, themeProvider: widget.themeProvider),
+                    builder: (_) => ProfileScreen(
+                      userId: userId,
+                      isCurrentUser: true,
+                      themeProvider: widget.themeProvider,
+                    ),
                   ),
                 );
               }
@@ -86,22 +88,13 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: Icon(Icons.update),
             label: 'Updates',
           ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.call),
-            label: 'Calls',
-          ),
+          const BottomNavigationBarItem(icon: Icon(Icons.call), label: 'Calls'),
           const BottomNavigationBarItem(
             icon: Icon(Icons.group),
             label: 'Communities',
           ),
-          BottomNavigationBarItem(
-            icon: _buildChatsIcon(),
-            label: 'Chats',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'You',
-          ),
+          BottomNavigationBarItem(icon: _buildChatsIcon(), label: 'Chats'),
+          const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'You'),
         ],
         onTap: (idx) {
           setState(() => _currentIndex = idx);
@@ -113,7 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 3;
 
   Widget _buildBody(BuildContext context) {
-    final currentUser = widget.auth?.currentUser ?? FirebaseAuth.instance.currentUser;
+    final currentUser =
+        widget.auth?.currentUser ?? FirebaseAuth.instance.currentUser;
     final pages = <Widget>[
       const NotificationScreen(),
       const CallContactsScreen(),
@@ -125,7 +119,11 @@ class _HomeScreenState extends State<HomeScreen> {
               firestore: widget.firestore,
               themeProvider: widget.themeProvider ?? ThemeProvider(),
             ),
-      ProfileScreen(userId: currentUser?.uid ?? '', isCurrentUser: true, themeProvider: widget.themeProvider),
+      ProfileScreen(
+        userId: currentUser?.uid ?? '',
+        isCurrentUser: true,
+        themeProvider: widget.themeProvider,
+      ),
     ];
 
     return pages[_currentIndex];
@@ -140,10 +138,14 @@ class _HomeScreenState extends State<HomeScreen> {
           right: -6,
           top: -6,
           child: StreamBuilder<int>(
-            stream: widget.unreadCountStream ??
+            stream:
+                widget.unreadCountStream ??
                 widget.firestore
                     ?.collection('messages')
-                    .where('receiverId', isEqualTo: widget.auth?.currentUser?.uid)
+                    .where(
+                      'receiverId',
+                      isEqualTo: widget.auth?.currentUser?.uid,
+                    )
                     .where('read', isEqualTo: false)
                     .snapshots()
                     .map((s) => s.docs.length) ??
@@ -154,7 +156,10 @@ class _HomeScreenState extends State<HomeScreen> {
               if (count <= 0) return const SizedBox.shrink();
               return Container(
                 padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(color: cs.secondary, shape: BoxShape.circle),
+                decoration: BoxDecoration(
+                  color: cs.secondary,
+                  shape: BoxShape.circle,
+                ),
                 child: Text(
                   count > 9 ? '9+' : '$count',
                   style: TextStyle(fontSize: 10, color: cs.onSecondary),

@@ -27,19 +27,12 @@ service cloud.firestore {
           'chatId',
           'senderId',
           'receiverId',
-          'text',
-          'timestamp',
-          'read',
-          'readAt',
-          'readBy'
+          'text'
         ])
         && request.resource.data.senderId == request.auth.uid
         && request.resource.data.receiverId != request.auth.uid
         && request.resource.data.text is string
-        && request.resource.data.text.size() > 0
-        && request.resource.data.read == false
-        && request.resource.data.readAt == null
-        && request.resource.data.readBy == null;
+        && request.resource.data.text.size() > 0;
     }
 
     match /users/{userId} {

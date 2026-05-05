@@ -29,7 +29,8 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  ChatService get _chatService => widget.chatService ?? ChatService(auth: _auth);
+  ChatService get _chatService =>
+      widget.chatService ?? ChatService(auth: _auth);
 
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -58,9 +59,9 @@ class _ChatPageState extends State<ChatPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
     }
   }
 
@@ -80,14 +81,13 @@ class _ChatPageState extends State<ChatPage> {
             children: [
               Text(widget.receiverName),
               const SizedBox(height: 2),
-              const Text(
-                'Direct Message',
-                style: TextStyle(fontSize: 12),
-              ),
+              const Text('Direct Message', style: TextStyle(fontSize: 12)),
             ],
           ),
         ),
-        body: const Center(child: Text('No messages yet. Start the conversation.')),
+        body: const Center(
+          child: Text('No messages yet. Start the conversation.'),
+        ),
       );
     }
 
@@ -96,11 +96,60 @@ class _ChatPageState extends State<ChatPage> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.receiverName),
+            Row(
+              children: [
+                Expanded(child: Text(widget.receiverName)),
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(widget.receiverId)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    bool isOnline = false;
+                    if (snapshot.hasData && snapshot.data != null) {
+                      try {
+                        isOnline =
+                            snapshot.data?.get('isOnline') as bool? ?? false;
+                      } catch (e) {
+                        isOnline = false;
+                      }
+                    }
+                    return Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: isOnline ? Colors.green : Colors.grey,
+                        shape: BoxShape.circle,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
             const SizedBox(height: 2),
-            const Text(
-              'Direct Message',
-              style: TextStyle(fontSize: 12),
+            StreamBuilder<DocumentSnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(widget.receiverId)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                bool isTyping = false;
+                if (snapshot.hasData && snapshot.data != null) {
+                  try {
+                    isTyping = snapshot.data?.get('isTyping') as bool? ?? false;
+                  } catch (e) {
+                    isTyping = false;
+                  }
+                }
+                return Text(
+                  isTyping ? 'typing...' : 'Direct Message',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isTyping ? Colors.orange : null,
+                    fontStyle: isTyping ? FontStyle.italic : FontStyle.normal,
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -111,12 +160,16 @@ class _ChatPageState extends State<ChatPage> {
             child: currentUser == null
                 ? const Center(child: Text('Please sign in to view messages.'))
                 : StreamBuilder<List<Message>>(
-                    stream: _chatService.getMessages(currentUser.uid, widget.receiverId),
+                    stream: _chatService.getMessages(
+                      currentUser.uid,
+                      widget.receiverId,
+                    ),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         final err = snapshot.error;
                         // If Firestore permission denied, show a friendly empty state
-                        if (err is FirebaseException && err.code == 'permission-denied') {
+                        if (err is FirebaseException &&
+                            err.code == 'permission-denied') {
                           return const Center(child: Text('No messages yet.'));
                         }
 
@@ -135,8 +188,10 @@ class _ChatPageState extends State<ChatPage> {
 
                       // Sort by timestamp ascending
                       messages.sort((a, b) {
-                        final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
-                        final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
+                        final aMillis =
+                            a.timestamp?.millisecondsSinceEpoch ?? 0;
+                        final bMillis =
+                            b.timestamp?.millisecondsSinceEpoch ?? 0;
                         return aMillis.compareTo(bMillis);
                       });
 
@@ -144,7 +199,10 @@ class _ChatPageState extends State<ChatPage> {
                       for (final msg in messages) {
                         final isCurrentUser = msg.senderId == currentUser.uid;
                         if (!isCurrentUser && !msg.read) {
-                          _chatService.markMessageAsRead(msg.id, currentUser.uid);
+                          _chatService.markMessageAsRead(
+                            msg.id,
+                            currentUser.uid,
+                          );
                         }
                       }
 
@@ -154,32 +212,43 @@ class _ChatPageState extends State<ChatPage> {
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final message = messages[index];
-                          final isCurrentUser = message.senderId == currentUser.uid;
+                          final isCurrentUser =
+                              message.senderId == currentUser.uid;
 
                           final readStatusText = isCurrentUser
                               ? (message.read
-                                  ? 'seen ${TimeFormatter.formatTimeAgo(message.readAt)}'
-                                  : 'sent')
+                                    ? 'seen ${TimeFormatter.formatTimeAgo(message.readAt)}'
+                                    : 'sent')
                               : '';
 
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: MessageBubble(
                               messageId: message.id,
-                              text: message.isDeleted ? '[This message was deleted]' : message.text,
+                              text: message.isDeleted
+                                  ? '[This message was deleted]'
+                                  : message.text,
                               isCurrentUser: isCurrentUser,
                               isRead: message.read,
                               readStatusText: readStatusText,
                               isStarred: message.isStarredBy(currentUser.uid),
                               onStarToggle: () async {
-                                await _chatService.toggleStar(message.id, currentUser.uid);
+                                await _chatService.toggleStar(
+                                  message.id,
+                                  currentUser.uid,
+                                );
                               },
                               onDeleteForMe: () async {
-                                await _chatService.deleteMessageForMe(message.id, currentUser.uid);
+                                await _chatService.deleteMessageForMe(
+                                  message.id,
+                                  currentUser.uid,
+                                );
                               },
                               onDeleteForEveryone: isCurrentUser
                                   ? () async {
-                                      await _chatService.deleteMessage(message.id);
+                                      await _chatService.deleteMessage(
+                                        message.id,
+                                      );
                                     }
                                   : null,
                             ),
@@ -199,6 +268,24 @@ class _ChatPageState extends State<ChatPage> {
                       controller: _messageController,
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),
+                      onChanged: (value) async {
+                        final currentUser = _auth.currentUser;
+                        if (currentUser != null) {
+                          await FirebaseFirestore.instance
+                              .collection('users')
+                              .doc(currentUser.uid)
+                              .update({'isTyping': value.isNotEmpty});
+                          if (value.isEmpty) {
+                            await Future.delayed(const Duration(seconds: 1));
+                            if (_messageController.text.isEmpty && mounted) {
+                              await FirebaseFirestore.instance
+                                  .collection('users')
+                                  .doc(currentUser.uid)
+                                  .update({'isTyping': false});
+                            }
+                          }
+                        }
+                      },
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
                         border: OutlineInputBorder(
