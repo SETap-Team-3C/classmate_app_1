@@ -10,7 +10,6 @@ class ProfileSettings extends StatefulWidget {
 
 class _ProfileSettingsState extends State<ProfileSettings> {
   late User? _user;
-  bool _showPassword = false;
 
   @override
   void initState() {
@@ -21,10 +20,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Edit Profile'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Edit Profile'), centerTitle: true),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
@@ -40,11 +36,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                         ? NetworkImage(_user!.photoURL!)
                         : null,
                     child: _user?.photoURL == null
-                        ? Icon(
-                            Icons.person,
-                            size: 60,
-                            color: Colors.grey[600],
-                          )
+                        ? Icon(Icons.person, size: 60, color: Colors.grey[600])
                         : null,
                   ),
                   Positioned(
@@ -62,10 +54,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.blue,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 3,
-                          ),
+                          border: Border.all(color: Colors.white, width: 3),
                         ),
                         child: const Padding(
                           padding: EdgeInsets.all(8.0),
@@ -125,9 +114,10 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
   void _showChangeEmailDialog() {
     final TextEditingController newEmailController = TextEditingController();
-    final TextEditingController confirmEmailController = TextEditingController();
+    final TextEditingController confirmEmailController =
+        TextEditingController();
     final TextEditingController passwordController = TextEditingController();
-    bool _obscurePassword = true;
+    bool obscurePassword = true;
 
     showDialog(
       context: context,
@@ -185,7 +175,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                 // Current Password
                 TextField(
                   controller: passwordController,
-                  obscureText: _obscurePassword,
+                  obscureText: obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Current Password',
                     hintText: 'Enter your current password',
@@ -195,11 +185,13 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                        obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
-                          _obscurePassword = !_obscurePassword;
+                          obscurePassword = !obscurePassword;
                         });
                       },
                     ),
@@ -256,12 +248,16 @@ class _ProfileSettingsState extends State<ProfileSettings> {
     );
   }
 
-  Future<void> _changeEmail(BuildContext context, String newEmail, String password) async {
+  Future<void> _changeEmail(
+    BuildContext context,
+    String newEmail,
+    String password,
+  ) async {
     try {
       if (_user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
         return;
       }
 
@@ -295,25 +291,29 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         errorMessage = 'Email already in use';
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     }
   }
 
-  Future<void> _changePassword(BuildContext context, String currentPassword, String newPassword) async {
+  Future<void> _changePassword(
+    BuildContext context,
+    String currentPassword,
+    String newPassword,
+  ) async {
     try {
       if (_user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('User not authenticated')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
         return;
       }
 
@@ -345,26 +345,28 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         errorMessage = 'New password is too weak';
       }
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     }
   }
 
   void _showChangePasswordDialog() {
-    final TextEditingController currentPasswordController = TextEditingController();
+    final TextEditingController currentPasswordController =
+        TextEditingController();
     final TextEditingController newPasswordController = TextEditingController();
-    final TextEditingController confirmPasswordController = TextEditingController();
-    bool _obscureCurrentPassword = true;
-    bool _obscureNewPassword = true;
-    bool _obscureConfirmPassword = true;
+    final TextEditingController confirmPasswordController =
+        TextEditingController();
+    bool obscureCurrentPassword = true;
+    bool obscureNewPassword = true;
+    bool obscureConfirmPassword = true;
 
     showDialog(
       context: context,
@@ -378,7 +380,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                 // Current Password
                 TextField(
                   controller: currentPasswordController,
-                  obscureText: _obscureCurrentPassword,
+                  obscureText: obscureCurrentPassword,
                   decoration: InputDecoration(
                     labelText: 'Current Password',
                     hintText: 'Enter your current password',
@@ -388,11 +390,13 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
+                        obscureCurrentPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
-                          _obscureCurrentPassword = !_obscureCurrentPassword;
+                          obscureCurrentPassword = !obscureCurrentPassword;
                         });
                       },
                     ),
@@ -403,7 +407,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                 // New Password
                 TextField(
                   controller: newPasswordController,
-                  obscureText: _obscureNewPassword,
+                  obscureText: obscureNewPassword,
                   decoration: InputDecoration(
                     labelText: 'New Password',
                     hintText: 'Enter your new password',
@@ -413,11 +417,13 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
+                        obscureNewPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
-                          _obscureNewPassword = !_obscureNewPassword;
+                          obscureNewPassword = !obscureNewPassword;
                         });
                       },
                     ),
@@ -428,7 +434,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                 // Confirm New Password
                 TextField(
                   controller: confirmPasswordController,
-                  obscureText: _obscureConfirmPassword,
+                  obscureText: obscureConfirmPassword,
                   decoration: InputDecoration(
                     labelText: 'Confirm New Password',
                     hintText: 'Re-enter your new password',
@@ -438,11 +444,13 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                     prefixIcon: const Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                        obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
                       ),
                       onPressed: () {
                         setState(() {
-                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                          obscureConfirmPassword = !obscureConfirmPassword;
                         });
                       },
                     ),
@@ -461,7 +469,9 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                 // Validate inputs
                 if (currentPasswordController.text.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter your current password')),
+                    const SnackBar(
+                      content: Text('Please enter your current password'),
+                    ),
                   );
                   return;
                 }
@@ -477,7 +487,8 @@ class _ProfileSettingsState extends State<ProfileSettings> {
                   );
                   return;
                 }
-                if (newPasswordController.text != confirmPasswordController.text) {
+                if (newPasswordController.text !=
+                    confirmPasswordController.text) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Passwords do not match')),
                   );
@@ -499,4 +510,3 @@ class _ProfileSettingsState extends State<ProfileSettings> {
     );
   }
 }
-
