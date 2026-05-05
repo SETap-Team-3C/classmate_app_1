@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 
+import '../../core/theme/theme_provider.dart';
 import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
-import '../../widets/app_logo.dart';
+// import '../../widets/app_logo.dart'; // unused after switching to image asset
 import '../../widets/custom_textfield.dart';
-import '../feed_screen.dart';
+import '../home_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, required this.themeProvider});
+
+  final ThemeProvider themeProvider;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -18,7 +22,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
-  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
+  FirebaseAnalytics? _analytics;
 
   String email = '';
   String password = '';
@@ -34,8 +38,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _logScreenOpened() async {
     try {
+      if (Firebase.apps.isEmpty) return;
+      _analytics ??= FirebaseAnalytics.instance;
       await _analytics
-          .logEvent(name: 'screen_opened', parameters: {'screen': 'login'})
+          ?.logEvent(name: 'screen_opened', parameters: {'screen': 'login'})
           .timeout(const Duration(seconds: 5));
       print('Analytics event logged successfully');
     } catch (e) {
@@ -50,10 +56,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = true);
 
     try {
-      await _analytics.logEvent(
-        name: 'login_attempt',
-        parameters: {'has_email': email.isNotEmpty ? 'true' : 'false'},
-      );
+      if (Firebase.apps.isNotEmpty) {
+        _analytics ??= FirebaseAnalytics.instance;
+        await _analytics?.logEvent(
+          name: 'login_attempt',
+          parameters: {'has_email': email.isNotEmpty ? 'true' : 'false'},
+        );
+      }
 
       print('Starting login with email: $email');
 
@@ -74,7 +83,12 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const FeedScreen()),
+          MaterialPageRoute(
+            builder: (_) => HomeScreen(
+              title: 'Classmate',
+              themeProvider: widget.themeProvider,
+            ),
+          ),
         );
         return;
       }
@@ -107,15 +121,19 @@ class _LoginScreenState extends State<LoginScreen> {
             key: _formKey,
             child: Column(
               children: [
-                const AppLogo(
-                  iconSize: 34,
-                  textStyle: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      'assets/app_logo.png',
+                      width: 128,
+                      height: 128,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 16),
+                    const Text('Welcome back'),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                const Text('Welcome back'),
                 const SizedBox(height: 30),
                 CustomTextField(
                   label: 'Email',
