@@ -154,11 +154,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   groupValue: isDarkMode,
                                   onChanged: (value) async {
                                     if (value == null) return;
+                                    final nav = Navigator.of(context);
                                     await widget.themeProvider.setDarkMode(
                                       value,
                                     );
                                     if (!mounted) return;
-                                    Navigator.pop(context);
+                                    nav.pop();
                                   },
                                 ),
                                 RadioListTile<bool>(
@@ -167,11 +168,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   groupValue: isDarkMode,
                                   onChanged: (value) async {
                                     if (value == null) return;
+                                    final nav = Navigator.of(context);
                                     await widget.themeProvider.setDarkMode(
                                       value,
                                     );
                                     if (!mounted) return;
-                                    Navigator.pop(context);
+                                    nav.pop();
                                   },
                                 ),
                               ],

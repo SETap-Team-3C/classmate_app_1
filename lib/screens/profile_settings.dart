@@ -253,11 +253,14 @@ class _ProfileSettingsState extends State<ProfileSettings> {
     String newEmail,
     String password,
   ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
     try {
       if (_user == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+        messenger.showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
         return;
       }
 
@@ -273,13 +276,13 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       await _user!.verifyBeforeUpdateEmail(newEmail);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Verification email sent to your new email address'),
             duration: Duration(seconds: 3),
           ),
         );
-        Navigator.pop(context);
+        navigator.pop();
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'Failed to change email';
@@ -291,15 +294,13 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         errorMessage = 'Email already in use';
       }
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        messenger.showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        messenger.showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
       }
     }
   }
@@ -309,11 +310,14 @@ class _ProfileSettingsState extends State<ProfileSettings> {
     String currentPassword,
     String newPassword,
   ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
+
     try {
       if (_user == null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('User not authenticated')));
+        messenger.showSnackBar(
+          const SnackBar(content: Text('User not authenticated')),
+        );
         return;
       }
 
@@ -329,13 +333,13 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       await _user!.updatePassword(newPassword);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           const SnackBar(
             content: Text('Password changed successfully'),
             duration: Duration(seconds: 2),
           ),
         );
-        Navigator.pop(context);
+        navigator.pop();
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'Invalid password, please try again';
@@ -345,15 +349,13 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         errorMessage = 'New password is too weak';
       }
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        messenger.showSnackBar(SnackBar(content: Text(errorMessage)));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        messenger.showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
       }
     }
   }
