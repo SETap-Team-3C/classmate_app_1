@@ -87,9 +87,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Theme.of(context).colorScheme.primary.withOpacity(0.10),
+              Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
               Theme.of(context).colorScheme.surface,
-              Theme.of(context).colorScheme.secondary.withOpacity(0.08),
+              Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
             ],
           ),
         ),
@@ -99,7 +99,9 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               top: -80,
               left: -60,
               child: _GlowCircle(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.16),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.16),
                 size: 180,
               ),
             ),
@@ -109,7 +111,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               child: _GlowCircle(
                 color: Theme.of(
                   context,
-                ).colorScheme.secondary.withOpacity(0.14),
+                ).colorScheme.secondary.withValues(alpha: 0.14),
                 size: 220,
               ),
             ),
@@ -138,16 +140,16 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                               decoration: BoxDecoration(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.surface.withOpacity(0.72),
+                                ).colorScheme.surface.withValues(alpha: 0.72),
                                 borderRadius: BorderRadius.circular(28),
                                 border: Border.all(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.outline.withOpacity(0.12),
+                                  ).colorScheme.outline.withValues(alpha: 0.12),
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.10),
+                                    color: Colors.black.withValues(alpha: 0.10),
                                     blurRadius: 28,
                                     offset: const Offset(0, 16),
                                   ),
@@ -172,7 +174,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                                   color: Theme.of(context)
                                                       .colorScheme
                                                       .primary
-                                                      .withOpacity(0.20),
+                                                      .withValues(alpha: 0.20),
                                                   blurRadius: 20,
                                                   spreadRadius: 2,
                                                 ),

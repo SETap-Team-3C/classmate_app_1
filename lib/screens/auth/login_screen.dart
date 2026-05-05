@@ -43,9 +43,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await _analytics
           ?.logEvent(name: 'screen_opened', parameters: {'screen': 'login'})
           .timeout(const Duration(seconds: 5));
-      print('Analytics event logged successfully');
+      debugPrint('Analytics event logged successfully');
     } catch (e) {
-      print('Analytics logging failed: $e');
+      debugPrint('Analytics logging failed: $e');
       // Don't block UI for analytics
     }
   }
@@ -64,7 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
 
-      print('Starting login with email: $email');
+      debugPrint('Starting login with email: $email');
 
       // Add timeout to prevent infinite freeze
       final error = await _authService
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => isLoading = false);
 
       if (error == null) {
-        print('Login successful, navigating to chat list');
+        debugPrint('Login successful, navigating to chat list');
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
@@ -91,12 +91,12 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       // Show detailed error
-      print('Login error: $error');
+      debugPrint('Login error: $error');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(error), duration: const Duration(seconds: 5)),
       );
     } catch (e) {
-      print('Login exception: $e');
+      debugPrint('Login exception: $e');
       if (!mounted) return;
       setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(

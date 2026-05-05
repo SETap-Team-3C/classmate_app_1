@@ -8,12 +8,12 @@ import '../core/theme/theme_provider.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({
-    Key? key,
+    super.key,
     this.auth,
     this.firestore,
     this.showTestEmptyState = false,
     required this.themeProvider,
-  }) : super(key: key);
+  });
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
@@ -401,8 +401,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               fontSize: 12,
                                               color: unreadCount > 0
                                                   ? cs.error
-                                                  : cs.onSurface.withOpacity(
-                                                      0.7,
+                                                  : cs.onSurface.withValues(
+                                                      alpha: 0.7,
                                                     ),
                                               fontWeight: unreadCount > 0
                                                   ? FontWeight.bold
@@ -425,8 +425,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               _formatTimeAgo(lastTimestamp),
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: cs.onSurface.withOpacity(
-                                                  0.7,
+                                                color: cs.onSurface.withValues(
+                                                  alpha: 0.7,
                                                 ),
                                               ),
                                             ),

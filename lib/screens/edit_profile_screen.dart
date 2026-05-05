@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/user_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({Key? key}) : super(key: key);
+  const EditProfileScreen({super.key});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -204,7 +204,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }) {
     final selected = _bottomIndex == index;
     final cs = Theme.of(context).colorScheme;
-    final color = selected ? cs.primary : cs.onSurface.withOpacity(0.6);
+    final color = selected ? cs.primary : cs.onSurface.withValues(alpha: 0.6);
 
     return Expanded(
       child: InkWell(

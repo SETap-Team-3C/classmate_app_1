@@ -76,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           final isDarkMode = widget.themeProvider.isDarkMode;
           final cs = Theme.of(context).colorScheme;
           final tt = Theme.of(context).textTheme;
-          final muted = cs.onSurface.withOpacity(0.7);
+          final muted = cs.onSurface.withValues(alpha: 0.7);
           return ListView(
             children: [
               Padding(
@@ -311,9 +311,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                           TextButton(
                             onPressed: () async {
+                              final nav = Navigator.of(context);
                               await FirebaseAuth.instance.signOut();
                               if (!mounted) return;
-                              Navigator.of(context).pushAndRemoveUntil(
+                              nav.pushAndRemoveUntil(
                                 MaterialPageRoute(
                                   builder: (_) => LoginScreen(
                                     themeProvider: widget.themeProvider,

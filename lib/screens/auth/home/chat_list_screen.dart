@@ -83,7 +83,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
               onPressed: () async {
                 final navigator = Navigator.of(context);
                 final messenger = ScaffoldMessenger.of(context);
-
                 try {
                   // Show confirmation dialog
                   final confirmed = await showDialog<bool>(
@@ -249,9 +248,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                 shape: BoxShape.circle,
                                 color: isOnline
                                     ? cs.secondary
-                                    : cs.onSurface.withOpacity(0.4),
+                                    : cs.onSurface.withValues(alpha: 0.4),
                                 border: Border.all(
-                                  color: cs.background,
+                                  color: cs.surfaceContainer,
                                   width: 2,
                                 ),
                               ),
