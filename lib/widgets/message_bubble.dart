@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../models/message.dart';
+
 class MessageBubble extends StatelessWidget {
   final String messageId;
   final String text;
+  final MessageType messageType;
+  final String? fileUrl;
+  final String? fileName;
+  final String? mimeType;
+  final int? fileSize;
+  final Map<String, dynamic>? contactData;
+  final bool isDeleted;
   final bool isCurrentUser;
   final bool isRead;
   final String readStatusText;
@@ -16,6 +25,13 @@ class MessageBubble extends StatelessWidget {
     super.key,
     required this.messageId,
     required this.text,
+    this.messageType = MessageType.text,
+    this.fileUrl,
+    this.fileName,
+    this.mimeType,
+    this.fileSize,
+    this.contactData,
+    this.isDeleted = false,
     required this.isCurrentUser,
     required this.isRead,
     required this.readStatusText,
@@ -49,6 +65,111 @@ class MessageBubble extends StatelessWidget {
             child: const Text('Close'),
           ),
         ],
+      ),
+    );
+  }
+
+  String _humanReadableFileSize(int? bytes) {
+    if (bytes == null || bytes <= 0) return '';
+    const units = ['B', 'KB', 'MB', 'GB'];
+    var size = bytes.toDouble();
+    var unitIndex = 0;
+    while (size >= 1024 && unitIndex < units.length - 1) {
+      size /= 1024;
+      unitIndex++;
+    }
+    final value = size >= 10 || unitIndex == 0 ? size.round().toString() : size.toStringAsFixed(1);
+    return '$value ${units[unitIndex]}';
+  }
+
+  Widget _buildAttachmentPreview(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    if (messageType == MessageType.image && fileUrl != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 260, maxHeight: 260),
+          child: Image.network(
+            fileUrl!,
+            fit: BoxFit.cover,
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return SizedBox(
+                width: 220,
+                height: 180,
+                child: Center(
+                  child: CircularProgressIndicator(
+                    value: progress.expectedTotalBytes != null
+                        ? progress.cumulativeBytesLoaded /
+                            progress.expectedTotalBytes!
+                        : null,
+                  ),
+                ),
+              );
+            },
+            errorBuilder: (context, error, stackTrace) => Container(
+              width: 220,
+              height: 180,
+              color: cs.surfaceContainerHighest,
+              alignment: Alignment.center,
+              child: const Icon(Icons.broken_image_outlined),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (messageType == MessageType.document) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.description_outlined, color: cs.onPrimaryContainer),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              fileName ?? 'Document',
+              style: TextStyle(
+                fontSize: 14,
+                color: isCurrentUser ? cs.onPrimaryContainer : cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (messageType == MessageType.contact) {
+      final name = contactData?['displayName']?.toString() ?? 'Contact';
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: cs.primaryContainer,
+            child: Icon(Icons.person, color: cs.onPrimaryContainer, size: 18),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              name,
+              style: TextStyle(
+                fontSize: 14,
+                color: isCurrentUser ? cs.onPrimaryContainer : cs.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 16,
+        color: isCurrentUser ? cs.onPrimaryContainer : cs.onSurface,
       ),
     );
   }
@@ -146,15 +267,92 @@ class MessageBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        text,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: isCurrentUser
-                              ? cs.onPrimaryContainer
-                              : cs.onSurface,
+                        if (isDeleted)
+                          Text(
+                            '[This message was deleted]',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontStyle: FontStyle.italic,
+                              color: isCurrentUser
+                                  ? cs.onPrimaryContainer
+                                  : cs.onSurface,
+                            ),
+                          )
+                        else
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildAttachmentPreview(context),
+                              if (messageType == MessageType.image &&
+                                  text.trim().isNotEmpty)
+                                const SizedBox(height: 6),
+                              if (messageType == MessageType.image &&
+                                  text.trim().isNotEmpty)
+                                Text(
+                                  text,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: isCurrentUser
+                                        ? cs.onPrimaryContainer
+                                        : cs.onSurface,
+                                  ),
+                                ),
+                              if (messageType == MessageType.text)
+                                Text(
+                                  text,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: isCurrentUser
+                                        ? cs.onPrimaryContainer
+                                        : cs.onSurface,
+                                  ),
+                                ),
+                              if (messageType == MessageType.document &&
+                                  text.trim().isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Text(
+                                    text,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isCurrentUser
+                                          ? cs.onPrimaryContainer
+                                          : cs.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              if (messageType == MessageType.contact &&
+                                  text.trim().isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: Text(
+                                    text,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isCurrentUser
+                                          ? cs.onPrimaryContainer
+                                          : cs.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              if (messageType == MessageType.document &&
+                                  fileSize != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    _humanReadableFileSize(fileSize),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isCurrentUser
+                                          ? cs.onPrimaryContainer.withValues(
+                                              alpha: 0.7,
+                                            )
+                                          : cs.onSurface.withValues(alpha: 0.7),
+                                    ),
+                                  ),
+                                ),
+                            ],
                         ),
-                      ),
                       if (isCurrentUser)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
