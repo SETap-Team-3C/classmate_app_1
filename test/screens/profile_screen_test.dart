@@ -7,7 +7,7 @@ void main() {
   ) async {
     // Simply verify the widget can be created with the required parameters
     // Full testing would require Firebase mocking which is complex
-    const widget = ProfileScreen(userId: 'test-user-id', isCurrentUser: false);
+    const widget = ProfileScreen(userId: 'test-user-id', isCurrentUser: false, themeProvider: null);
 
     expect(widget.userId, 'test-user-id');
     expect(widget.isCurrentUser, false);

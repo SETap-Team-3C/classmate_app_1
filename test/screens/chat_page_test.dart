@@ -9,7 +9,13 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      wrapForTest(const ChatPage(receiverId: 'u2', receiverName: 'Bob')),
+      wrapForTest(
+        const ChatPage(
+          receiverId: 'u2',
+          receiverName: 'Bob',
+          showTestEmptyState: true,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 

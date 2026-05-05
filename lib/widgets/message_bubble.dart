@@ -10,6 +10,7 @@ class MessageBubble extends StatelessWidget {
   final VoidCallback? onStarToggle;
   final Future<void> Function()? onDeleteForMe;
   final Future<void> Function()? onDeleteForEveryone;
+  final Future<void> Function()? onDelete;
 
   const MessageBubble({
     super.key,
@@ -20,6 +21,7 @@ class MessageBubble extends StatelessWidget {
     required this.readStatusText,
     this.onDeleteForMe,
     this.onDeleteForEveryone,
+    this.onDelete,
     this.isStarred = false,
     this.onStarToggle,
   });
@@ -44,7 +46,10 @@ class MessageBubble extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            child: Text(
+              'Delete',
+              style: TextStyle(color: Theme.of(dialogContext).colorScheme.error),
+            ),
           ),
         ],
       ),
@@ -60,7 +65,8 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bubbleColor = isCurrentUser ? Colors.blue[300] : Colors.grey[300];
+    final cs = Theme.of(context).colorScheme;
+    final bubbleColor = isCurrentUser ? cs.primaryContainer : cs.surfaceVariant;
 
     return Column(
       crossAxisAlignment: isCurrentUser
@@ -105,9 +111,15 @@ class MessageBubble extends StatelessWidget {
                         )
                       : null),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(text, style: const TextStyle(fontSize: 16)),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          text,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isCurrentUser ? cs.onPrimaryContainer : cs.onSurface,
+                          ),
+                        ),
                       if (isCurrentUser)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
@@ -117,14 +129,14 @@ class MessageBubble extends StatelessWidget {
                               Icon(
                                 isRead ? Icons.done_all : Icons.done,
                                 size: 14,
-                                color: isRead ? Colors.blue : Colors.grey,
+                                color: isRead ? cs.primary : cs.onSurface.withOpacity(0.7),
                               ),
                               const SizedBox(width: 2),
                               Text(
                                 isRead ? 'Seen' : 'Sent',
                                 style: TextStyle(
                                   fontSize: 10,
-                                  color: isRead ? Colors.blue : Colors.grey,
+                                  color: isRead ? cs.primary : cs.onSurface.withOpacity(0.7),
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -136,7 +148,7 @@ class MessageBubble extends StatelessWidget {
                 ),
               ),
               // Show options menu (delete for me, delete for everyone, star/unstar)
-              if (onDeleteForMe != null || onDeleteForEveryone != null || onStarToggle != null)
+              if (onDeleteForMe != null || onDeleteForEveryone != null || onStarToggle != null || onDelete != null)
                 Positioned(
                   right: 6,
                   top: 6,
@@ -147,7 +159,7 @@ class MessageBubble extends StatelessWidget {
                         await _confirmAndPerform(
                           context,
                           title: 'Delete Message',
-                          confirmText: 'Are you sure you want to delete this message for you?',
+                          confirmText: 'Are you sure you want to delete your message?',
                           action: onDeleteForMe,
                         );
                         return;
@@ -165,6 +177,15 @@ class MessageBubble extends StatelessWidget {
                         onStarToggle?.call();
                         return;
                       }
+                      if (value == 'delete_generic' && onDelete != null) {
+                        await _confirmAndPerform(
+                          context,
+                          title: 'Delete Message',
+                          confirmText: 'Are you sure you want to delete your message?',
+                          action: onDelete,
+                        );
+                        return;
+                      }
                     },
                     itemBuilder: (BuildContext context) {
                       final items = <PopupMenuEntry<String>>[];
@@ -176,7 +197,7 @@ class MessageBubble extends StatelessWidget {
                             children: [
                               Icon(
                                 isStarred ? Icons.star : Icons.star_border,
-                                color: isStarred ? Colors.amber : Colors.black87,
+                                color: isStarred ? cs.secondary : cs.onSurface,
                               ),
                               const SizedBox(width: 8),
                               Text(isStarred ? 'Unstar' : 'Star'),
@@ -186,26 +207,34 @@ class MessageBubble extends StatelessWidget {
                       }
 
                       if (onDeleteForMe != null) {
-                        items.add(const PopupMenuItem<String>(
+                        items.add(PopupMenuItem<String>(
                           value: 'delete_me',
                           child: Row(
                             children: [
-                              Icon(Icons.delete_outline, color: Colors.black87),
-                              SizedBox(width: 8),
-                              Text('Delete for me'),
+                              Icon(Icons.delete_outline, color: cs.onSurface),
+                              const SizedBox(width: 8),
+                              const Text('Delete for me'),
                             ],
                           ),
                         ));
                       }
 
-                      if (isCurrentUser && onDeleteForEveryone != null) {
+                      // Single 'Delete' entry for older tests that rely on a single callback.
+                      if (onDelete != null) {
                         items.add(const PopupMenuItem<String>(
+                          value: 'delete_generic',
+                          child: Text('Delete'),
+                        ));
+                      }
+
+                      if (isCurrentUser && onDeleteForEveryone != null) {
+                        items.add(PopupMenuItem<String>(
                           value: 'delete_everyone',
                           child: Row(
                             children: [
-                              Icon(Icons.delete_forever, color: Colors.red),
-                              SizedBox(width: 8),
-                              Text('Delete for everyone'),
+                              Icon(Icons.delete_forever, color: cs.error),
+                              const SizedBox(width: 8),
+                              const Text('Delete for everyone'),
                             ],
                           ),
                         ));
@@ -213,9 +242,9 @@ class MessageBubble extends StatelessWidget {
 
                       return items;
                     },
-                    child: const Icon(
+                    child: Icon(
                       Icons.more_vert,
-                      color: Colors.black87,
+                      color: cs.onSurface,
                       size: 18,
                     ),
                   ),
@@ -228,7 +257,7 @@ class MessageBubble extends StatelessWidget {
             padding: const EdgeInsets.only(right: 12, top: 2),
             child: Text(
               readStatusText,
-              style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+              style: TextStyle(fontSize: 10, color: cs.onSurface.withOpacity(0.7)),
             ),
           ),
       ],
