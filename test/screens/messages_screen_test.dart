@@ -1,6 +1,7 @@
 import 'package:classmate_app_1/screens/messages_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:classmate_app_1/core/theme/theme_provider.dart';
 
 import '../test_helpers.dart';
 
@@ -9,7 +10,7 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(
-      wrapForTest(const MessagesScreen(showTestEmptyState: true)),
+      wrapForTest(MessagesScreen(showTestEmptyState: true, themeProvider: ThemeProvider())),
     );
     await tester.pumpAndSettle();
 
