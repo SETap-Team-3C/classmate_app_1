@@ -7,6 +7,7 @@ import 'profile_screen.dart';
 import 'notification_screen.dart';
 import 'communities_screen.dart';
 import '../core/theme/theme_provider.dart';
+import '../services/user_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -30,12 +31,47 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  // Firestore may be accessed via widget.firestore when provided.
+  late UserService _userService;
 
   Future<void> _signOut() async {
+    // Set user as offline before signing out
+    await _userService.setUserOnline(false);
     await _auth.signOut();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _userService = UserService();
+    
+    // Add lifecycle observer to handle app going to background/foreground
+    WidgetsBinding.instance.addObserver(this);
+    
+    // Set user as online when entering home screen
+    _userService.setUserOnline(true);
+  }
+
+  @override
+  void dispose() {
+    // Remove lifecycle observer
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    
+    if (state == AppLifecycleState.resumed) {
+      // App brought to foreground
+      _userService.setUserOnline(true);
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      // App sent to background or closed
+      _userService.setUserOnline(false);
+    }
   }
 
   @override
