@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:io' as io;
 import 'package:image_picker/image_picker.dart';
 
 class UserService {
@@ -90,7 +89,7 @@ class UserService {
         .map((doc) => doc.data());
   }
 
-  /// Upload user profile picture
+  /// Upload user profile picture to Firebase Storage
   Future<String?> uploadProfilePicture(XFile imageFile) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -107,7 +106,7 @@ class UserService {
           'profile_pictures/${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       print('📁 Storage path: $fileName');
       print('👤 User ID: ${user.uid}');
-      
+
       final storageRef = _storage.ref().child(fileName);
 
       print('📤 Uploading bytes to Firebase Storage...');
@@ -116,7 +115,7 @@ class UserService {
           bytes,
           SettableMetadata(contentType: 'image/jpeg'),
         );
-        
+
         print('⏳ Waiting for upload to complete...');
         await uploadTask;
         print('✅ Upload complete');
@@ -125,7 +124,7 @@ class UserService {
         print('❌ Upload error type: ${uploadError.runtimeType}');
         rethrow;
       }
-      
+
       print('🔗 Getting download URL...');
       final downloadUrl = await storageRef.getDownloadURL();
       print('✅ Download URL: $downloadUrl');
@@ -145,7 +144,22 @@ class UserService {
     } catch (e) {
       print('❌ Error uploading profile picture: $e');
       print('❌ Error type: ${e.runtimeType}');
-      print('❌ Stack trace: ${StackTrace.current}');
+      return null;
+    }
+  }
+
+  /// Update user display name
+  Future<bool> updateUsername(String newUsername) async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+
+    try {
+      // Update display name in Firebase Auth
+      await user.updateDisplayName(newUsername);
+
+      // Update username in Firestore
+      await _firestore.collection('users').doc(user.uid).update({
+        'username': newUsername,
         'name': newUsername,
         'updatedAt': FieldValue.serverTimestamp(),
       });
