@@ -112,7 +112,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
 
   Future<void> _pickAndUploadProfilePicture() async {
     try {
-      print('📸 Starting image picker...');
+      debugPrint('📸 Starting image picker...');
       final ImagePicker picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
         source: ImageSource.gallery,
@@ -122,21 +122,21 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       );
 
       if (pickedFile == null) {
-        print('❌ No image selected');
+        debugPrint('❌ No image selected');
         return;
       }
 
-      print('✅ Image selected: ${pickedFile.name}');
+      debugPrint('✅ Image selected: ${pickedFile.name}');
 
       setState(() {
         _isLoadingProfilePicture = true;
       });
 
-      print('📤 Uploading to Firebase Storage...');
+      debugPrint('📤 Uploading to Firebase Storage...');
       final downloadUrl = await _userService.uploadProfilePicture(pickedFile);
 
       if (downloadUrl != null) {
-        print('✅ Upload successful: $downloadUrl');
+        debugPrint('✅ Upload successful: $downloadUrl');
         await _user?.reload();
         if (mounted) {
           setState(() {
@@ -149,7 +149,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
           );
         }
       } else {
-        print('❌ Upload failed - returned null');
+        debugPrint('❌ Upload failed - returned null');
         if (mounted) {
           setState(() {
             _isLoadingProfilePicture = false;
@@ -160,7 +160,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
         }
       }
     } catch (e) {
-      print('❌ Error: $e');
+      debugPrint('❌ Error: $e');
       if (mounted) {
         setState(() {
           _isLoadingProfilePicture = false;

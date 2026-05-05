@@ -4,14 +4,24 @@ class ChatScreen extends StatefulWidget {
   final String receiverId;
   final String receiverName;
 
-  const ChatScreen({super.key, required this.receiverId, required this.receiverName});
+  const ChatScreen({
+    super.key,
+    required this.receiverId,
+    required this.receiverName,
+  });
 
   @override
-  _ChatScreenState createState() => _ChatScreenState();
+  ChatScreenState createState() => ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class ChatScreenState extends State<ChatScreen> {
   final TextEditingController messageController = TextEditingController();
+
+  @override
+  void dispose() {
+    messageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +30,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
       body: Column(
         children: [
-          
           Expanded(child: Center(child: Text("No messages yet"))),
 
-          
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Row(

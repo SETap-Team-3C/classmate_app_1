@@ -125,7 +125,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _pickAndUploadProfilePicture() async {
     try {
-      print('📸 Starting image picker...');
+      debugPrint('📸 Starting image picker...');
       final ImagePicker picker = ImagePicker();
       final XFile? pickedFile = await picker.pickImage(
         source: ImageSource.gallery,
@@ -135,21 +135,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
       if (pickedFile == null) {
-        print('❌ No image selected');
+        debugPrint('❌ No image selected');
         return;
       }
 
-      print('✅ Image selected: ${pickedFile.name}');
+      debugPrint('✅ Image selected: ${pickedFile.name}');
 
       setState(() {
         _isLoadingProfilePicture = true;
       });
 
-      print('📤 Uploading to Firebase Storage...');
+      debugPrint('📤 Uploading to Firebase Storage...');
       final downloadUrl = await _userService.uploadProfilePicture(pickedFile);
 
       if (downloadUrl != null) {
-        print('✅ Upload successful: $downloadUrl');
+        debugPrint('✅ Upload successful: $downloadUrl');
         await _user?.reload();
         if (mounted) {
           setState(() {
@@ -162,7 +162,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           );
         }
       } else {
-        print('❌ Upload failed - returned null');
+        debugPrint('❌ Upload failed - returned null');
         if (mounted) {
           setState(() {
             _isLoadingProfilePicture = false;
@@ -173,7 +173,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         }
       }
     } catch (e) {
-      print('❌ Error: $e');
+      debugPrint('❌ Error: $e');
       if (mounted) {
         setState(() {
           _isLoadingProfilePicture = false;
@@ -340,10 +340,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   controller: _usernameController,
                   decoration: const InputDecoration(labelText: 'Username'),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty)
+                    if (v == null || v.trim().isEmpty) {
                       return 'Please enter a username';
-                    if (v.trim().length < 3)
+                    }
+                    if (v.trim().length < 3) {
                       return 'Username must be at least 3 characters';
+                    }
                     return null;
                   },
                 ),
