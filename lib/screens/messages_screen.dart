@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_page.dart';
+import 'new_group_screen.dart';
+import 'settings_screen.dart';
+import '../core/theme/theme_provider.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({
@@ -9,20 +12,36 @@ class MessagesScreen extends StatefulWidget {
     this.auth,
     this.firestore,
     this.showTestEmptyState = false,
+    this.onBack,
+    required this.themeProvider,
   }) : super(key: key);
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
   final bool showTestEmptyState;
+  final VoidCallback? onBack;
+  final ThemeProvider themeProvider;
 
   @override
   State<MessagesScreen> createState() => _MessagesScreenState();
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
-  FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore =>
-      widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseAuth? _tryGetAuth() {
+    try {
+      return widget.auth ?? FirebaseAuth.instance;
+    } catch (_) {
+      return widget.auth;
+    }
+  }
+
+  FirebaseFirestore? _tryGetFirestore() {
+    try {
+      return widget.firestore ?? FirebaseFirestore.instance;
+    } catch (_) {
+      return widget.firestore;
+    }
+  }
 
   String _buildChatId(String userA, String userB) {
     final ids = [userA, userB]..sort();
@@ -55,14 +74,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
     }
 
     final chatId = _buildChatId(currentUser.uid, selectedUser.id);
-    final currentUserDoc = await _firestore
+    final firestore = _tryGetFirestore();
+    if (firestore == null) return;
+
+    final currentUserDoc = await firestore
         .collection('users')
         .doc(currentUser.uid)
         .get();
     final currentUsername = (currentUserDoc.data()?['name'] ?? '').toString();
 
     try {
-      await _firestore.collection('chats').doc(chatId).set({
+      await firestore.collection('chats').doc(chatId).set({
         'participants': [currentUser.uid, selectedUser.id],
         'usernames': {
           currentUser.uid: currentUsername,
@@ -95,8 +117,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   Future<void> _showAddUserDialog() async {
-    final currentUser = _auth.currentUser;
+    final currentUser = _tryGetAuth()?.currentUser;
     if (currentUser == null) return;
+    final firestore = _tryGetFirestore();
+    if (firestore == null) return;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -104,7 +128,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       showDragHandle: true,
       builder: (context) {
         return UserSearchBottomSheet(
-          firestore: _firestore,
+          firestore: firestore,
           currentUserId: currentUser.uid,
           onUserSelected: (selectedUser) async {
             Navigator.pop(context);
@@ -118,28 +142,64 @@ class _MessagesScreenState extends State<MessagesScreen> {
     );
   }
 
+  void _handleMenuSelection(String value) {
+    if (!mounted) return;
+    switch (value) {
+      case 'new_group':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => NewGroupScreen(themeProvider: widget.themeProvider),
+          ),
+        );
+        break;
+      case 'settings':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => SettingsScreen(themeProvider: widget.themeProvider),
+          ),
+        );
+        break;
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
+    final currentUser = widget.showTestEmptyState ? null : _tryGetAuth()?.currentUser;
+    final firestore = widget.showTestEmptyState ? null : _tryGetFirestore();
+    final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddUserDialog,
+        child: const Icon(Icons.chat),
+      ),
       body: Column(
         children: [
           Container(
             height: 60,
-            color: Colors.deepPurple,
+            color: cs.primary,
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    if (widget.onBack != null) {
+                      widget.onBack!();
+                      return;
+                    }
+                    Navigator.maybePop(context);
+                  },
                   icon: const Icon(Icons.arrow_back),
                 ),
-                const Expanded(
+                Expanded(
                   child: Center(
                     child: Text(
                       'Direct Messages',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: cs.onPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
                       ),
@@ -148,16 +208,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 ),
                 IconButton(
                   onPressed: _showAddUserDialog,
+                  icon: const Icon(Icons.search),
+                ),
+                IconButton(
+                  onPressed: _showAddUserDialog,
                   icon: const Icon(Icons.add),
+                ),
+                PopupMenuButton<String>(
+                  onSelected: (value) => _handleMenuSelection(value),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: 'new_group', child: Text('New group')),
+                    const PopupMenuItem(value: 'settings', child: Text('Settings')),
+                  ],
                 ),
               ],
             ),
           ),
           Expanded(
-            child: widget.showTestEmptyState
+            child: widget.showTestEmptyState || currentUser == null || firestore == null
                 ? const Center(child: Text('No chats yet. Tap + to start one.'))
                 : StreamBuilder<QuerySnapshot>(
-                    stream: _firestore
+                stream: firestore
                         .collection('chats')
                         .where('participants', arrayContains: currentUser?.uid)
                         .snapshots(),
@@ -226,7 +297,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               chatData['lastTimestamp'] as Timestamp?;
 
                           return FutureBuilder<int>(
-                            future: _firestore
+                            future: firestore
                                 .collection('messages')
                                 .where('chatId', isEqualTo: chatId)
                                 .where(
@@ -266,9 +337,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: cs.surface,
                                     border: Border.all(
-                                      color: const Color(0xFFE1BEE7),
+                                      color: cs.secondary.withOpacity(0.60),
                                     ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
@@ -296,8 +367,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: unreadCount > 0
-                                                  ? Colors.red
-                                                  : const Color(0xFFE1BEE7),
+                                                  ? cs.primary
+                                                  : cs.secondary,
                                               fontWeight: unreadCount > 0
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
@@ -317,9 +388,9 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                           children: [
                                             Text(
                                               _formatTimeAgo(lastTimestamp),
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontSize: 12,
-                                                color: Color(0xFFE1BEE7),
+                                                color: cs.secondary,
                                               ),
                                             ),
                                           ],
@@ -357,7 +428,7 @@ class SearchUser {
 }
 
 class UserSearchBottomSheet extends StatefulWidget {
-  const UserSearchBottomSheet({
+  const UserSearchBottomSheet({super.key,
     this.firestore,
     required this.currentUserId,
     required this.onUserSelected,
