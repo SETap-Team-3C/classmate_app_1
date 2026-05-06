@@ -22,6 +22,15 @@ service cloud.firestore {
         && request.auth.uid in participants;
     }
 
+    function sameChatParticipants(a, b) {
+      return a is list
+        && b is list
+        && a.size() == 2
+        && b.size() == 2
+        && a.hasAll(b)
+        && b.hasAll(a);
+    }
+
     function validMessageCreateSchema() {
       return request.resource.data.keys().hasAll([
           'chatId',
@@ -142,7 +151,10 @@ service cloud.firestore {
         && validChatParticipants(request.resource.data.participants);
       allow update: if signedIn()
         && request.auth.uid in resource.data.participants
-        && request.resource.data.participants == resource.data.participants;
+        && sameChatParticipants(
+          request.resource.data.participants,
+          resource.data.participants
+        );
       allow delete: if signedIn() && request.auth.uid in resource.data.participants;
     }
 
