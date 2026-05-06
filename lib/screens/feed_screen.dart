@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import '../core/theme/theme_provider.dart';
 
 class _CommentNode {
   _CommentNode({required this.id, required this.data});
@@ -30,7 +31,45 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
-  String _activeFeed = 'mates';
+  String _activeFeed = 'class';
+
+  Widget _buildFeedToggle({
+    required String label,
+    required bool isSelected,
+    required Color labelColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: labelColor,
+                fontSize: 20,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 3,
+              width: isSelected ? 24 : 0,
+              decoration: BoxDecoration(
+                color: labelColor,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,31 +82,18 @@ class _FeedScreenState extends State<FeedScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            GestureDetector(
-              onTap: () {
-                setState(() => _activeFeed = 'class');
-              },
-              child: Text(
-                'Class',
-                style: TextStyle(
-                  color: _activeFeed == 'class' ? Colors.deepPurple : const Color(0xFFE1BEE7),
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            _buildFeedToggle(
+              label: 'Class',
+              isSelected: _activeFeed == 'class',
+              labelColor: Colors.deepPurple,
+              onTap: () => setState(() => _activeFeed = 'class'),
             ),
-            GestureDetector(
-              onTap: () {
-                setState(() => _activeFeed = 'mates');
-              },
-              child: Text(
-                'Mates',
-                style: TextStyle(
-                  color: _activeFeed == 'mates' ? Colors.black : const Color(0xFFE1BEE7),
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+            const SizedBox(width: 10),
+            _buildFeedToggle(
+              label: 'Mates',
+              isSelected: _activeFeed == 'mates',
+              labelColor: Colors.black,
+              onTap: () => setState(() => _activeFeed = 'mates'),
             ),
           ],
         ),
@@ -81,6 +107,7 @@ class _FeedScreenState extends State<FeedScreen> {
                   builder: (_) => MessagesScreen(
                     auth: widget.auth ?? FirebaseAuth.instance,
                     firestore: widget.firestore ?? FirebaseFirestore.instance,
+                    themeProvider: ThemeProvider(),
                   ),
                 ),
               );
@@ -125,11 +152,26 @@ class _FeedContentState extends State<FeedContent> {
   bool _isPosting = false;
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes;
-  final Set<String> _expandedCommentIds = <String>{};
 
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
   FirebaseFirestore get _firestore => widget.firestore ?? FirebaseFirestore.instance;
   FirebaseStorage get _storage => FirebaseStorage.instance;
+
+  FirebaseAuth? _tryGetAuth() {
+    try {
+      return widget.auth ?? FirebaseAuth.instance;
+    } catch (_) {
+      return widget.auth;
+    }
+  }
+
+  FirebaseFirestore? _tryGetFirestore() {
+    try {
+      return widget.firestore ?? FirebaseFirestore.instance;
+    } catch (_) {
+      return widget.firestore;
+    }
+  }
 
   String get _collectionName => 'posts_${widget.feedType}';
 
@@ -806,6 +848,33 @@ class _FeedContentState extends State<FeedContent> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = _tryGetAuth();
+    final firestore = _tryGetFirestore();
+
+    if (auth == null || firestore == null) {
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: _postController,
+              minLines: 1,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                hintText: 'What is on your mind?',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ),
+          const Expanded(
+            child: Center(
+              child: Text('No posts yet. Create the first one.'),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       children: [
         Padding(
@@ -870,7 +939,7 @@ class _FeedContentState extends State<FeedContent> {
         const Divider(height: 1),
         Expanded(
           child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: _firestore.collection(_collectionName).orderBy('createdAt', descending: true).snapshots(),
+            stream: firestore.collection(_collectionName).orderBy('createdAt', descending: true).snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
