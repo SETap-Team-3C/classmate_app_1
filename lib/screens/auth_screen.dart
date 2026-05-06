@@ -3,11 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({
-    super.key,
-    this.auth,
-    this.firestore,
-  });
+  const AuthScreen({super.key, this.auth, this.firestore});
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
@@ -24,7 +20,8 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isLoading = false;
 
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore => widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore =>
+      widget.firestore ?? FirebaseFirestore.instance;
 
   bool _isValidUsername(String username) {
     final usernameRegex = RegExp(r'^[A-Za-z0-9](?:[A-Za-z0-9_]*[A-Za-z0-9])?$');
@@ -49,7 +46,9 @@ class _AuthScreenState extends State<AuthScreen> {
     final password = _passwordController.text.trim();
     final username = _nameController.text.trim();
 
-    if (identifier.isEmpty || password.isEmpty || (!_isLogin && username.isEmpty)) {
+    if (identifier.isEmpty ||
+        password.isEmpty ||
+        (!_isLogin && username.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields.')),
       );
@@ -93,7 +92,8 @@ class _AuthScreenState extends State<AuthScreen> {
             );
           }
 
-          emailForLogin = (usernameQuery.docs.first.data()['email'] ?? '').toString();
+          emailForLogin = (usernameQuery.docs.first.data()['email'] ?? '')
+              .toString();
           if (emailForLogin.isEmpty) {
             throw FirebaseAuthException(
               code: 'invalid-email',
@@ -115,10 +115,7 @@ class _AuthScreenState extends State<AuthScreen> {
         final fallbackName = emailForLogin.split('@').first;
         final resolvedName = existingName.isEmpty ? fallbackName : existingName;
 
-        await _firestore
-            .collection('users')
-            .doc(credential.user!.uid)
-            .set({
+        await _firestore.collection('users').doc(credential.user!.uid).set({
           'name': resolvedName,
           'email': emailForLogin,
           'usernameLower': resolvedName.toLowerCase(),
@@ -142,8 +139,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
         final usernameLower = username.toLowerCase();
 
-        final credential =
-            await _auth.createUserWithEmailAndPassword(
+        final credential = await _auth.createUserWithEmailAndPassword(
           email: identifier,
           password: password,
         );
@@ -168,10 +164,7 @@ class _AuthScreenState extends State<AuthScreen> {
             );
           }
 
-          await _firestore
-              .collection('users')
-              .doc(credential.user!.uid)
-              .set({
+          await _firestore.collection('users').doc(credential.user!.uid).set({
             'name': username,
             'email': identifier,
             'usernameLower': usernameLower,
@@ -205,13 +198,60 @@ class _AuthScreenState extends State<AuthScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_isLogin ? 'Login' : 'Sign Up'),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              'assets/app_logo.png',
+              width: 32,
+              height: 32,
+              fit: BoxFit.contain,
+            ),
+            const SizedBox(width: 8),
+            const Text('ClassMates'),
+          ],
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // App logo + name header
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 140,
+                  height: 140,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.20),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    'assets/app_logo.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'ClassMates',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
             if (!_isLogin)
               TextField(
                 controller: _nameController,
@@ -219,8 +259,9 @@ class _AuthScreenState extends State<AuthScreen> {
               ),
             TextField(
               controller: _identifierController,
-              keyboardType:
-                  _isLogin ? TextInputType.text : TextInputType.emailAddress,
+              keyboardType: _isLogin
+                  ? TextInputType.text
+                  : TextInputType.emailAddress,
               decoration: InputDecoration(
                 labelText: _isLogin ? 'Username | Email' : 'Email',
               ),
@@ -236,14 +277,15 @@ class _AuthScreenState extends State<AuthScreen> {
             else
               ElevatedButton(
                 onPressed: _submit,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 52),
+                ),
                 child: Text(_isLogin ? 'Login' : 'Create Account'),
               ),
             TextButton(
               onPressed: () => setState(() => _isLogin = !_isLogin),
               child: Text(
-                _isLogin
-                    ? 'Create a new account'
-                    : 'I already have an account',
+                _isLogin ? 'Create a new account' : 'I already have an account',
               ),
             ),
           ],
