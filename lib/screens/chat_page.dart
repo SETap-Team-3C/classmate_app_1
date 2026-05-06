@@ -55,7 +55,7 @@ class _ChatPageState extends State<ChatPage> {
     try {
       await _chatService.sendMessage(widget.receiverId, text);
       _messageController.clear();
-      final currentUser = _auth.currentUser;
+      final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
         await FirebaseFirestore.instance
             .collection('users')
@@ -79,7 +79,7 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _setTypingStatus(bool isTyping) async {
-    final currentUser = _auth.currentUser;
+    final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
     try {
@@ -94,6 +94,15 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _pickAndSendImage(ImageSource source) async {
     if (_isUploadingAttachment) return;
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please sign in to send images.')),
+      );
+      return;
+    }
 
     try {
       final pickedImage = await _imagePicker.pickImage(
@@ -189,7 +198,7 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
+    final currentUser = widget.showTestEmptyState ? null : FirebaseAuth.instance.currentUser;
 
     if (widget.showTestEmptyState) {
       return Scaffold(
@@ -284,9 +293,9 @@ class _ChatPageState extends State<ChatPage> {
               child: LinearProgressIndicator(value: _uploadProgress),
             ),
           Expanded(
-            child: currentUser == null
-                ? const Center(child: Text('Please sign in to view messages.'))
-                : StreamBuilder<List<Message>>(
+          child: currentUser == null
+            ? const Center(child: CircularProgressIndicator())
+            : StreamBuilder<List<Message>>(
                     stream: _chatService.getMessages(
                       currentUser.uid,
                       widget.receiverId,
@@ -407,7 +416,7 @@ class _ChatPageState extends State<ChatPage> {
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _sendMessage(),
                       onChanged: (value) async {
-                        final currentUser = _auth.currentUser;
+                        final currentUser = FirebaseAuth.instance.currentUser;
                         if (currentUser != null) {
                           await FirebaseFirestore.instance
                               .collection('users')
