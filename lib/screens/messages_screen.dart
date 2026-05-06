@@ -160,6 +160,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
     final cs = Theme.of(context).colorScheme;
 
+    if (!widget.showTestEmptyState && currentUser == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final activeUser = currentUser;
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddUserDialog,
@@ -255,7 +263,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 : StreamBuilder<QuerySnapshot>(
                     stream: _firestore
                         .collection('chats')
-                        .where('participants', arrayContains: currentUser?.uid)
+                  .where('participants', arrayContains: activeUser!.uid)
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
@@ -320,7 +328,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             chatData['participants'] ?? [],
                           );
                           final otherUserId = participants.firstWhere(
-                            (id) => id != currentUser?.uid,
+                            (id) => id != activeUser.uid,
                             orElse: () => '',
                           );
 
@@ -342,7 +350,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 .where('chatId', isEqualTo: chatId)
                                 .where(
                                   'receiverId',
-                                  isEqualTo: currentUser?.uid,
+                                  isEqualTo: activeUser.uid,
                                 )
                                 .where('read', isEqualTo: false)
                                 .count()
