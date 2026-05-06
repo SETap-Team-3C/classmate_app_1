@@ -144,6 +144,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   Widget _buildBody(BuildContext context) {
     final currentUser =
         widget.auth?.currentUser ?? FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final pages = <Widget>[
       const NotificationScreen(),
       const CallContactsScreen(),
@@ -156,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               themeProvider: widget.themeProvider ?? ThemeProvider(),
             ),
       ProfileScreen(
-        userId: currentUser?.uid ?? '',
+        userId: currentUser.uid,
         isCurrentUser: true,
         themeProvider: widget.themeProvider,
       ),
@@ -166,6 +171,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildChatsIcon() {
+    final currentUser = widget.auth?.currentUser ?? FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      return const Icon(Icons.mail);
+    }
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -180,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     ?.collection('messages')
                     .where(
                       'receiverId',
-                      isEqualTo: widget.auth?.currentUser?.uid,
+                      isEqualTo: currentUser.uid,
                     )
                     .where('read', isEqualTo: false)
                     .snapshots()
