@@ -25,6 +25,11 @@ class ChatService {
     return '${ids[0]}_${ids[1]}';
   }
 
+  List<String> _buildParticipants(String userA, String userB) {
+    final participants = [userA, userB]..sort();
+    return participants;
+  }
+
   Future<void> sendMessage(String receiverId, String message) async {
     return sendTextMessage(receiverId, message);
   }
@@ -85,9 +90,11 @@ class ChatService {
 
       final messageDoc = _firestore.collection('messages').doc();
       final bytes = await imageFile.readAsBytes();
-      final safeName = _sanitizeFileName(imageFile.name.isNotEmpty
-          ? imageFile.name
-          : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final safeName = _sanitizeFileName(
+        imageFile.name.isNotEmpty
+            ? imageFile.name
+            : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
       final contentType = _inferImageContentType(safeName);
 
       debugPrint(
@@ -162,7 +169,9 @@ class ChatService {
       if (storageRef != null) {
         try {
           await storageRef.delete();
-          debugPrint('[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}');
+          debugPrint(
+            '[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}',
+          );
         } catch (_) {
           // Ignore cleanup errors.
         }
@@ -182,7 +191,7 @@ class ChatService {
     required String receiverName,
   }) async {
     await _firestore.collection('chats').doc(chatId).set({
-      'participants': [senderUid, receiverId],
+      'participants': _buildParticipants(senderUid, receiverId),
       'usernames': {senderUid: senderName, receiverId: receiverName},
       'lastTimestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
@@ -199,7 +208,10 @@ class ChatService {
 
     final chatId = _buildChatId(user.uid, receiverId);
     final senderDoc = await _firestore.collection('users').doc(user.uid).get();
-    final receiverDoc = await _firestore.collection('users').doc(receiverId).get();
+    final receiverDoc = await _firestore
+        .collection('users')
+        .doc(receiverId)
+        .get();
     final senderName = (senderDoc.data()?['name'] ?? user.displayName ?? '')
         .toString();
     final receiverName = (receiverDoc.data()?['name'] ?? '').toString();
@@ -223,16 +235,12 @@ class ChatService {
   }) async {
     final batch = _firestore.batch();
     batch.set(messageDoc, message.toCreateMap());
-    batch.set(
-      _firestore.collection('chats').doc(chatId),
-      {
-        'participants': [senderUid, receiverId],
-        'usernames': {senderUid: senderName, receiverId: receiverName},
-        'lastMessage': message.previewText,
-        'lastTimestamp': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    batch.set(_firestore.collection('chats').doc(chatId), {
+      'participants': _buildParticipants(senderUid, receiverId),
+      'usernames': {senderUid: senderName, receiverId: receiverName},
+      'lastMessage': message.previewText,
+      'lastTimestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
     await batch.commit();
   }
 
@@ -320,7 +328,6 @@ class ChatService {
     }
   }
 
-
   Future<void> toggleStar(String messageId, String userId) async {
     try {
       final docRef = _firestore.collection('messages').doc(messageId);
@@ -349,7 +356,6 @@ class ChatService {
     }
   }
 
-  
   Stream<List<Message>> getStarredMessages(String userId) {
     return _firestore
         .collection('messages')

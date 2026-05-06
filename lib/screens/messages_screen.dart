@@ -37,6 +37,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
     return '${ids[0]}_${ids[1]}';
   }
 
+  List<String> _buildParticipants(String userA, String userB) {
+    final participants = [userA, userB]..sort();
+    return participants;
+  }
+
   String _formatTimeAgo(Timestamp? timestamp) {
     if (timestamp == null) return '';
     final now = DateTime.now();
@@ -71,7 +76,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
     try {
       await _firestore.collection('chats').doc(chatId).set({
-        'participants': [currentUser.uid, selectedUser.id],
+        'participants': _buildParticipants(currentUser.uid, selectedUser.id),
         'usernames': {
           currentUser.uid: currentUsername,
           selectedUser.id: selectedUser.name,
