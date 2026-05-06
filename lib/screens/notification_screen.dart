@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
 
 class NotificationScreen extends StatefulWidget {
-  const NotificationScreen({Key? key}) : super(key: key);
+  const NotificationScreen({super.key});
 
   @override
   State<NotificationScreen> createState() => _NotificationScreenState();
@@ -13,7 +13,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
   final TextEditingController _titleController = TextEditingController(text: 'Hello');
   final TextEditingController _bodyController = TextEditingController(text: 'This is a test notification');
   final List<String> _messages = [
-    'Welcome to Classmate!',
+    'Welcome to ClassMates!',
     'Your assignment is due tomorrow',
     'New message from Raj',
   ];
