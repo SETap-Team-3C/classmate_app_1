@@ -9,7 +9,6 @@ import '../../../widets/app_logo.dart';
 import '../../../widets/enhanced_avatar.dart';
 import '../../general_settings_screen.dart';
 import '../../chat_page.dart';
-import '../login_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key, required this.themeProvider});
@@ -45,6 +44,11 @@ class _ChatListScreenState extends State<ChatListScreen> {
     final currentUser = FirebaseAuth.instance.currentUser;
     final cs = Theme.of(context).colorScheme;
 
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
       appBar: AppBar(
         title: const AppLogo(
@@ -82,7 +86,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
             IconButton(
               icon: const Icon(Icons.logout),
               onPressed: () async {
-                final navigator = Navigator.of(context);
                 final messenger = ScaffoldMessenger.of(context);
                 try {
                   // Show confirmation dialog
@@ -117,13 +120,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
                   if (!mounted) return;
 
-                  navigator.pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          LoginScreen(themeProvider: widget.themeProvider),
-                    ),
-                    (route) => false,
-                  );
                 } catch (e) {
                   if (!mounted) return;
                   setState(() => _isSigningOut = false);
@@ -156,7 +152,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             final user = doc.data();
             final uid = (user['uid'] ?? doc.id).toString();
 
-            if (uid == currentUser?.uid) {
+            if (uid == currentUser.uid) {
               return false;
             }
 
