@@ -31,7 +31,7 @@ dart run tool/seed_demo_data.dart
 
 This script will:
 
-- create or reuse two accounts
+- create or reuse two demo accounts
 - create or update `users` documents for both
 - create or update one chat document
 - insert one test message from Alice to Bob
