@@ -36,7 +36,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     }
     if (currentUser == null) return;
 
-    final members = [_auth.currentUser!.uid, ..._selected];
+    final members = [currentUser.uid, ..._selected];
 
     try {
       await _firestore.collection('groups').add({
@@ -62,6 +62,12 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = _auth.currentUser;
+
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('New Group')),
@@ -92,7 +98,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final docs = snapshot.data?.docs ?? [];
-                final users = docs.where((d) => d.id != currentUser?.uid).map((
+                final users = docs.where((d) => d.id != currentUser.uid).map((
                   d,
                 ) {
                   final data = d.data() as Map<String, dynamic>;
