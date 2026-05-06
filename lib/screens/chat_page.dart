@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 
+import '../core/utils/time_formatter.dart';
 import '../models/message.dart';
 import '../services/chat_service.dart';
-import '../core/utils/time_formatter.dart';
 import '../widgets/message_bubble.dart';
 
 class ChatPage extends StatefulWidget {
@@ -14,118 +15,132 @@ class ChatPage extends StatefulWidget {
   final bool showTestEmptyState;
 
   const ChatPage({
-    Key? key,
+    super.key,
     required this.receiverId,
     required this.receiverName,
     this.chatService,
     this.auth,
     this.showTestEmptyState = false,
-  }) : super(key: key);
+  });
 
   @override
   State<ChatPage> createState() => _ChatPageState();
 }
 
 class _ChatPageState extends State<ChatPage> {
-  ChatService? _chatService;
-  final TextEditingController _messageController = TextEditingController();
-  FirebaseAuth? _auth;
+  FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
+  ChatService get _chatService => widget.chatService ?? ChatService(auth: _auth);
 
-  @override
-  void initState() {
-    super.initState();
-    if (!widget.showTestEmptyState) {
-      _auth = widget.auth ?? FirebaseAuth.instance;
-      _chatService = widget.chatService ?? ChatService(auth: _auth);
-    }
-  }
+  final TextEditingController _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void dispose() {
     _messageController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _sendMessage() async {
-    final messageText = _messageController.text.trim();
-    if (messageText.isEmpty) return;
-    if (_chatService == null) return;
+    final text = _messageController.text.trim();
+    if (text.isEmpty) return;
 
-    await _chatService!.sendMessage(widget.receiverId, messageText);
-
-    _messageController.clear();
+    try {
+      await _chatService.sendMessage(widget.receiverId, text);
+      _messageController.clear();
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send message: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
-        child: Container(
-          color: Colors.deepPurple,
-          child: SafeArea(
-            bottom: false,
-            child: SizedBox(
-              height: 60,
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        widget.receiverName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 48),
-                ],
-              ),
-            ),
+    final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
+
+    if (widget.showTestEmptyState) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back),
           ),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.receiverName),
+              const SizedBox(height: 2),
+              const Text(
+                'Direct Message',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+        ),
+        body: const Center(
+          child: Text('No messages yet. Start the conversation.'),
+        ),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back),
+        ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.receiverName),
+            const SizedBox(height: 2),
+            const Text(
+              'Direct Message',
+              style: TextStyle(fontSize: 12),
+            ),
+          ],
         ),
       ),
       body: Column(
         children: [
           Expanded(
-            child: widget.showTestEmptyState
-                ? const Center(
-                    child: Text('No messages yet. Start the conversation.'),
-                  )
+            child: currentUser == null
+                ? const Center(child: Text('Please sign in to view messages.'))
                 : StreamBuilder<List<Message>>(
-                    stream: _chatService!.getMessages(
-                      _auth!.currentUser!.uid,
+                    stream: _chatService.getMessages(
+                      currentUser.uid,
                       widget.receiverId,
                     ),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              'Could not load chat: ${snapshot.error}',
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        );
+                        final err = snapshot.error;
+                        if (err is FirebaseException &&
+                            err.code == 'permission-denied') {
+                          return const Center(child: Text('No messages yet.'));
+                        }
+
+                        return Center(child: Text('Error: ${snapshot.error}'));
                       }
 
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       }
 
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      final messages = snapshot.data!;
+                      final messages = snapshot.data ?? [];
 
                       if (messages.isEmpty) {
                         return Center(
@@ -161,94 +176,96 @@ class _ChatPageState extends State<ChatPage> {
                       }
 
                       messages.sort((a, b) {
-                        final aTimestamp = a.timestamp;
-                        final bTimestamp = b.timestamp;
-                        final aMillis = aTimestamp?.millisecondsSinceEpoch ?? 0;
-                        final bMillis = bTimestamp?.millisecondsSinceEpoch ?? 0;
+                        final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
+                        final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
                         return aMillis.compareTo(bMillis);
                       });
 
-                      // Mark incoming messages as read
                       for (final msg in messages) {
-                        final isCurrentUser =
-                            msg.senderId == _auth!.currentUser!.uid;
-                        final isRead = msg.read;
-
-                        if (!isCurrentUser && !isRead) {
-                          _chatService!.markMessageAsRead(
-                            msg.id,
-                            _auth!.currentUser!.uid,
-                          );
+                        final isCurrentUser = msg.senderId == currentUser.uid;
+                        if (!isCurrentUser && !msg.read) {
+                          _chatService.markMessageAsRead(msg.id, currentUser.uid);
                         }
                       }
 
-                      return ListView(
-                        children: messages.asMap().entries.map((entry) {
-                          final message = entry.value;
-                          final messageId = message.id;
-                          final isCurrentUser =
-                              message.senderId == _auth!.currentUser!.uid;
-                          final isRead = message.read;
-                          final readAt = message.readAt;
+                      return ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isCurrentUser = message.senderId == currentUser.uid;
 
-                          return Column(
-                            crossAxisAlignment: isCurrentUser
-                                ? CrossAxisAlignment.end
-                                : CrossAxisAlignment.start,
-                            children: [
-                              if (isCurrentUser)
-                                MessageBubble(
-                                  messageId: messageId,
-                                  text: message.text,
-                                  isCurrentUser: true,
-                                  isRead: isRead,
-                                  readStatusText: isRead
-                                      ? 'seen ${TimeFormatter.formatTimeAgo(readAt)}'
-                                      : 'unseen',
-                                  onDelete: () =>
-                                      _chatService!.deleteMessage(messageId),
-                                )
-                              else
-                                MessageBubble(
-                                  messageId: messageId,
-                                  text: message.text,
-                                  isCurrentUser: false,
-                                  isRead: isRead,
-                                  readStatusText: '',
-                                ),
-                            ],
+                          final readStatusText = isCurrentUser
+                              ? (message.read
+                                  ? 'seen ${TimeFormatter.formatTimeAgo(message.readAt)}'
+                                  : 'sent')
+                              : '';
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: MessageBubble(
+                              messageId: message.id,
+                              text: message.isDeleted
+                                  ? '[This message was deleted]'
+                                  : message.text,
+                              isCurrentUser: isCurrentUser,
+                              isRead: message.read,
+                              readStatusText: readStatusText,
+                              isStarred: message.isStarredBy(currentUser.uid),
+                              onStarToggle: () async {
+                                await _chatService.toggleStar(
+                                  message.id,
+                                  currentUser.uid,
+                                );
+                              },
+                              onDeleteForMe: () async {
+                                await _chatService.deleteMessageForMe(
+                                  message.id,
+                                  currentUser.uid,
+                                );
+                              },
+                              onDeleteForEveryone: isCurrentUser
+                                  ? () async {
+                                      await _chatService.deleteMessage(message.id);
+                                    }
+                                  : null,
+                            ),
                           );
-                        }).toList(),
+                        },
                       );
                     },
                   ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    onSubmitted: (_) => _sendMessage(),
-                    decoration: InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _messageController,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _sendMessage(),
+                      decoration: InputDecoration(
+                        hintText: 'Type a message...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                IconButton(
-                  icon: const Icon(Icons.send),
-                  onPressed: _sendMessage,
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: _sendMessage,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
