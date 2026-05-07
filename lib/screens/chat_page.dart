@@ -1,8 +1,14 @@
+<<<<<<< HEAD
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+=======
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
 
 import '../core/utils/time_formatter.dart';
 import '../models/message.dart';
@@ -302,7 +308,10 @@ class _ChatPageState extends State<ChatPage> {
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         final err = snapshot.error;
+<<<<<<< HEAD
                         // If Firestore permission denied, show a friendly empty state
+=======
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                         if (err is FirebaseException &&
                             err.code == 'permission-denied') {
                           return const Center(child: Text('No messages yet.'));
@@ -387,6 +396,8 @@ class _ChatPageState extends State<ChatPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: MessageBubble(
                               messageId: message.id,
+<<<<<<< HEAD
+                              text: message.text,
                               messageType: message.messageType,
                               fileUrl: message.fileUrl,
                               fileName: message.fileName,
@@ -394,9 +405,11 @@ class _ChatPageState extends State<ChatPage> {
                               fileSize: message.fileSize,
                               contactData: message.contactData,
                               isDeleted: message.isDeleted,
+=======
                               text: message.isDeleted
                                   ? '[This message was deleted]'
                                   : message.text,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                               isCurrentUser: isCurrentUser,
                               isRead: message.read,
                               readStatusText: readStatusText,

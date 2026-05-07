@@ -276,7 +276,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 : StreamBuilder<QuerySnapshot>(
                 stream: firestore
                         .collection('chats')
-                  .where('participants', arrayContains: currentUser.uid)
+                        .where('participants', arrayContains: currentUser.uid)
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
@@ -399,9 +399,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: cs.surface,
+<<<<<<< HEAD
+                                    border: Border.all(color: cs.outline),
+=======
                                     border: Border.all(
-                                      color: cs.secondary.withValues(alpha: 0.60),
+                                      color: cs.secondary.withOpacity(0.60),
                                     ),
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   padding: const EdgeInsets.symmetric(
@@ -428,8 +432,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: unreadCount > 0
+<<<<<<< HEAD
                                                   ? cs.error
-                                                  : cs.onSurface.withValues(alpha: 0.7),
+                                                  : cs.onSurface.withValues(
+                                                      alpha: 0.7,
+                                                    ),
+=======
+                                                  ? cs.primary
+                                                  : cs.secondary,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                                               fontWeight: unreadCount > 0
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
@@ -449,10 +460,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                           children: [
                                             Text(
                                               _formatTimeAgo(lastTimestamp),
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: cs.onSurface.withValues(alpha: 0.7),
+                                              style: TextStyle(
+                                                fontSize: 12,
+<<<<<<< HEAD
+                                                color: cs.onSurface.withValues(
+                                                  alpha: 0.7,
                                                 ),
+=======
+                                                color: cs.secondary,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -489,8 +506,14 @@ class SearchUser {
 }
 
 class UserSearchBottomSheet extends StatefulWidget {
+  const UserSearchBottomSheet({super.key});
+
+<<<<<<< HEAD
   const UserSearchBottomSheet({
     super.key,
+=======
+  const UserSearchBottomSheet({super.key,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
     this.firestore,
     required this.currentUserId,
     required this.onUserSelected,

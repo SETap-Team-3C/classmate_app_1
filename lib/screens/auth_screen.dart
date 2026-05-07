@@ -110,6 +110,8 @@ class _AuthScreenState extends State<AuthScreen> {
 
         debugPrint('Signup Firestore profile created for UID: ${activeUser.uid}');
       }
+<<<<<<< HEAD
+=======
 
       final confirmedUser = FirebaseAuth.instance.currentUser;
       if (confirmedUser == null) {
@@ -131,6 +133,7 @@ class _AuthScreenState extends State<AuthScreen> {
           content: Text('Authentication timed out. Please try again.'),
         ),
       );
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
     } on FirebaseAuthException catch (error) {
       messenger.showSnackBar(
         SnackBar(content: Text(error.message ?? 'Authentication failed.')),
@@ -179,10 +182,16 @@ class _AuthScreenState extends State<AuthScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
+<<<<<<< HEAD
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.20),
+=======
                         color: Theme.of(context)
                             .colorScheme
                             .primary
                             .withValues(alpha: 0.20),
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),

@@ -8,7 +8,7 @@ import '../test_helpers.dart';
 
 void main() {
   group('Navigation Workflow Tests', () {
-    testWidgets('Feed to Chats Transition', (WidgetTester tester) async {
+    testWidgetsFeedToChatsTransition(WidgetTester tester) async {
       final auth = MockFirebaseAuth(
         mockUser: MockUser(uid: 'u1', email: 'test@test.com'),
         signedIn: true,

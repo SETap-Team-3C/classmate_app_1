@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:classmate_app_1/widets/enhanced_avatar.dart';
 import 'package:classmate_app_1/widets/online_indicator.dart';
 import 'package:classmate_app_1/core/utils/time_formatter.dart';
@@ -57,6 +58,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final email = userData['email'] ?? '';
         final username =
             userData['username'] ?? 'user${widget.userId.substring(0, 5)}';
+        final profilePictureUrl =
+            userData['profilePictureUrl'] ??
+            FirebaseAuth.instance.currentUser?.photoURL;
         final isOnline = userData['isOnline'] ?? false;
         final lastSeen = userData['lastSeen'] as Timestamp?;
 
@@ -93,7 +97,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
-                      EnhancedAvatar(name: name, radius: 60),
+                      EnhancedAvatar(
+                        name: name,
+                        radius: 60,
+                        imageUrl: profilePictureUrl,
+                      ),
                       OnlineIndicator(isOnline: isOnline, size: 24),
                     ],
                   ),
