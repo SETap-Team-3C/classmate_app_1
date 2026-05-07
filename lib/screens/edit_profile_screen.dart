@@ -3,10 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/user_service.dart';
-<<<<<<< HEAD
 import '../core/localization/app_localizations.dart';
-=======
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -100,15 +97,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-<<<<<<< HEAD
             title: Text(loc.t('email_change_requested')),
             content: Text(loc.t('email_change_info')),
-=======
-            title: const Text('Email change requested'),
-            content: const Text(
-              'We saved your requested email. To complete an email change you may need to re-authenticate (sign out and sign in) or perform the change from your account settings.',
-            ),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
@@ -120,23 +110,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-<<<<<<< HEAD
-      ).showSnackBar(SnackBar(content: Text(loc.t('profile_updated'))));
-=======
-      ).showSnackBar(const SnackBar(content: Text('Profile updated')));
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(loc.t('profile_updated'))));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-<<<<<<< HEAD
-      ).showSnackBar(SnackBar(content: Text(loc.t('failed_save_profile', params: {'error': e.toString()}))));
-=======
-      ).showSnackBar(SnackBar(content: Text('Failed to save profile: $e')));
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(loc.t('failed_save_profile', params: {'error': e.toString()}))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

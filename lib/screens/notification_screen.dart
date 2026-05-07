@@ -42,15 +42,9 @@ class _NotificationScreenState extends State<NotificationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-<<<<<<< HEAD
             Text(
               loc.t('recent_notifications'),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-=======
-            const Text(
-              'Recent Notifications',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
             ),
             const SizedBox(height: 8),
 

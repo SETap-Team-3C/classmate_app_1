@@ -116,15 +116,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   await FirebaseAuth.instance.signOut();
 
                   if (!mounted) return;
-<<<<<<< HEAD
 
                   navigator.pushAndRemoveUntil(
-=======
-                  Navigator.of(context).pushAndRemoveUntil(
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                     MaterialPageRoute(
-                      builder: (_) =>
-                          LoginScreen(themeProvider: widget.themeProvider),
+                      builder: (_) => LoginScreen(themeProvider: widget.themeProvider),
                     ),
                     (route) => false,
                   );

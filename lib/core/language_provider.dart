@@ -58,8 +58,8 @@ class LanguageInherited extends InheritedNotifier<LanguageProvider> {
   const LanguageInherited({
     super.key,
     required LanguageProvider languageProvider,
-    required Widget child,
-  }) : super(notifier: languageProvider, child: child);
+    required super.child,
+  }) : super(notifier: languageProvider);
 
   static LanguageProvider of(BuildContext context) {
     final inherited = context.dependOnInheritedWidgetOfExactType<LanguageInherited>();

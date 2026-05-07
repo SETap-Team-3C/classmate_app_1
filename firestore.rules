@@ -138,8 +138,6 @@ service cloud.firestore {
         && request.resource.data.mimeType == resource.data.mimeType
         && request.resource.data.fileSize == resource.data.fileSize
         && request.resource.data.contactData == resource.data.contactData;
-<<<<<<< HEAD
-=======
     }
 
     function validPostCreateSchema() {
@@ -202,7 +200,6 @@ service cloud.firestore {
       return signedIn()
         && exists(/databases/$(database)/documents/$(collectionName)/$(postId))
         && get(/databases/$(database)/documents/$(collectionName)/$(postId)).data.userId == request.auth.uid;
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
     }
 
     match /users/{userId} {

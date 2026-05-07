@@ -188,11 +188,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           ),
                                           const SizedBox(height: 28),
                                           Text(
-<<<<<<< HEAD
                                             AppLocalizations.of(context).t('app_name'),
-=======
-                                            'ClassMates',
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                                             textAlign: TextAlign.center,
                                             style: Theme.of(context)
                                                 .textTheme

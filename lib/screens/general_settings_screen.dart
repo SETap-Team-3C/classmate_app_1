@@ -114,22 +114,13 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                 const SizedBox(height: 12),
                 ListTile(
                   leading: const Icon(Icons.palette),
-<<<<<<< HEAD
                   title: Text(loc.t('theme')),
                   subtitle: Text(isDarkMode ? loc.t('dark') : loc.t('light')),
-=======
-                  title: const Text('Theme'),
-                  subtitle: Text(isDarkMode ? 'Dark' : 'Light'),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                   onTap: () async {
                     final selected = await showDialog<String>(
                       context: context,
                       builder: (dialogContext) => AlertDialog(
-<<<<<<< HEAD
                         title: Text(loc.t('select_theme')),
-=======
-                        title: const Text('Select Theme'),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -139,11 +130,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                                     ? Icons.radio_button_unchecked
                                     : Icons.check_circle,
                               ),
-<<<<<<< HEAD
                               title: Text(loc.t('light')),
-=======
-                              title: const Text('Light'),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                               onTap: () =>
                                   Navigator.of(dialogContext).pop('light'),
                             ),
@@ -153,11 +140,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                                     ? Icons.check_circle
                                     : Icons.radio_button_unchecked,
                               ),
-<<<<<<< HEAD
                               title: Text(loc.t('dark')),
-=======
-                              title: const Text('Dark'),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                               onTap: () =>
                                   Navigator.of(dialogContext).pop('dark'),
                             ),
@@ -211,7 +194,6 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                 final shouldLogout = await showDialog<bool>(
                   context: context,
                   builder: (dialogContext) => AlertDialog(
-<<<<<<< HEAD
                     title: Text(loc.t('logout')),
                     content: Text(loc.t('logout_confirm')),
                     actions: [
@@ -222,18 +204,6 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                       TextButton(
                         onPressed: () => Navigator.of(dialogContext).pop(true),
                         child: Text(loc.t('logout')),
-=======
-                    title: const Text('Logout'),
-                    content: const Text('Are you sure you want to logout?'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        child: const Text('Logout'),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                       ),
                     ],
                   ),

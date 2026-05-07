@@ -55,11 +55,7 @@ class CallContactsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final user = users[index];
               final data = user.data() as Map<String, dynamic>?;
-<<<<<<< HEAD
               final userName = _readStringField(data, 'name', loc.t('unknown_user'));
-=======
-              final userName = _readStringField(data, 'name', 'Unknown User');
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
               final userEmail = _readStringField(data, 'email');
               final userPhone = _readStringField(data, 'phone');
 
@@ -76,13 +72,7 @@ class CallContactsScreen extends StatelessWidget {
                     if (userEmail.isNotEmpty) Text(userEmail),
                     const SizedBox(height: 2),
                     Text(
-                      userPhone.isNotEmpty
-                          ? userPhone
-<<<<<<< HEAD
-                          : loc.t('no_phone_number_added'),
-=======
-                          : 'No phone number added',
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
+                      userPhone.isNotEmpty ? userPhone : loc.t('no_phone_number_added'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,

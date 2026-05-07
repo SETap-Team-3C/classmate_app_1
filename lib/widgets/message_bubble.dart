@@ -247,119 +247,111 @@ class MessageBubble extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: GestureDetector(
-                  onLongPress: isCurrentUser && onDeleteForEveryone != null
+                  onLongPress: onDeleteForEveryone != null && isCurrentUser
                       ? () => _confirmAndPerform(
-<<<<<<< HEAD
-                          context,
-                          title: 'Delete Message for Everyone',
-                          confirmText:
-                              'This will remove the message for everyone in the chat. Continue?',
-                          action: onDeleteForEveryone,
-=======
-                        context,
-                        title: 'Delete Message',
-                        confirmText:
-                          'Are you sure you want to delete your message?',
-                        action: onDeleteForMe,
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-                        )
-                      : (onDeleteForMe != null
-                            ? () => _confirmAndPerform(
+                            context,
+                            title: 'Delete Message for Everyone',
+                            confirmText:
+                                'This will remove the message for everyone in the chat. Continue?',
+                            action: onDeleteForEveryone,
+                          )
+                      : onDeleteForMe != null
+                          ? () => _confirmAndPerform(
                                 context,
                                 title: 'Delete Message',
                                 confirmText:
-                                    'Are you sure you want to delete your message for you?',
+                                    'Are you sure you want to delete your message?',
                                 action: onDeleteForMe,
                               )
-                            : null),
+                          : null,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                        if (isDeleted)
-                          Text(
-                            '[This message was deleted]',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontStyle: FontStyle.italic,
-                              color: isCurrentUser
-                                  ? cs.onPrimaryContainer
-                                  : cs.onSurface,
-                            ),
-                          )
-                        else
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildAttachmentPreview(context),
-                              if (messageType == MessageType.image &&
-                                  text.trim().isNotEmpty)
-                                const SizedBox(height: 6),
-                              if (messageType == MessageType.image &&
-                                  text.trim().isNotEmpty)
-                                Text(
+                      if (isDeleted)
+                        Text(
+                          '[This message was deleted]',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontStyle: FontStyle.italic,
+                            color: isCurrentUser
+                                ? cs.onPrimaryContainer
+                                : cs.onSurface,
+                          ),
+                        )
+                      else
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildAttachmentPreview(context),
+                            if (messageType == MessageType.image &&
+                                text.trim().isNotEmpty)
+                              const SizedBox(height: 6),
+                            if (messageType == MessageType.image &&
+                                text.trim().isNotEmpty)
+                              Text(
+                                text,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: isCurrentUser
+                                      ? cs.onPrimaryContainer
+                                      : cs.onSurface,
+                                ),
+                              ),
+                            if (messageType == MessageType.text)
+                              Text(
+                                text,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isCurrentUser
+                                      ? cs.onPrimaryContainer
+                                      : cs.onSurface,
+                                ),
+                              ),
+                            if (messageType == MessageType.document &&
+                                text.trim().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
                                   text,
                                   style: TextStyle(
-                                    fontSize: 15,
+                                    fontSize: 14,
                                     color: isCurrentUser
                                         ? cs.onPrimaryContainer
                                         : cs.onSurface,
                                   ),
                                 ),
-                              if (messageType == MessageType.text)
-                                Text(
+                              ),
+                            if (messageType == MessageType.contact &&
+                                text.trim().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
                                   text,
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     color: isCurrentUser
                                         ? cs.onPrimaryContainer
                                         : cs.onSurface,
                                   ),
                                 ),
-                              if (messageType == MessageType.document &&
-                                  text.trim().isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(
-                                    text,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isCurrentUser
-                                          ? cs.onPrimaryContainer
-                                          : cs.onSurface,
-                                    ),
+                              ),
+                            if (messageType == MessageType.document &&
+                                fileSize != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  _humanReadableFileSize(fileSize),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isCurrentUser
+                                        ? cs.onPrimaryContainer.withValues(
+                                            alpha: 0.7,
+                                          )
+                                        : cs.onSurface.withValues(alpha: 0.7),
                                   ),
                                 ),
-                              if (messageType == MessageType.contact &&
-                                  text.trim().isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(
-                                    text,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isCurrentUser
-                                          ? cs.onPrimaryContainer
-                                          : cs.onSurface,
-                                    ),
-                                  ),
-                                ),
-                              if (messageType == MessageType.document &&
-                                  fileSize != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    _humanReadableFileSize(fileSize),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isCurrentUser
-                                          ? cs.onPrimaryContainer.withValues(
-                                              alpha: 0.7,
-                                            )
-                                          : cs.onSurface.withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                              ),
+                          ],
                         ),
                       if (isCurrentUser)
                         Padding(
@@ -474,7 +466,6 @@ class MessageBubble extends StatelessWidget {
                       }
 
                       if (onDeleteForMe != null) {
-<<<<<<< HEAD
                         items.add(
                           PopupMenuItem<String>(
                             value: 'delete_me',
@@ -485,16 +476,6 @@ class MessageBubble extends StatelessWidget {
                                 const Text('Delete for me'),
                               ],
                             ),
-=======
-                        items.add(PopupMenuItem<String>(
-                          value: 'delete_me',
-                          child: Row(
-                            children: [
-                              Icon(Icons.delete_outline, color: cs.onSurface),
-                              const SizedBox(width: 8),
-                              const Text('Delete'),
-                            ],
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                           ),
                         );
                       }
