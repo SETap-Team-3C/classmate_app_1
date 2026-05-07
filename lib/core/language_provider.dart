@@ -31,6 +31,8 @@ class LanguageProvider extends ChangeNotifier {
         return 'Spanish';
       case 'hi':
         return 'Hindi';
+      case 'fr':
+        return 'French';
       case 'en':
       default:
         return 'English';
@@ -48,6 +50,10 @@ class LanguageProvider extends ChangeNotifier {
         return 'es';
       case 'hindi':
         return 'hi';
+      case 'french':
+      case 'francais':
+      case 'français':
+        return 'fr';
       case 'english':
       default:
         return 'en';
@@ -62,6 +68,8 @@ class LanguageProvider extends ChangeNotifier {
         return const Locale('es');
       case 'hi':
         return const Locale('hi');
+      case 'fr':
+        return const Locale('fr');
       case 'en':
       default:
         return const Locale('en');

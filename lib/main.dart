@@ -94,6 +94,7 @@ class _ClassmateAppState extends State<ClassmateApp> {
             Locale('es'),
             Locale('zh'),
             Locale('hi'),
+            Locale('fr'),
           ],
           theme: widget.themeProvider.lightTheme,
           darkTheme: widget.themeProvider.darkTheme,

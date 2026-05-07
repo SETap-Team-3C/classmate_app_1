@@ -243,6 +243,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     'Spanish',
     'Chinese (Mandarin)',
     'Hindi',
+    'French',
   ];
 
   Widget _buildBottomNavItem({

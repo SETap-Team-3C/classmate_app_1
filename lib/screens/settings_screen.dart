@@ -29,6 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     'Spanish',
     'Chinese (Mandarin)',
     'Hindi',
+    'French',
   ];
   bool _loadedLanguage = false;
   @override
