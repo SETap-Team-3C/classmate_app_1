@@ -89,7 +89,12 @@ class _ClassmateAppState extends State<ClassmateApp> {
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
-          supportedLocales: const [Locale('en'), Locale('es'), Locale('zh')],
+          supportedLocales: const [
+            Locale('en'),
+            Locale('es'),
+            Locale('zh'),
+            Locale('hi'),
+          ],
           theme: widget.themeProvider.lightTheme,
           darkTheme: widget.themeProvider.darkTheme,
           themeMode: widget.themeProvider.isDarkMode

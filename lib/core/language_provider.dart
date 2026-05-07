@@ -29,6 +29,8 @@ class LanguageProvider extends ChangeNotifier {
         return 'Chinese (Mandarin)';
       case 'es':
         return 'Spanish';
+      case 'hi':
+        return 'Hindi';
       case 'en':
       default:
         return 'English';
@@ -44,6 +46,8 @@ class LanguageProvider extends ChangeNotifier {
         return 'zh';
       case 'spanish':
         return 'es';
+      case 'hindi':
+        return 'hi';
       case 'english':
       default:
         return 'en';
@@ -56,6 +60,8 @@ class LanguageProvider extends ChangeNotifier {
         return const Locale('zh');
       case 'es':
         return const Locale('es');
+      case 'hi':
+        return const Locale('hi');
       case 'en':
       default:
         return const Locale('en');
