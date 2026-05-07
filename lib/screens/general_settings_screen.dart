@@ -44,7 +44,9 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfileSettings()),
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileSettings(),
+                      ),
                     );
                   },
                 ),
@@ -54,7 +56,9 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ProfileSettings()),
+                      MaterialPageRoute(
+                        builder: (context) => const ProfileSettings(),
+                      ),
                     );
                   },
                 ),
@@ -110,40 +114,43 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                   leading: const Icon(Icons.palette),
                   title: const Text('Theme'),
                   subtitle: Text(isDarkMode ? 'Dark' : 'Light'),
-                  onTap: () {
-                    showDialog(
+                  onTap: () async {
+                    final selected = await showDialog<String>(
                       context: context,
-                      builder: (context) => AlertDialog(
+                      builder: (dialogContext) => AlertDialog(
                         title: const Text('Select Theme'),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            RadioListTile(
+                            ListTile(
+                              leading: Icon(
+                                isDarkMode
+                                    ? Icons.radio_button_unchecked
+                                    : Icons.check_circle,
+                              ),
                               title: const Text('Light'),
-                              value: 'light',
-                              groupValue: isDarkMode ? 'dark' : 'light',
-                              onChanged: (value) async {
-                                await widget.themeProvider.setDarkMode(false);
-                                if (!mounted) return;
-                                setState(() {});
-                                Navigator.pop(context);
-                              },
+                              onTap: () =>
+                                  Navigator.of(dialogContext).pop('light'),
                             ),
-                            RadioListTile(
+                            ListTile(
+                              leading: Icon(
+                                isDarkMode
+                                    ? Icons.check_circle
+                                    : Icons.radio_button_unchecked,
+                              ),
                               title: const Text('Dark'),
-                              value: 'dark',
-                              groupValue: isDarkMode ? 'dark' : 'light',
-                              onChanged: (value) async {
-                                await widget.themeProvider.setDarkMode(true);
-                                if (!mounted) return;
-                                setState(() {});
-                                Navigator.pop(context);
-                              },
+                              onTap: () =>
+                                  Navigator.of(dialogContext).pop('dark'),
                             ),
                           ],
                         ),
                       ),
                     );
+
+                    if (selected == null) return;
+                    await widget.themeProvider.setDarkMode(selected == 'dark');
+                    if (!mounted) return;
+                    setState(() {});
                   },
                 ),
               ],
@@ -182,27 +189,30 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             padding: const EdgeInsets.all(16),
             child: ElevatedButton.icon(
               onPressed: () async {
-                showDialog(
+                final shouldLogout = await showDialog<bool>(
                   context: context,
-                  builder: (context) => AlertDialog(
+                  builder: (dialogContext) => AlertDialog(
                     title: const Text('Logout'),
                     content: const Text('Are you sure you want to logout?'),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
                         child: const Text('Cancel'),
                       ),
                       TextButton(
-                        onPressed: () async {
-                          await FirebaseAuth.instance.signOut();
-                          if (!mounted) return;
-                          Navigator.pop(context);
-                        },
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
                         child: const Text('Logout'),
                       ),
                     ],
                   ),
                 );
+
+                if (shouldLogout != true) return;
+                await FirebaseAuth.instance.signOut();
+                if (!mounted) return;
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               },
               icon: const Icon(Icons.logout),
               label: const Text('Logout'),
