@@ -4,8 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'firebase_options.dart';
 import 'core/theme/theme_provider.dart';
-import 'screens/auth_screen.dart';
-import 'screens/home_screen.dart';
+import 'screens/auth_gate.dart';
 
 void main() async {
   
@@ -40,7 +39,10 @@ void main() async {
   }
 
   final themeProvider = ThemeProvider();
-  runApp(ClassmateApp(themeProvider: themeProvider, home: const AuthScreen()));
+  runApp(ClassmateApp(
+    themeProvider: themeProvider,
+    home: AuthGate(themeProvider: themeProvider),
+  ));
 }
 
 class ClassmateApp extends StatefulWidget {
