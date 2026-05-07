@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
 
 class _CommentNode {
@@ -17,11 +18,7 @@ class _CommentNode {
 }
 
 class FeedScreen extends StatefulWidget {
-  const FeedScreen({
-    super.key,
-    this.auth,
-    this.firestore,
-  });
+  const FeedScreen({super.key, this.auth, this.firestore});
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
@@ -154,7 +151,8 @@ class _FeedContentState extends State<FeedContent> {
   Uint8List? _selectedImageBytes;
 
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore => widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore =>
+      widget.firestore ?? FirebaseFirestore.instance;
   FirebaseStorage get _storage => FirebaseStorage.instance;
 
   FirebaseAuth? _tryGetAuth() {
@@ -195,7 +193,9 @@ class _FeedContentState extends State<FeedContent> {
   }) {
     final leftDate = _timestampToDate(left['createdAt']);
     final rightDate = _timestampToDate(right['createdAt']);
-    return descending ? rightDate.compareTo(leftDate) : leftDate.compareTo(rightDate);
+    return descending
+        ? rightDate.compareTo(leftDate)
+        : leftDate.compareTo(rightDate);
   }
 
   List<QueryDocumentSnapshot<Map<String, dynamic>>> _sortedPosts(
@@ -235,11 +235,8 @@ class _FeedContentState extends State<FeedContent> {
 
     void sortNodes(List<_CommentNode> commentNodes) {
       commentNodes.sort(
-        (left, right) => _compareByCreatedAt(
-          left.data,
-          right.data,
-          descending: true,
-        ),
+        (left, right) =>
+            _compareByCreatedAt(left.data, right.data, descending: true),
       );
       for (final node in commentNodes) {
         sortNodes(node.children);
@@ -254,19 +251,27 @@ class _FeedContentState extends State<FeedContent> {
     await _firestore.collection(_collectionName).doc(postId).delete();
   }
 
-  Future<void> _togglePinComment(String postId, String commentId, bool isPinned) async {
+  Future<void> _togglePinComment(
+    String postId,
+    String commentId,
+    bool isPinned,
+  ) async {
     await _firestore
         .collection(_collectionName)
         .doc(postId)
         .collection('comments')
         .doc(commentId)
         .update({
-      'isPinned': !isPinned,
-      'pinnedAt': !isPinned ? FieldValue.serverTimestamp() : null,
-    });
+          'isPinned': !isPinned,
+          'pinnedAt': !isPinned ? FieldValue.serverTimestamp() : null,
+        });
   }
 
-  Future<void> _toggleLikeComment(String postId, String commentId, String userId) async {
+  Future<void> _toggleLikeComment(
+    String postId,
+    String commentId,
+    String userId,
+  ) async {
     try {
       final likeRef = _firestore
           .collection(_collectionName)
@@ -308,12 +313,12 @@ class _FeedContentState extends State<FeedContent> {
         .doc(postId)
         .collection('comments')
         .add({
-      'userId': user.uid,
-      'userName': user.displayName ?? user.email ?? 'User',
-      'text': text.trim(),
-      'createdAt': FieldValue.serverTimestamp(),
-      'parentCommentId': parentCommentId,
-    });
+          'userId': user.uid,
+          'userName': user.displayName ?? user.email ?? 'User',
+          'text': text.trim(),
+          'createdAt': FieldValue.serverTimestamp(),
+          'parentCommentId': parentCommentId,
+        });
   }
 
   Future<void> _deleteCommentTree(
@@ -333,7 +338,10 @@ class _FeedContentState extends State<FeedContent> {
     collect(commentId);
 
     final batch = _firestore.batch();
-    final commentsCollection = _firestore.collection(_collectionName).doc(postId).collection('comments');
+    final commentsCollection = _firestore
+        .collection(_collectionName)
+        .doc(postId)
+        .collection('comments');
     for (final id in idsToDelete) {
       batch.delete(commentsCollection.doc(id));
     }
@@ -357,8 +365,10 @@ class _FeedContentState extends State<FeedContent> {
     final authorId = (data['userId'] ?? '').toString();
     final authorName = (data['userName'] ?? 'User').toString();
     final text = (data['text'] ?? '').toString();
-    final isOwnedByCurrentUser = currentUserId != null && authorId == currentUserId;
-    final canPinComment = currentUserId != null && postAuthorId == currentUserId;
+    final isOwnedByCurrentUser =
+        currentUserId != null && authorId == currentUserId;
+    final canPinComment =
+        currentUserId != null && postAuthorId == currentUserId;
     final isPinned = data['isPinned'] == true;
     final hasChildren = node.children.isNotEmpty;
     final isRepliesExpanded = expandedCommentIds.contains(node.id);
@@ -370,7 +380,9 @@ class _FeedContentState extends State<FeedContent> {
         decoration: BoxDecoration(
           color: Colors.deepPurple.withValues(alpha: depth == 0 ? 0.08 : 0.04),
           borderRadius: BorderRadius.circular(12),
-          border: Border(left: BorderSide(color: Colors.deepPurple.shade200, width: 3)),
+          border: Border(
+            left: BorderSide(color: Colors.deepPurple.shade200, width: 3),
+          ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
@@ -397,7 +409,10 @@ class _FeedContentState extends State<FeedContent> {
                             SizedBox(width: 2),
                             Text(
                               'Pinned',
-                              style: TextStyle(fontSize: 10, color: Colors.amber),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.amber,
+                              ),
                             ),
                           ],
                         ),
@@ -418,8 +433,10 @@ class _FeedContentState extends State<FeedContent> {
                       .snapshots(),
                   builder: (context, likeSnapshot) {
                     final likeCount = likeSnapshot.data?.docs.length ?? 0;
-                    final isLiked = likeSnapshot.data?.docs
-                            .any((doc) => doc.id == currentUserId) ??
+                    final isLiked =
+                        likeSnapshot.data?.docs.any(
+                          (doc) => doc.id == currentUserId,
+                        ) ??
                         false;
 
                     return IconButton(
@@ -429,9 +446,14 @@ class _FeedContentState extends State<FeedContent> {
                         size: 18,
                       ),
                       onPressed: currentUserId != null
-                          ? () => _toggleLikeComment(postId, node.id, currentUserId)
+                          ? () => _toggleLikeComment(
+                              postId,
+                              node.id,
+                              currentUserId,
+                            )
                           : null,
-                      tooltip: '$likeCount ${likeCount == 1 ? "like" : "likes"}',
+                      tooltip:
+                          '$likeCount ${likeCount == 1 ? "like" : "likes"}',
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                     );
@@ -454,7 +476,9 @@ class _FeedContentState extends State<FeedContent> {
                           child: Row(
                             children: [
                               Icon(
-                                isPinned ? Icons.push_pin_outlined : Icons.push_pin,
+                                isPinned
+                                    ? Icons.push_pin_outlined
+                                    : Icons.push_pin,
                               ),
                               const SizedBox(width: 8),
                               Text(isPinned ? 'Unpin' : 'Pin'),
@@ -563,14 +587,14 @@ class _FeedContentState extends State<FeedContent> {
         _selectedImageBytes = null;
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Post created.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Post created.')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to post: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to post: $e')));
     } finally {
       if (mounted) {
         setState(() => _isPosting = false);
@@ -596,9 +620,9 @@ class _FeedContentState extends State<FeedContent> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not pick image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Could not pick image: $e')));
     }
   }
 
@@ -606,7 +630,9 @@ class _FeedContentState extends State<FeedContent> {
     final bytes = await image.readAsBytes();
     final fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
     final ref = _storage.ref().child('post_images/$userId/$fileName');
-    final metadata = SettableMetadata(contentType: image.mimeType ?? 'image/jpeg');
+    final metadata = SettableMetadata(
+      contentType: image.mimeType ?? 'image/jpeg',
+    );
     await ref.putData(bytes, metadata);
     return ref.getDownloadURL();
   }
@@ -646,13 +672,16 @@ class _FeedContentState extends State<FeedContent> {
             .doc(postId)
             .collection('likes')
             .doc(user.uid)
-            .set({'userId': user.uid, 'createdAt': FieldValue.serverTimestamp()});
+            .set({
+              'userId': user.uid,
+              'createdAt': FieldValue.serverTimestamp(),
+            });
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating like: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating like: $e')));
     }
   }
 
@@ -712,8 +741,11 @@ class _FeedContentState extends State<FeedContent> {
                             .collection('comments')
                             .snapshots(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const Center(child: CircularProgressIndicator());
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
                           }
 
                           final comments = snapshot.data?.docs ?? [];
@@ -726,9 +758,13 @@ class _FeedContentState extends State<FeedContent> {
                           final nodes = _buildCommentTree(comments);
                           final childrenByParent = <String, List<String>>{};
                           for (final doc in comments) {
-                            final parentId = (doc.data()['parentCommentId'] ?? '').toString();
+                            final parentId =
+                                (doc.data()['parentCommentId'] ?? '')
+                                    .toString();
                             if (parentId.isNotEmpty) {
-                              childrenByParent.putIfAbsent(parentId, () => <String>[]).add(doc.id);
+                              childrenByParent
+                                  .putIfAbsent(parentId, () => <String>[])
+                                  .add(doc.id);
                             }
                           }
 
@@ -753,7 +789,9 @@ class _FeedContentState extends State<FeedContent> {
                                     },
                                     onToggleReplies: (commentId) {
                                       setSheetState(() {
-                                        if (expandedCommentIds.contains(commentId)) {
+                                        if (expandedCommentIds.contains(
+                                          commentId,
+                                        )) {
                                           expandedCommentIds.remove(commentId);
                                         } else {
                                           expandedCommentIds.add(commentId);
@@ -761,7 +799,11 @@ class _FeedContentState extends State<FeedContent> {
                                       });
                                     },
                                     onDelete: (commentId) async {
-                                      await _deleteCommentTree(postId, commentId, childrenByParent);
+                                      await _deleteCommentTree(
+                                        postId,
+                                        commentId,
+                                        childrenByParent,
+                                      );
                                     },
                                   ),
                                 )
@@ -823,7 +865,11 @@ class _FeedContentState extends State<FeedContent> {
                                   } catch (e) {
                                     if (!context.mounted) return;
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error posting comment: $e')),
+                                      SnackBar(
+                                        content: Text(
+                                          'Error posting comment: $e',
+                                        ),
+                                      ),
                                     );
                                   }
                                 },
@@ -850,6 +896,7 @@ class _FeedContentState extends State<FeedContent> {
   Widget build(BuildContext context) {
     final auth = _tryGetAuth();
     final firestore = _tryGetFirestore();
+    final loc = AppLocalizations.of(context);
 
     if (auth == null || firestore == null) {
       return Column(
@@ -860,16 +907,14 @@ class _FeedContentState extends State<FeedContent> {
               controller: _postController,
               minLines: 1,
               maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'What is on your mind?',
+              decoration: InputDecoration(
+                hintText: loc.t('what_is_on_your_mind'),
                 border: OutlineInputBorder(),
               ),
             ),
           ),
           const Expanded(
-            child: Center(
-              child: Text('No posts yet. Create the first one.'),
-            ),
+            child: Center(child: Text('No posts yet. Create the first one.')),
           ),
         ],
       );
@@ -885,8 +930,8 @@ class _FeedContentState extends State<FeedContent> {
                 controller: _postController,
                 minLines: 1,
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'What is on your mind?',
+                decoration: InputDecoration(
+                  hintText: loc.t('what_is_on_your_mind'),
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -915,9 +960,9 @@ class _FeedContentState extends State<FeedContent> {
                       onPressed: _isPosting
                           ? null
                           : () => setState(() {
-                                _selectedImage = null;
-                                _selectedImageBytes = null;
-                              }),
+                              _selectedImage = null;
+                              _selectedImageBytes = null;
+                            }),
                       child: const Text('Remove'),
                     ),
                   const Spacer(),
@@ -939,7 +984,10 @@ class _FeedContentState extends State<FeedContent> {
         const Divider(height: 1),
         Expanded(
           child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: firestore.collection(_collectionName).orderBy('createdAt', descending: true).snapshots(),
+            stream: firestore
+                .collection(_collectionName)
+                .orderBy('createdAt', descending: true)
+                .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
@@ -971,7 +1019,8 @@ class _FeedContentState extends State<FeedContent> {
                   final postId = postDoc.id;
                   final postAuthorId = (data['userId'] ?? '').toString();
                   final currentUserId = _auth.currentUser?.uid;
-                  final isCurrentUserPost = currentUserId != null && postAuthorId == currentUserId;
+                  final isCurrentUserPost =
+                      currentUserId != null && postAuthorId == currentUserId;
                   final isPinned = data['isPinned'] == true;
                   final name = (data['userName'] ?? 'User').toString();
                   final text = (data['text'] ?? '').toString();
@@ -1010,7 +1059,8 @@ class _FeedContentState extends State<FeedContent> {
                                             ),
                                             decoration: BoxDecoration(
                                               color: Colors.amber.shade100,
-                                              borderRadius: BorderRadius.circular(999),
+                                              borderRadius:
+                                                  BorderRadius.circular(999),
                                             ),
                                             child: const Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -1019,7 +1069,9 @@ class _FeedContentState extends State<FeedContent> {
                                                 SizedBox(width: 4),
                                                 Text(
                                                   'Pinned',
-                                                  style: TextStyle(fontSize: 11),
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -1044,18 +1096,22 @@ class _FeedContentState extends State<FeedContent> {
                                       await _deletePost(postId);
                                     }
                                   },
-                                  itemBuilder: (context) => <PopupMenuEntry<String>>[
-                                    const PopupMenuItem<String>(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete, color: Colors.red),
-                                          SizedBox(width: 8),
-                                          Text('Delete'),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                  itemBuilder: (context) =>
+                                      <PopupMenuEntry<String>>[
+                                        const PopupMenuItem<String>(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.delete,
+                                                color: Colors.red,
+                                              ),
+                                              SizedBox(width: 8),
+                                              Text('Delete'),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                   child: const Padding(
                                     padding: EdgeInsets.only(left: 8),
                                     child: Icon(Icons.more_vert),
@@ -1088,10 +1144,13 @@ class _FeedContentState extends State<FeedContent> {
                                 .collection('likes')
                                 .snapshots(),
                             builder: (context, likeSnapshot) {
-                              final likeCount = likeSnapshot.data?.docs.length ?? 0;
+                              final likeCount =
+                                  likeSnapshot.data?.docs.length ?? 0;
                               final currentUser = _auth.currentUser;
-                              final isLiked = likeSnapshot.data?.docs
-                                      .any((doc) => doc.id == currentUser?.uid) ??
+                              final isLiked =
+                                  likeSnapshot.data?.docs.any(
+                                    (doc) => doc.id == currentUser?.uid,
+                                  ) ??
                                   false;
 
                               return StreamBuilder<QuerySnapshot>(
@@ -1101,16 +1160,20 @@ class _FeedContentState extends State<FeedContent> {
                                     .collection('comments')
                                     .snapshots(),
                                 builder: (context, commentSnapshot) {
-                                  final commentCount = commentSnapshot.data?.docs.length ?? 0;
+                                  final commentCount =
+                                      commentSnapshot.data?.docs.length ?? 0;
 
                                   return Row(
                                     children: [
                                       IconButton(
                                         icon: Icon(
-                                          isLiked ? Icons.favorite : Icons.favorite_border,
+                                          isLiked
+                                              ? Icons.favorite
+                                              : Icons.favorite_border,
                                           color: isLiked ? Colors.red : null,
                                         ),
-                                        onPressed: () => _toggleLike(postId, isLiked),
+                                        onPressed: () =>
+                                            _toggleLike(postId, isLiked),
                                       ),
                                       Text(
                                         likeCount.toString(),
@@ -1118,8 +1181,11 @@ class _FeedContentState extends State<FeedContent> {
                                       ),
                                       const SizedBox(width: 16),
                                       IconButton(
-                                        icon: const Icon(Icons.comment_outlined),
-                                        onPressed: () => _showComments(postId, postAuthorId),
+                                        icon: const Icon(
+                                          Icons.comment_outlined,
+                                        ),
+                                        onPressed: () =>
+                                            _showComments(postId, postAuthorId),
                                       ),
                                       Text(
                                         commentCount.toString(),
