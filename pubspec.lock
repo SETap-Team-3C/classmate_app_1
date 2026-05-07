@@ -317,47 +317,26 @@ packages:
     dependency: "direct main"
     description:
       name: firebase_storage
-<<<<<<< HEAD
-      sha256: "2a9c9046eca3d4426eac73b671891666297a215019538e0af87eacec7e77ccf1"
-      url: "https://pub.dev"
-    source: hosted
-    version: "13.2.0"
-=======
       sha256: "825a5a64addc66b57a2e793b5e40343d1364e8b5a2a0d7e6cfc116ae9c021fbd"
       url: "https://pub.dev"
     source: hosted
     version: "13.3.0"
->>>>>>> fde43c5fe5bd05ff089766e6ac833868df4ccbe7
   firebase_storage_platform_interface:
     dependency: transitive
     description:
       name: firebase_storage_platform_interface
-<<<<<<< HEAD
-      sha256: "83f858784ebfdbe4d033d97c431ff67541d41266277ec290c169ce6c4bfda485"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.2.19"
-=======
       sha256: f910990a2fed456756bdce72ea58e86b4b3f8da4706ac7fe0d3b15ac3dffc0f0
       url: "https://pub.dev"
     source: hosted
     version: "5.2.20"
->>>>>>> fde43c5fe5bd05ff089766e6ac833868df4ccbe7
   firebase_storage_web:
     dependency: transitive
     description:
       name: firebase_storage_web
-<<<<<<< HEAD
-      sha256: "75003d7529cd458c93cfe12194773df1681d3b4722f70e5b4b4ff7b43ab8cd72"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.11.4"
-=======
       sha256: "80abcaca8e39c594b97a92099e5ac66787638cd3c5f85b663deb29e10820f00a"
       url: "https://pub.dev"
     source: hosted
     version: "3.11.5"
->>>>>>> fde43c5fe5bd05ff089766e6ac833868df4ccbe7
   fixnum:
     dependency: transitive
     description:
@@ -443,32 +422,18 @@ packages:
     dependency: "direct main"
     description:
       name: image_picker
-<<<<<<< HEAD
-      sha256: "784210112be18ea55f69d7076e2c656a4e24949fa9e76429fe53af0c0f4fa320"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.1"
-=======
       sha256: "91c025426c2881c551100bce834e201c835a170151545f58d17da5180ca7d9ac"
       url: "https://pub.dev"
     source: hosted
     version: "1.2.2"
->>>>>>> fde43c5fe5bd05ff089766e6ac833868df4ccbe7
   image_picker_android:
     dependency: transitive
     description:
       name: image_picker_android
-<<<<<<< HEAD
-      sha256: "66810af8e99b2657ee98e5c6f02064f69bb63f7a70e343937f70946c5f8c6622"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.8.13+16"
-=======
       sha256: d5b3e1774af29c9ab00103afb0d4614070f924d2e0057ac867ec98800114793f
       url: "https://pub.dev"
     source: hosted
     version: "0.8.13+17"
->>>>>>> fde43c5fe5bd05ff089766e6ac833868df4ccbe7
   image_picker_for_web:
     dependency: transitive
     description:
@@ -582,14 +547,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
+      sha256: e3641ec5d63ebf0d9b41bd43201a66e3fc79a65db5f61fc181f04cd27aab950c
       url: "https://pub.dev"
     source: hosted
-<<<<<<< HEAD
     version: "1.16.0"
-=======
-    version: "1.17.0"
->>>>>>> fde43c5fe5bd05ff089766e6ac833868df4ccbe7
   mime:
     dependency: transitive
     description:
@@ -799,10 +760,10 @@ packages:
     dependency: transitive
     description:
       name: test_api
-      sha256: ab2726c1a94d3176a45960b6234466ec367179b87dd74f1611adb1f3b5fb9d55
+      sha256: "522f00f556e73044315fa4585ec3270f1808a4b186c936e612cab0b565ff1e00"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.7"
+    version: "0.7.6"
   typed_data:
     dependency: transitive
     description:
