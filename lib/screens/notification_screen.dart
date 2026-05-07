@@ -10,8 +10,12 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
-  final TextEditingController _titleController = TextEditingController(text: 'Hello');
-  final TextEditingController _bodyController = TextEditingController(text: 'This is a test notification');
+  final TextEditingController _titleController = TextEditingController(
+    text: 'Hello',
+  );
+  final TextEditingController _bodyController = TextEditingController(
+    text: 'This is a test notification',
+  );
   final List<String> _messages = [
     'Welcome to ClassMates!',
     'Your assignment is due tomorrow',
@@ -36,7 +40,10 @@ class _NotificationScreenState extends State<NotificationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Recent Notifications', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const Text(
+              'Recent Notifications',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
 
             // Notification list
@@ -80,9 +87,16 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ElevatedButton(
               onPressed: () {
                 // show and also add to list for visual feedback
-                svc.showInAppNotification(context, _titleController.text, _bodyController.text);
+                svc.showInAppNotification(
+                  context,
+                  _titleController.text,
+                  _bodyController.text,
+                );
                 setState(() {
-                  _messages.insert(0, '${_titleController.text}: ${_bodyController.text}');
+                  _messages.insert(
+                    0,
+                    '${_titleController.text}: ${_bodyController.text}',
+                  );
                 });
               },
               child: const Text('Show Now'),
@@ -92,12 +106,22 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
             ElevatedButton(
               onPressed: () async {
-                await svc.scheduleNotification(const Duration(seconds: 5), _titleController.text, _bodyController.text);
+                final scaffold = ScaffoldMessenger.of(context);
+                await svc.scheduleNotification(
+                  const Duration(seconds: 5),
+                  _titleController.text,
+                  _bodyController.text,
+                );
                 if (!mounted) return;
                 setState(() {
-                  _messages.insert(0, 'Scheduled: ${_titleController.text}: ${_bodyController.text}');
+                  _messages.insert(
+                    0,
+                    'Scheduled: ${_titleController.text}: ${_bodyController.text}',
+                  );
                 });
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Scheduled in 5 seconds')));
+                scaffold.showSnackBar(
+                  const SnackBar(content: Text('Scheduled in 5 seconds')),
+                );
               },
               child: const Text('Schedule (5s)'),
             ),
