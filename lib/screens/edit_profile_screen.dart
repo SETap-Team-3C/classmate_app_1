@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
+import '../core/language_provider.dart';
 import '../services/user_service.dart';
 import '../core/localization/app_localizations.dart';
 
@@ -68,7 +69,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     final user = _user;
     if (user == null) return;
-    
+
     final loc = AppLocalizations.of(context);
 
     final newName = _nameController.text.trim();
@@ -121,14 +122,37 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(loc.t('profile_updated'))));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loc.t('profile_updated'))));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(loc.t('failed_save_profile', params: {'error': e.toString()}))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            loc.t('failed_save_profile', params: {'error': e.toString()}),
+          ),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _setLanguage(String language) async {
+    final languageProvider = LanguageInherited.of(context);
+    await languageProvider.setLocaleByLanguageName(language);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(
+            context,
+          ).t('selected_language_changed', params: {'language': language}),
+        ),
+      ),
+    );
   }
 
   Future<void> _pickAndUploadProfilePicture() async {
@@ -214,6 +238,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   int _bottomIndex = 3; // default selected 'Chats'
+  static const List<String> _languages = <String>[
+    'English',
+    'Spanish',
+    'Chinese (Mandarin)',
+  ];
 
   Widget _buildBottomNavItem({
     required IconData icon,
@@ -280,8 +309,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final currentLanguage = LanguageInherited.of(context).codeToLanguageName();
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
+      appBar: AppBar(title: Text(loc.t('edit_profile'))),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -351,6 +382,52 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.language),
+                  title: Text(loc.t('language')),
+                  subtitle: Text(currentLanguage),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () async {
+                    final selected = await showDialog<String>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: Text(loc.t('select_language')),
+                        content: SizedBox(
+                          width: double.maxFinite,
+                          child: ListView(
+                            shrinkWrap: true,
+                            children: _languages
+                                .map(
+                                  (language) => ListTile(
+                                    leading: Icon(
+                                      currentLanguage == language
+                                          ? Icons.check_circle
+                                          : Icons.radio_button_unchecked,
+                                    ),
+                                    title: Text(language),
+                                    onTap: () => Navigator.of(
+                                      dialogContext,
+                                    ).pop(language),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            child: Text(loc.t('cancel')),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (selected == null) return;
+                    await _setLanguage(selected);
+                  },
+                ),
+                const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(labelText: 'Full name'),
@@ -396,7 +473,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ? const CircularProgressIndicator()
                     : ElevatedButton(
                         onPressed: _save,
-                        child: const Text('Save'),
+                        child: Text(loc.t('save')),
                       ),
               ],
             ),

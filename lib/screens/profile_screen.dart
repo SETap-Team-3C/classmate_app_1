@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:classmate_app_1/widets/enhanced_avatar.dart';
 import 'package:classmate_app_1/widets/online_indicator.dart';
 import 'package:classmate_app_1/core/utils/time_formatter.dart';
+import 'package:classmate_app_1/core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
 import 'settings_screen.dart';
 
@@ -37,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     return StreamBuilder<DocumentSnapshot>(
       stream: _userStream,
       builder: (context, snapshot) {
@@ -48,8 +50,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         if (!snapshot.hasData || !snapshot.data!.exists) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Profile')),
-            body: const Center(child: Text('User not found')),
+            appBar: AppBar(title: Text(loc.t('profile'))),
+            body: Center(child: Text(loc.t('user_not_found'))),
           );
         }
 
@@ -66,7 +68,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Profile'),
+            title: Text(loc.t('profile')),
             centerTitle: true,
             actions: widget.isCurrentUser
                 ? [
@@ -158,10 +160,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         const SizedBox(width: 8),
                         Text(
                           isOnline
-                              ? 'Online'
+                              ? loc.t('online')
                               : lastSeen != null
-                              ? 'Last seen ${TimeFormatter.formatTimeAgo(lastSeen)}'
-                              : 'Offline',
+                              ? loc.t(
+                                  'last_seen',
+                                  params: {
+                                    'time': TimeFormatter.formatTimeAgo(
+                                      lastSeen,
+                                    ),
+                                  },
+                                )
+                              : loc.t('offline'),
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
                                 color: isOnline
@@ -189,7 +198,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Contact Information',
+                          loc.t('contact_information'),
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -249,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           );
                         },
                         icon: const Icon(Icons.message),
-                        label: const Text('Send Message'),
+                        label: Text(loc.t('send_message')),
                       ),
                     ),
                 ],

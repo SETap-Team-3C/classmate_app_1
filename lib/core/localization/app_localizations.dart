@@ -6,7 +6,10 @@ class AppLocalizations {
   final Locale locale;
 
   static AppLocalizations of(BuildContext context) {
-    final result = Localizations.of<AppLocalizations>(context, AppLocalizations);
+    final result = Localizations.of<AppLocalizations>(
+      context,
+      AppLocalizations,
+    );
     assert(result != null, 'No AppLocalizations found in context');
     return result!;
   }
@@ -125,12 +128,16 @@ class AppLocalizations {
       'call_with': 'Call with {{name}}',
       'end_call': 'End Call',
       'open_dialer': 'Open Dialer',
-      'opens_phone_dialer_using_saved_contact': 'This opens the phone dialer using the saved contact number.',
-      'email_change_info': 'We saved your requested email. To complete an email change you may need to re-authenticate (sign out and sign in) or perform the change from your account settings.',
+      'opens_phone_dialer_using_saved_contact':
+          'This opens the phone dialer using the saved contact number.',
+      'email_change_info':
+          'We saved your requested email. To complete an email change you may need to re-authenticate (sign out and sign in) or perform the change from your account settings.',
       'communities_placeholder': 'Communities placeholder',
       'username': 'Username',
-      'username_validation_error': 'Username can only use letters, numbers, and underscores. Underscores cannot be first or last.',
-      'username_login_firestore_error': 'Username login needs Firestore read access. Temporarily log in with email, or update rules for username lookup.',
+      'username_validation_error':
+          'Username can only use letters, numbers, and underscores. Underscores cannot be first or last.',
+      'username_login_firestore_error':
+          'Username login needs Firestore read access. Temporarily log in with email, or update rules for username lookup.',
     },
     'es': {
       'app_name': 'Classmate',
@@ -206,11 +213,13 @@ class AppLocalizations {
       'typing': 'escribiendo...',
       'type_a_message': 'Escribe un mensaje...',
       'error': 'Error: {{error}}',
-      'please_sign_in_view_messages': 'Por favor inicia sesión para ver los mensajes.',
+      'please_sign_in_view_messages':
+          'Por favor inicia sesión para ver los mensajes.',
       'no_messages_yet': 'Sin mensajes aún.',
       'no_messages_start': 'Sin mensajes aún. Empieza la conversación.',
       'call_ended': 'Llamada finalizada',
-      'no_phone_number_found': 'No se encontró número telefónico para este contacto',
+      'no_phone_number_found':
+          'No se encontró número telefónico para este contacto',
       'opening_dialer_for': 'Abriendo marcador para {{phone}}',
       'could_not_open_dialer': 'No se pudo abrir el marcador',
       'new_group_title': 'Nuevo grupo',
@@ -245,12 +254,73 @@ class AppLocalizations {
       'call_with': 'Llamada con {{name}}',
       'end_call': 'Finalizar llamada',
       'open_dialer': 'Abrir marcador',
-      'opens_phone_dialer_using_saved_contact': 'Abre el marcador telefónico usando el número de contacto guardado.',
-      'email_change_info': 'Hemos guardado el correo solicitado. Para completar un cambio de correo, puede que necesites re-autenticarte (cerrar y volver a iniciar sesión) o realizar el cambio desde tu configuración de cuenta.',
+      'opens_phone_dialer_using_saved_contact':
+          'Abre el marcador telefónico usando el número de contacto guardado.',
+      'email_change_info':
+          'Hemos guardado el correo solicitado. Para completar un cambio de correo, puede que necesites re-autenticarte (cerrar y volver a iniciar sesión) o realizar el cambio desde tu configuración de cuenta.',
       'communities_placeholder': 'Placeholder de comunidades',
       'username': 'Nombre de usuario',
-      'username_validation_error': 'El nombre de usuario solo puede usar letras, números y guiones bajos. Los guiones bajos no pueden estar al principio ni al final.',
-      'username_login_firestore_error': 'El inicio de sesión con nombre de usuario necesita acceso de lectura a Firestore. Inicia sesión temporalmente con correo electrónico o actualiza las reglas para la búsqueda de nombre de usuario.',
+      'username_validation_error':
+          'El nombre de usuario solo puede usar letras, números y guiones bajos. Los guiones bajos no pueden estar al principio ni al final.',
+      'username_login_firestore_error':
+          'El inicio de sesión con nombre de usuario necesita acceso de lectura a Firestore. Inicia sesión temporalmente con correo electrónico o actualiza las reglas para la búsqueda de nombre de usuario.',
+    },
+    'zh': {
+      'app_name': 'Classmate',
+      'feed': '动态',
+      'calls': '通话',
+      'communities': '社区',
+      'chats': '聊天',
+      'you': '你',
+      'continue': '继续',
+      'welcome_back': '欢迎回来',
+      'email': '电子邮件',
+      'password': '密码',
+      'login': '登录',
+      'signup_prompt': '还没有账户？注册',
+      'create_account': '创建你的账户',
+      'full_name': '全名',
+      'sign_up': '注册',
+      'settings': '设置',
+      'new_group': '新群组',
+      'search_user': '搜索用户',
+      'search_by_name_or_username': '按姓名或用户名搜索',
+      'search_chats_hint': '按名称搜索聊天...',
+      'direct_messages': '直接消息',
+      'clear': '清除',
+      'no_chats_yet': '还没有聊天。点击 + 开始一个。',
+      'no_users_available': '没有可用用户。',
+      'no_matching_users_found': '没有找到匹配的用户。',
+      'settings_account': '账户',
+      'not_available': '不可用',
+      'edit_profile': '编辑资料',
+      'notifications': '通知',
+      'enable_notifications': '启用通知',
+      'receive_message_notifications': '接收消息通知',
+      'sound': '声音',
+      'play_notification_sound': '播放通知声音',
+      'appearance': '外观',
+      'theme': '主题',
+      'select_theme': '选择主题',
+      'light': '浅色',
+      'dark': '深色',
+      'language': '语言',
+      'select_language': '选择语言',
+      'privacy': '隐私',
+      'privacy_policy': '隐私政策',
+      'terms_of_service': '服务条款',
+      'logout': '退出登录',
+      'logout_confirm': '确定要退出登录吗？',
+      'cancel': '取消',
+      'profile': '个人资料',
+      'user_not_found': '未找到用户',
+      'online': '在线',
+      'offline': '离线',
+      'last_seen': '上次在线 {{time}}',
+      'contact_information': '联系信息',
+      'send_message': '发送消息',
+      'save': '保存',
+      'selected_language_changed': '语言已切换为 {{language}}',
     },
   };
 
@@ -268,11 +338,14 @@ class AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
   const AppLocalizationsDelegate();
 
   @override
-  bool isSupported(Locale locale) => ['en', 'es'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      ['en', 'es', 'zh'].contains(locale.languageCode);
 
   @override
-  Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
+  Future<AppLocalizations> load(Locale locale) async =>
+      AppLocalizations(locale);
 
   @override
-  bool shouldReload(covariant LocalizationsDelegate<AppLocalizations> old) => false;
+  bool shouldReload(covariant LocalizationsDelegate<AppLocalizations> old) =>
+      false;
 }

@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
 import '../services/user_service.dart';
 import 'call_contacts_screen.dart';
@@ -99,15 +100,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final firestore = widget.firestore ?? FirebaseFirestore.instance;
     final currentUserId = _auth.currentUser?.uid;
 
-    final stream = widget.unreadCountStream ??
+    final stream =
+        widget.unreadCountStream ??
         (currentUserId == null
             ? const Stream<int>.empty()
             : firestore
-                .collection('messages')
-                .where('receiverId', isEqualTo: currentUserId)
-                .where('read', isEqualTo: false)
-                .snapshots()
-                .map((snapshot) => snapshot.docs.length));
+                  .collection('messages')
+                  .where('receiverId', isEqualTo: currentUserId)
+                  .where('read', isEqualTo: false)
+                  .snapshots()
+                  .map((snapshot) => snapshot.docs.length));
 
     return Stack(
       clipBehavior: Clip.none,
@@ -143,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final isFeedPage = _currentIndex == 0;
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -167,16 +170,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (_) => const NotificationScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => const NotificationScreen()),
                 );
               },
             ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: _signOut,
-          ),
+          IconButton(icon: const Icon(Icons.logout), onPressed: _signOut),
         ],
       ),
       body: _buildBody(context),
@@ -185,25 +183,22 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         type: BottomNavigationBarType.fixed,
         onTap: (index) => setState(() => _currentIndex = index),
         items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Feed',
-          ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: loc.t('feed')),
+          BottomNavigationBarItem(
             icon: Icon(Icons.call),
-            label: 'Calls',
+            label: loc.t('calls'),
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.group),
-            label: 'Communities',
+            label: loc.t('communities'),
           ),
           BottomNavigationBarItem(
             icon: _buildChatsIcon(),
-            label: 'Chats',
+            label: loc.t('chats'),
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'You',
+            label: loc.t('you'),
           ),
         ],
       ),

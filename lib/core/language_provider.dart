@@ -25,6 +25,8 @@ class LanguageProvider extends ChangeNotifier {
 
   String codeToLanguageName() {
     switch (_locale.languageCode) {
+      case 'zh':
+        return 'Chinese (Mandarin)';
       case 'es':
         return 'Spanish';
       case 'en':
@@ -35,6 +37,11 @@ class LanguageProvider extends ChangeNotifier {
 
   String _languageNameToCode(String languageName) {
     switch (languageName.toLowerCase()) {
+      case 'chinese (mandarin)':
+      case 'mandarin chinese':
+      case 'mandarin':
+      case 'chinese':
+        return 'zh';
       case 'spanish':
         return 'es';
       case 'english':
@@ -45,6 +52,8 @@ class LanguageProvider extends ChangeNotifier {
 
   Locale _normalizeCode(String code) {
     switch (code) {
+      case 'zh':
+        return const Locale('zh');
       case 'es':
         return const Locale('es');
       case 'en':
@@ -62,7 +71,8 @@ class LanguageInherited extends InheritedNotifier<LanguageProvider> {
   }) : super(notifier: languageProvider);
 
   static LanguageProvider of(BuildContext context) {
-    final inherited = context.dependOnInheritedWidgetOfExactType<LanguageInherited>();
+    final inherited = context
+        .dependOnInheritedWidgetOfExactType<LanguageInherited>();
     assert(inherited != null, 'No LanguageInherited found in context');
     return inherited!.notifier!;
   }

@@ -24,20 +24,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _notificationsEnabled = true;
   bool _soundEnabled = true;
   String _selectedLanguage = 'English';
-  final List<String> _languages = const ['English', 'Spanish'];
+  final List<String> _languages = const [
+    'English',
+    'Spanish',
+    'Chinese (Mandarin)',
+  ];
   bool _loadedLanguage = false;
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_loadedLanguage) return;
     _loadedLanguage = true;
-  }
-
-  @override
-  void initState() {
-    super.initState();
     _loadLanguagePreference();
   }
+
   Future<void> _loadLanguagePreference() async {
     _selectedLanguage = LanguageInherited.of(context).codeToLanguageName();
     if (mounted) setState(() {});
@@ -54,7 +54,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _selectedLanguage = language;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Language changed to $language')),
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(
+            context,
+          ).t('selected_language_changed', params: {'language': language}),
+        ),
+      ),
     );
   }
 
@@ -64,7 +70,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context).t('settings'), style: Theme.of(context).textTheme.titleLarge),
+        title: Text(
+          AppLocalizations.of(context).t('settings'),
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
         centerTitle: true,
       ),
       body: AnimatedBuilder(
@@ -90,16 +99,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 12),
                     ListTile(
                       leading: Icon(Icons.person, color: muted),
-                      title: Text(AppLocalizations.of(context).t('email'), style: tt.bodyMedium),
+                      title: Text(
+                        AppLocalizations.of(context).t('email'),
+                        style: tt.bodyMedium,
+                      ),
                       subtitle: Text(
-                        user?.email ?? AppLocalizations.of(context).t('not_available'),
+                        user?.email ??
+                            AppLocalizations.of(context).t('not_available'),
                         style: tt.bodySmall?.copyWith(color: muted),
                       ),
                       onTap: () {},
                     ),
                     ListTile(
                       leading: Icon(Icons.edit, color: muted),
-                      title: Text(AppLocalizations.of(context).t('edit_profile'), style: tt.bodyMedium),
+                      title: Text(
+                        AppLocalizations.of(context).t('edit_profile'),
+                        style: tt.bodyMedium,
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -126,9 +142,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 12),
                     SwitchListTile(
-                      title: Text(AppLocalizations.of(context).t('enable_notifications'), style: tt.bodyMedium),
+                      title: Text(
+                        AppLocalizations.of(context).t('enable_notifications'),
+                        style: tt.bodyMedium,
+                      ),
                       subtitle: Text(
-                        AppLocalizations.of(context).t('receive_message_notifications'),
+                        AppLocalizations.of(
+                          context,
+                        ).t('receive_message_notifications'),
                         style: tt.bodySmall?.copyWith(color: muted),
                       ),
                       value: _notificationsEnabled,
@@ -138,9 +159,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                     SwitchListTile(
-                      title: Text(AppLocalizations.of(context).t('sound'), style: tt.bodyMedium),
+                      title: Text(
+                        AppLocalizations.of(context).t('sound'),
+                        style: tt.bodyMedium,
+                      ),
                       subtitle: Text(
-                        AppLocalizations.of(context).t('play_notification_sound'),
+                        AppLocalizations.of(
+                          context,
+                        ).t('play_notification_sound'),
                         style: tt.bodySmall?.copyWith(color: muted),
                       ),
                       value: _soundEnabled,
@@ -167,7 +193,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 12),
                     ListTile(
                       leading: Icon(Icons.palette, color: muted),
-                      title: Text(AppLocalizations.of(context).t('theme'), style: tt.bodyMedium),
+                      title: Text(
+                        AppLocalizations.of(context).t('theme'),
+                        style: tt.bodyMedium,
+                      ),
                       subtitle: Text(
                         isDarkMode
                             ? AppLocalizations.of(context).t('dark')
@@ -178,7 +207,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         final selected = await showDialog<bool>(
                           context: context,
                           builder: (dialogContext) => AlertDialog(
-                            title: Text(AppLocalizations.of(context).t('select_theme'), style: tt.titleMedium),
+                            title: Text(
+                              AppLocalizations.of(context).t('select_theme'),
+                              style: tt.titleMedium,
+                            ),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -189,7 +221,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         : Icons.check_circle,
                                     color: muted,
                                   ),
-                                  title: Text(AppLocalizations.of(context).t('light'), style: tt.bodyMedium),
+                                  title: Text(
+                                    AppLocalizations.of(context).t('light'),
+                                    style: tt.bodyMedium,
+                                  ),
                                   onTap: () =>
                                       Navigator.of(dialogContext).pop(false),
                                 ),
@@ -200,7 +235,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         : Icons.radio_button_unchecked,
                                     color: muted,
                                   ),
-                                  title: Text(AppLocalizations.of(context).t('dark'), style: tt.bodyMedium),
+                                  title: Text(
+                                    AppLocalizations.of(context).t('dark'),
+                                    style: tt.bodyMedium,
+                                  ),
                                   onTap: () =>
                                       Navigator.of(dialogContext).pop(true),
                                 ),
@@ -208,8 +246,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.of(dialogContext).pop(),
-                                child: Text(AppLocalizations.of(context).t('cancel')),
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
+                                child: Text(
+                                  AppLocalizations.of(context).t('cancel'),
+                                ),
                               ),
                             ],
                           ),
@@ -223,7 +264,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     ListTile(
                       leading: Icon(Icons.language, color: muted),
-                      title: Text(AppLocalizations.of(context).t('language'), style: tt.bodyMedium),
+                      title: Text(
+                        AppLocalizations.of(context).t('language'),
+                        style: tt.bodyMedium,
+                      ),
                       subtitle: Text(
                         _selectedLanguage,
                         style: tt.bodySmall?.copyWith(color: muted),
@@ -232,7 +276,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         final selected = await showDialog<String>(
                           context: context,
                           builder: (dialogContext) => AlertDialog(
-                            title: Text(AppLocalizations.of(context).t('select_language'), style: tt.titleMedium),
+                            title: Text(
+                              AppLocalizations.of(context).t('select_language'),
+                              style: tt.titleMedium,
+                            ),
                             content: SizedBox(
                               width: double.maxFinite,
                               child: ListView(
@@ -260,8 +307,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.of(dialogContext).pop(),
-                                child: Text(AppLocalizations.of(context).t('cancel')),
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
+                                child: Text(
+                                  AppLocalizations.of(context).t('cancel'),
+                                ),
                               ),
                             ],
                           ),
@@ -289,7 +339,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const SizedBox(height: 12),
                     ListTile(
                       leading: Icon(Icons.lock, color: muted),
-                      title: Text(AppLocalizations.of(context).t('privacy_policy'), style: tt.bodyMedium),
+                      title: Text(
+                        AppLocalizations.of(context).t('privacy_policy'),
+                        style: tt.bodyMedium,
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -301,7 +354,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     ListTile(
                       leading: Icon(Icons.description, color: muted),
-                      title: Text(AppLocalizations.of(context).t('terms_of_service'), style: tt.bodyMedium),
+                      title: Text(
+                        AppLocalizations.of(context).t('terms_of_service'),
+                        style: tt.bodyMedium,
+                      ),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -320,19 +376,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: ElevatedButton.icon(
                   onPressed: () async {
                     final shouldLogout = await showDialog<bool>(
-                        context: context,
-                        builder: (dialogContext) => AlertDialog(
-                          title: Text(AppLocalizations.of(context).t('logout')),
-                          content: Text(AppLocalizations.of(context).t('logout_confirm')),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.of(dialogContext).pop(false),
-                              child: Text(AppLocalizations.of(context).t('cancel'), style: tt.bodyMedium),
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        title: Text(AppLocalizations.of(context).t('logout')),
+                        content: Text(
+                          AppLocalizations.of(context).t('logout_confirm'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(false),
+                            child: Text(
+                              AppLocalizations.of(context).t('cancel'),
+                              style: tt.bodyMedium,
                             ),
-                            TextButton(
-                              onPressed: () => Navigator.of(dialogContext).pop(true),
-                              child: Text(AppLocalizations.of(context).t('logout'), style: tt.bodyMedium),
+                          ),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(true),
+                            child: Text(
+                              AppLocalizations.of(context).t('logout'),
+                              style: tt.bodyMedium,
                             ),
+                          ),
                         ],
                       ),
                     );
@@ -349,8 +415,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       (route) => false,
                     );
                   },
-                  icon: Icon(Icons.logout, color: Theme.of(context).colorScheme.onError),
-                  label: Text(AppLocalizations.of(context).t('logout'), style: tt.bodyMedium),
+                  icon: Icon(
+                    Icons.logout,
+                    color: Theme.of(context).colorScheme.onError,
+                  ),
+                  label: Text(
+                    AppLocalizations.of(context).t('logout'),
+                    style: tt.bodyMedium,
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.error,
                     foregroundColor: Theme.of(context).colorScheme.onError,
@@ -364,4 +436,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 }
-

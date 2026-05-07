@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../core/localization/app_localizations.dart';
 import 'auth_screen.dart';
 import '../core/theme/theme_provider.dart';
 import 'home_screen.dart';
@@ -25,7 +26,7 @@ class AuthGate extends StatelessWidget {
 
         if (snapshot.hasData) {
           return HomeScreen(
-            title: 'Classmate',
+            title: AppLocalizations.of(context).t('app_name'),
             themeProvider: themeProvider ?? ThemeProvider(),
           );
         }

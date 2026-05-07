@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_page.dart';
 import 'new_group_screen.dart';
 import 'settings_screen.dart';
+import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
 
 class MessagesScreen extends StatefulWidget {
@@ -171,9 +172,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = widget.showTestEmptyState ? null : _tryGetAuth()?.currentUser;
+    final currentUser = widget.showTestEmptyState
+        ? null
+        : _tryGetAuth()?.currentUser;
     final firestore = widget.showTestEmptyState ? null : _tryGetFirestore();
     final cs = Theme.of(context).colorScheme;
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
       floatingActionButton: FloatingActionButton(
@@ -200,7 +204,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 Expanded(
                   child: Center(
                     child: Text(
-                      'Direct Messages',
+                      loc.t('direct_messages'),
                       style: TextStyle(
                         color: cs.onPrimary,
                         fontSize: 18,
@@ -226,7 +230,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 );
                               },
                               decoration: InputDecoration(
-                                hintText: 'Search chats by name...',
+                                hintText: loc.t('search_chats_hint'),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -241,7 +245,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 setState(() => _searchQuery = '');
                                 Navigator.pop(sheetContext);
                               },
-                              child: const Text('Clear'),
+                              child: Text(loc.t('clear')),
                             ),
                           ],
                         ),
@@ -257,13 +261,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 PopupMenuButton<String>(
                   onSelected: (value) => _handleMenuSelection(value),
                   itemBuilder: (context) => [
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'new_group',
-                      child: Text('New group'),
+                      child: Text(loc.t('new_group')),
                     ),
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'settings',
-                      child: Text('Settings'),
+                      child: Text(loc.t('settings')),
                     ),
                   ],
                 ),
@@ -271,10 +275,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
             ),
           ),
           Expanded(
-            child: widget.showTestEmptyState || currentUser == null || firestore == null
-                ? const Center(child: Text('No chats yet. Tap + to start one.'))
+            child:
+                widget.showTestEmptyState ||
+                    currentUser == null ||
+                    firestore == null
+                ? Center(child: Text(loc.t('no_chats_yet')))
                 : StreamBuilder<QuerySnapshot>(
-                stream: firestore
+                    stream: firestore
                         .collection('chats')
                         .where('participants', arrayContains: currentUser.uid)
                         .snapshots(),
@@ -311,9 +318,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                       });
 
                       if (chats.isEmpty) {
-                        return const Center(
-                          child: Text('No chats yet. Tap + to start one.'),
-                        );
+                        return Center(child: Text(loc.t('no_chats_yet')));
                       }
 
                       final filteredChats = _searchQuery.isEmpty
@@ -361,10 +366,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             future: firestore
                                 .collection('messages')
                                 .where('chatId', isEqualTo: chatId)
-                                .where(
-                                  'receiverId',
-                                  isEqualTo: currentUser.uid,
-                                )
+                                .where('receiverId', isEqualTo: currentUser.uid)
                                 .where('read', isEqualTo: false)
                                 .count()
                                 .get()
@@ -399,7 +401,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: cs.surface,
-                                    border: Border.all(color: cs.outline),                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: cs.outline),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
@@ -428,7 +431,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                                   ? cs.error
                                                   : cs.onSurface.withValues(
                                                       alpha: 0.7,
-                                                    ),                                              fontWeight: unreadCount > 0
+                                                    ),
+                                              fontWeight: unreadCount > 0
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
                                             ),
@@ -451,7 +455,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                                 fontSize: 12,
                                                 color: cs.onSurface.withValues(
                                                   alpha: 0.7,
-                                                ),                                              ),
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -489,7 +494,8 @@ class SearchUser {
 
 class UserSearchBottomSheet extends StatefulWidget {
   const UserSearchBottomSheet({
-    super.key,    this.firestore,
+    super.key,
+    this.firestore,
     required this.currentUserId,
     required this.onUserSelected,
     this.usersLoader,
@@ -561,6 +567,7 @@ class _UserSearchBottomSheetState extends State<UserSearchBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final loc = AppLocalizations.of(context);
 
     return SafeArea(
       child: Padding(
@@ -570,8 +577,8 @@ class _UserSearchBottomSheetState extends State<UserSearchBottomSheet> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Search User',
+              Text(
+                loc.t('search_user'),
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 12),
@@ -584,7 +591,7 @@ class _UserSearchBottomSheetState extends State<UserSearchBottomSheet> {
                   });
                 },
                 decoration: InputDecoration(
-                  hintText: 'Search by name or username',
+                  hintText: loc.t('search_by_name_or_username'),
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: _query.isEmpty
                       ? null
@@ -626,12 +633,12 @@ class _UserSearchBottomSheetState extends State<UserSearchBottomSheet> {
                     }).toList();
 
                     if (users.isEmpty) {
-                      return const Center(child: Text('No users available.'));
+                      return Center(child: Text(loc.t('no_users_available')));
                     }
 
                     if (filteredUsers.isEmpty) {
-                      return const Center(
-                        child: Text('No matching users found.'),
+                      return Center(
+                        child: Text(loc.t('no_matching_users_found')),
                       );
                     }
 
