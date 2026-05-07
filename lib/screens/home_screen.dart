@@ -124,7 +124,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-<<<<<<< HEAD
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -151,26 +150,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                     builder: (_) => ProfileScreen(
                       userId: userId,
                       isCurrentUser: true,
-                      themeProvider: widget.themeProvider,
-=======
-        title: isFeedPage
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () => setState(() => _activeFeed = 'class'),
-                    child: Text(
-                      'Class',
-                      style: TextStyle(
-                        color: Colors.deepPurple,
-                        fontSize: 20,
-                        fontWeight: _activeFeed == 'class'
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                      ),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-                    ),
+                      themeProvider: widget.themeProvider,                    ),
                   ),
                   GestureDetector(
                     onTap: () => setState(() => _activeFeed = 'mates'),
@@ -209,46 +189,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             icon: Icon(Icons.home),
             label: 'Feed',
           ),
-<<<<<<< HEAD
           BottomNavigationBarItem(icon: Icon(Icons.call), label: 'Calls'),
           BottomNavigationBarItem(
             icon: Icon(Icons.group),
             label: 'Communities',
           ),
           BottomNavigationBarItem(icon: buildChatsIcon(), label: 'Chats'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'You'),
-=======
-          BottomNavigationBarItem(
-            icon: Icon(Icons.call),
-            label: 'Calls',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.groups),
-            label: 'Communities',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Chats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'You',
-          ),
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-        ],
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'You'),        ],
         onTap: (idx) => setState(() => _currentIndex = idx),
       ),
     );
   }
 
   Widget buildBody(BuildContext context) {
-<<<<<<< HEAD
     final currentUser =
-        widget.auth?.currentUser ?? FirebaseAuth.instance.currentUser;
-=======
-    final currentUser = widget.auth?.currentUser;
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-    final pages = <Widget>[
+        widget.auth?.currentUser ?? FirebaseAuth.instance.currentUser;    final pages = <Widget>[
       FeedContent(
         feedType: _activeFeed,
         auth: widget.auth,
@@ -274,8 +229,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return pages[_currentIndex];
   }
 
-<<<<<<< HEAD
-  Widget buildChatsIcon() {
+Widget buildChatsIcon() {
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -316,7 +270,4 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ),
       ],
     );
-  }
-=======
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-}
+  }}

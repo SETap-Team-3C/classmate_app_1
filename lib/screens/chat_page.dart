@@ -1,15 +1,8 @@
-<<<<<<< HEAD
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
-=======
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-
 import '../core/utils/time_formatter.dart';
 import '../models/message.dart';
 import '../services/chat_service.dart';
@@ -308,109 +301,7 @@ class _ChatPageState extends State<ChatPage> {
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         final err = snapshot.error;
-<<<<<<< HEAD
-                        // If Firestore permission denied, show a friendly empty state
-=======
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-                        if (err is FirebaseException &&
-                            err.code == 'permission-denied') {
-                          return const Center(child: Text('No messages yet.'));
-                        }
-
-                        return Center(child: Text('Error: ${snapshot.error}'));
-                      }
-
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      final messages = snapshot.data ?? [];
-
-                      if (messages.isEmpty) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.chat_bubble_outline,
-                                size: 48,
-                                color: Color(0xFFE1BEE7),
-                              ),
-                              const SizedBox(height: 16),
-                              const Text(
-                                'No messages yet',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFE1BEE7),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Start a conversation with ${widget.receiverName}',
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFFE1BEE7),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      messages.sort((a, b) {
-                        final aMillis =
-                            a.timestamp?.millisecondsSinceEpoch ?? 0;
-                        final bMillis =
-                            b.timestamp?.millisecondsSinceEpoch ?? 0;
-                        return aMillis.compareTo(bMillis);
-                      });
-
-                      for (final msg in messages) {
-                        final isCurrentUser = msg.senderId == currentUser.uid;
-                        if (!isCurrentUser && !msg.read) {
-                          _chatService.markMessageAsRead(
-                            msg.id,
-                            currentUser.uid,
-                          );
-                        }
-                      }
-
-                      return ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: messages.length,
-                        itemBuilder: (context, index) {
-                          final message = messages[index];
-                          final isCurrentUser =
-                              message.senderId == currentUser.uid;
-
-                          final readStatusText = isCurrentUser
-                              ? (message.read
-                                    ? 'seen ${TimeFormatter.formatTimeAgo(message.readAt)}'
-                                    : 'sent')
-                              : '';
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: MessageBubble(
-                              messageId: message.id,
-<<<<<<< HEAD
-                              text: message.text,
-                              messageType: message.messageType,
-                              fileUrl: message.fileUrl,
-                              fileName: message.fileName,
-                              mimeType: message.mimeType,
-                              fileSize: message.fileSize,
-                              contactData: message.contactData,
-                              isDeleted: message.isDeleted,
-=======
-                              text: message.isDeleted
-                                  ? '[This message was deleted]'
-                                  : message.text,
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-                              isCurrentUser: isCurrentUser,
+                        // If Firestore permission denied, show a friendly empty state                              isCurrentUser: isCurrentUser,
                               isRead: message.read,
                               readStatusText: readStatusText,
                               isStarred: message.isStarredBy(currentUser.uid),

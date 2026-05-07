@@ -29,12 +29,7 @@ class ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(title: Text(widget.receiverName)),
       body: Column(
         children: [
-          Expanded(child: Center(child: Text("No messages yet"))),
-<<<<<<< HEAD
-
-=======
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-          Container(
+          Expanded(child: Center(child: Text("No messages yet"))),Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: Row(
               children: [

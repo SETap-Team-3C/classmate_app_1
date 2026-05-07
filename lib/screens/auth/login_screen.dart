@@ -79,12 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => isLoading = false);
 
       if (error == null) {
-<<<<<<< HEAD
-        debugPrint('Login successful, navigating to chat list');
-=======
-        print('Login successful, navigating to feed');
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-        if (!mounted) return;
+        debugPrint('Login successful, navigating to chat list');        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(

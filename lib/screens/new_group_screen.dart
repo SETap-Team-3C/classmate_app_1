@@ -36,12 +36,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     }
     if (currentUser == null) return;
 
-<<<<<<< HEAD
     final members = [_auth.currentUser!.uid, ..._selected];
-=======
-    final members = [currentUser.uid, ..._selected];
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-
     try {
       await _firestore.collection('groups').add({
         'name': name,
@@ -102,12 +97,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final docs = snapshot.data?.docs ?? [];
-<<<<<<< HEAD
-                final users = docs.where((d) => d.id != currentUser.uid).map((
-=======
-                final users = docs.where((d) => d.id != currentUser.uid).map((
->>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
-                  d,
+                final users = docs.where((d) => d.id != currentUser.uid).map((                  d,
                 ) {
                   final data = d.data() as Map<String, dynamic>;
                   return MapEntry(d.id, (data['name'] ?? 'User').toString());
