@@ -249,11 +249,19 @@ class MessageBubble extends StatelessWidget {
                 child: GestureDetector(
                   onLongPress: isCurrentUser && onDeleteForEveryone != null
                       ? () => _confirmAndPerform(
+<<<<<<< HEAD
                           context,
                           title: 'Delete Message for Everyone',
                           confirmText:
                               'This will remove the message for everyone in the chat. Continue?',
                           action: onDeleteForEveryone,
+=======
+                        context,
+                        title: 'Delete Message',
+                        confirmText:
+                          'Are you sure you want to delete your message?',
+                        action: onDeleteForMe,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                         )
                       : (onDeleteForMe != null
                             ? () => _confirmAndPerform(
@@ -466,6 +474,7 @@ class MessageBubble extends StatelessWidget {
                       }
 
                       if (onDeleteForMe != null) {
+<<<<<<< HEAD
                         items.add(
                           PopupMenuItem<String>(
                             value: 'delete_me',
@@ -476,6 +485,16 @@ class MessageBubble extends StatelessWidget {
                                 const Text('Delete for me'),
                               ],
                             ),
+=======
+                        items.add(PopupMenuItem<String>(
+                          value: 'delete_me',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete_outline, color: cs.onSurface),
+                              const SizedBox(width: 8),
+                              const Text('Delete'),
+                            ],
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                           ),
                         );
                       }

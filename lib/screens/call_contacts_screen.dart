@@ -23,6 +23,12 @@ class CallContactsScreen extends StatelessWidget {
     final currentUserId = auth.currentUser?.uid;
     final loc = AppLocalizations.of(context);
 
+    if (currentUserId == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text(loc.t('select_contact_to_call'))),
       body: StreamBuilder<QuerySnapshot>(
@@ -49,7 +55,11 @@ class CallContactsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final user = users[index];
               final data = user.data() as Map<String, dynamic>?;
+<<<<<<< HEAD
               final userName = _readStringField(data, 'name', loc.t('unknown_user'));
+=======
+              final userName = _readStringField(data, 'name', 'Unknown User');
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
               final userEmail = _readStringField(data, 'email');
               final userPhone = _readStringField(data, 'phone');
 
@@ -68,7 +78,11 @@ class CallContactsScreen extends StatelessWidget {
                     Text(
                       userPhone.isNotEmpty
                           ? userPhone
+<<<<<<< HEAD
                           : loc.t('no_phone_number_added'),
+=======
+                          : 'No phone number added',
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,

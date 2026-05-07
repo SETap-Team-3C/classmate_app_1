@@ -8,6 +8,23 @@ class AuthService {
 
   FirebaseFirestore get _db => FirebaseFirestore.instance;
 
+  Future<User?> _waitForAuthenticatedUser({
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final existing = _auth.currentUser;
+    if (existing != null) return existing;
+
+    try {
+      final user = await _auth
+          .authStateChanges()
+          .firstWhere((user) => user != null)
+          .timeout(timeout);
+      return user;
+    } catch (_) {
+      return _auth.currentUser;
+    }
+  }
+
   // 🔐 SIGNUP
   Future<String?> signup({
     required String name,
@@ -28,6 +45,14 @@ class AuthService {
         'email': email,
         'createdAt': Timestamp.now(),
       });
+
+      final activeUser = await _waitForAuthenticatedUser();
+      if (activeUser == null) {
+        throw FirebaseAuthException(
+          code: 'auth-not-ready',
+          message: 'Signup completed but FirebaseAuth user is still null.',
+        );
+      }
 
       debugPrint('Signup successful for uid: $uid');
       return null;
@@ -55,6 +80,14 @@ class AuthService {
             const Duration(seconds: 15),
             onTimeout: () => throw TimeoutException('Login request timed out'),
           );
+
+      final activeUser = await _waitForAuthenticatedUser();
+      if (activeUser == null) {
+        throw FirebaseAuthException(
+          code: 'auth-not-ready',
+          message: 'Login completed but FirebaseAuth user is still null.',
+        );
+      }
 
       debugPrint('Login successful for user: ${userCredential.user?.email}');
       return null;

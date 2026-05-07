@@ -24,7 +24,10 @@ class AuthGate extends StatelessWidget {
         }
 
         if (snapshot.hasData) {
-          return HomeScreen(title: 'Classmate Home', themeProvider: themeProvider ?? ThemeProvider());
+          return HomeScreen(
+            title: 'Classmate',
+            themeProvider: themeProvider ?? ThemeProvider(),
+          );
         }
 
         return const AuthScreen();

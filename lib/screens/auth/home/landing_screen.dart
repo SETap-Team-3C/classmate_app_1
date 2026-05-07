@@ -63,6 +63,15 @@ class LandingScreen extends StatelessWidget {
                       fit: BoxFit.contain,
                     ),
                   ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'Classmate',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 20),
                   Text(
                     'Connect, chat, and stay in touch with classmates.',

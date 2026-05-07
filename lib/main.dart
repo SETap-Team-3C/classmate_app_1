@@ -7,11 +7,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'core/language_provider.dart';
 import 'core/localization/app_localizations.dart';
 import 'core/theme/theme_provider.dart';
+<<<<<<< HEAD
 import 'firebase_options.dart';
 import 'screens/welcome_screen.dart';
+=======
+import 'screens/auth_gate.dart';
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
 
 void main() async {
-  // Ensures Flutter is ready before Firebase starts
+  
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
@@ -25,6 +29,12 @@ void main() async {
     debugPrint('Auth instance: ${FirebaseAuth.instance}');
     debugPrint('Current user: ${FirebaseAuth.instance.currentUser}');
 
+    
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      debugPrint('[authStateChanges] event: $user');
+      debugPrint('[authStateChanges] currentUser: ${FirebaseAuth.instance.currentUser}');
+    });
+
     await FirebaseAnalytics.instance.logEvent(
       name: 'copilot_startup_test',
       parameters: {
@@ -36,17 +46,25 @@ void main() async {
     debugPrint("Firebase initialization error: $e");
   }
 
-  runApp(const ClassmateApp());
+  final themeProvider = ThemeProvider();
+  runApp(ClassmateApp(
+    themeProvider: themeProvider,
+    home: AuthGate(themeProvider: themeProvider),
+  ));
 }
 
 class ClassmateApp extends StatefulWidget {
-  const ClassmateApp({super.key});
+  const ClassmateApp({super.key, required this.themeProvider, required this.home});
+
+  final ThemeProvider themeProvider;
+  final Widget home;
 
   @override
   State<ClassmateApp> createState() => _ClassmateAppState();
 }
 
 class _ClassmateAppState extends State<ClassmateApp> {
+<<<<<<< HEAD
   final ThemeProvider _themeProvider = ThemeProvider();
   final LanguageProvider _languageProvider = LanguageProvider();
 
@@ -82,8 +100,24 @@ class _ClassmateAppState extends State<ClassmateApp> {
             home: WelcomeScreen(themeProvider: _themeProvider),
           );
         },
+=======
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: widget.themeProvider,
+      builder: (context, _) => MaterialApp(
+        title: 'Classmate',
+        debugShowCheckedModeBanner: false,
+        theme: widget.themeProvider.lightTheme,
+        darkTheme: widget.themeProvider.darkTheme,
+        themeMode: widget.themeProvider.isDarkMode
+            ? ThemeMode.dark
+            : ThemeMode.light,
+        home: widget.home,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
       ),
     );
+
   }
 }
 

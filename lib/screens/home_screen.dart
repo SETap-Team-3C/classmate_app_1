@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'feed_screen.dart';
 import 'call_contacts_screen.dart';
 import 'messages_screen.dart';
 import 'profile_screen.dart';
@@ -34,6 +35,47 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
   late UserService _userService;
+
+  int _currentIndex = 0;
+  String _activeFeed = 'class';
+
+  Widget _buildFeedToggle({
+    required String label,
+    required bool isSelected,
+    required Color labelColor,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: labelColor,
+                fontSize: 20,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 4),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 3,
+              width: isSelected ? 24 : 0,
+              decoration: BoxDecoration(
+                color: labelColor,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Future<void> _signOut() async {
     // Set user as offline before signing out
@@ -76,9 +118,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    final currentUser = widget.auth?.currentUser;
+    final isFeedPage = _currentIndex == 0;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
+<<<<<<< HEAD
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -106,12 +152,51 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                       userId: userId,
                       isCurrentUser: true,
                       themeProvider: widget.themeProvider,
+=======
+        title: isFeedPage
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => setState(() => _activeFeed = 'class'),
+                    child: Text(
+                      'Class',
+                      style: TextStyle(
+                        color: Colors.deepPurple,
+                        fontSize: 20,
+                        fontWeight: _activeFeed == 'class'
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                     ),
                   ),
-                );
-              }
-            },
-          ),
+                  GestureDetector(
+                    onTap: () => setState(() => _activeFeed = 'mates'),
+                    child: Text(
+                      'Mates',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontSize: 20,
+                        fontWeight: _activeFeed == 'mates'
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : Text(widget.title),
+        actions: [
+          if (isFeedPage)
+            IconButton(
+              icon: const Icon(Icons.notifications),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotificationScreen()),
+              ),
+            ),
           IconButton(icon: const Icon(Icons.logout), onPressed: _signOut),
         ],
       ),
@@ -119,11 +204,12 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         type: BottomNavigationBarType.fixed,
-        items: [
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.update),
-            label: 'Updates',
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Feed',
           ),
+<<<<<<< HEAD
           const BottomNavigationBarItem(icon: Icon(Icons.call), label: 'Calls'),
           const BottomNavigationBarItem(
             icon: Icon(Icons.group),
@@ -131,21 +217,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ),
           BottomNavigationBarItem(icon: _buildChatsIcon(), label: 'Chats'),
           const BottomNavigationBarItem(icon: Icon(Icons.person), label: 'You'),
+=======
+          BottomNavigationBarItem(
+            icon: Icon(Icons.call),
+            label: 'Calls',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.groups),
+            label: 'Communities',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.mail),
+            label: 'Chats',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'You',
+          ),
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
         ],
-        onTap: (idx) {
-          setState(() => _currentIndex = idx);
-        },
+        onTap: (idx) => setState(() => _currentIndex = idx),
       ),
     );
   }
 
-  int _currentIndex = 3;
-
   Widget _buildBody(BuildContext context) {
+<<<<<<< HEAD
     final currentUser =
         widget.auth?.currentUser ?? FirebaseAuth.instance.currentUser;
+=======
+    final currentUser = widget.auth?.currentUser;
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
     final pages = <Widget>[
-      const NotificationScreen(),
+      FeedContent(
+        feedType: _activeFeed,
+        auth: widget.auth,
+        firestore: widget.firestore,
+      ),
       const CallContactsScreen(),
       const CommunitiesScreen(),
       widget.messagesScreenBuilder != null
@@ -153,6 +261,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           : MessagesScreen(
               auth: widget.auth,
               firestore: widget.firestore,
+              onBack: () => setState(() => _currentIndex = 0),
               themeProvider: widget.themeProvider ?? ThemeProvider(),
             ),
       ProfileScreen(
@@ -165,6 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return pages[_currentIndex];
   }
 
+<<<<<<< HEAD
   Widget _buildChatsIcon() {
     return Stack(
       clipBehavior: Clip.none,
@@ -207,4 +317,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ],
     );
   }
+=======
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
 }

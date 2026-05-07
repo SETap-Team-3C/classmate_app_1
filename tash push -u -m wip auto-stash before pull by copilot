@@ -1,0 +1,10 @@
+[33m74d6d98[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m fix: Language button recode (Spanish as first option)
+[33mf11eab2[m enhance MessageBubble to support multiple message types and file attachments
+[33m40bcf10[m enhance ChatService with image message support and refactor message handling
+[33m10365c4[m enhance chat functionality with image attachment support and typing status updates
+[33m2543927[m  enhance Message model with messageType and file attributes
+[33mc96cc14[m  initial Firebase Storage rules for chat uploads
+[33mc50bc02[m update meta and test_api package versions in pubspec.lock
+[33m4126b57[m enhance message validation schema for create and update operations
+[33m6dcf8c0[m implement message attachment functionality and enhance Firestore rules for message handling
+[33mee312cf[m Merge branch 'main' of https://github.com/SETap-Team-3C/classmate_app_1

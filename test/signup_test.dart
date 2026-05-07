@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(MaterialApp(home: SignupScreen()));
 
     // Check UI elements
-    expect(find.text("Classmate"), findsOneWidget);
+    expect(find.text("ClassMates"), findsOneWidget);
     expect(find.text("Sign Up"), findsOneWidget);
 
     // Enter valid data

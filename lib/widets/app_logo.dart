@@ -49,7 +49,7 @@ class AppLogo extends StatelessWidget {
         leading,
         if (showText) ...[
           SizedBox(width: gap),
-          Text('Classmate', style: textStyle ?? defaultTextStyle),
+          Text('ClassMates', style: textStyle ?? defaultTextStyle),
         ],
       ],
     );

@@ -1,12 +1,18 @@
+<<<<<<< HEAD
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+=======
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
 
+import '../core/utils/time_formatter.dart';
 import '../models/message.dart';
 import '../services/chat_service.dart';
-import '../core/utils/time_formatter.dart';
 import '../widgets/message_bubble.dart';
 
 class ChatPage extends StatefulWidget {
@@ -194,8 +200,10 @@ class _ChatPageState extends State<ChatPage> {
     if (widget.showTestEmptyState) {
       return Scaffold(
         appBar: AppBar(
+          backgroundColor: Colors.deepPurple,
+          foregroundColor: Colors.white,
           leading: IconButton(
-            onPressed: () {},
+            onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back),
           ),
           title: Column(
@@ -215,6 +223,12 @@ class _ChatPageState extends State<ChatPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back),
+        ),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -294,7 +308,10 @@ class _ChatPageState extends State<ChatPage> {
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         final err = snapshot.error;
+<<<<<<< HEAD
                         // If Firestore permission denied, show a friendly empty state
+=======
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                         if (err is FirebaseException &&
                             err.code == 'permission-denied') {
                           return const Center(child: Text('No messages yet.'));
@@ -310,10 +327,38 @@ class _ChatPageState extends State<ChatPage> {
                       final messages = snapshot.data ?? [];
 
                       if (messages.isEmpty) {
-                        return const Center(child: Text('No messages yet.'));
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(
+                                Icons.chat_bubble_outline,
+                                size: 48,
+                                color: Color(0xFFE1BEE7),
+                              ),
+                              const SizedBox(height: 16),
+                              const Text(
+                                'No messages yet',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFFE1BEE7),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Start a conversation with ${widget.receiverName}',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFFE1BEE7),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
                       }
 
-                      // Sort by timestamp ascending
                       messages.sort((a, b) {
                         final aMillis =
                             a.timestamp?.millisecondsSinceEpoch ?? 0;
@@ -322,7 +367,6 @@ class _ChatPageState extends State<ChatPage> {
                         return aMillis.compareTo(bMillis);
                       });
 
-                      // Mark incoming messages as read
                       for (final msg in messages) {
                         final isCurrentUser = msg.senderId == currentUser.uid;
                         if (!isCurrentUser && !msg.read) {
@@ -352,6 +396,7 @@ class _ChatPageState extends State<ChatPage> {
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             child: MessageBubble(
                               messageId: message.id,
+<<<<<<< HEAD
                               text: message.text,
                               messageType: message.messageType,
                               fileUrl: message.fileUrl,
@@ -360,6 +405,11 @@ class _ChatPageState extends State<ChatPage> {
                               fileSize: message.fileSize,
                               contactData: message.contactData,
                               isDeleted: message.isDeleted,
+=======
+                              text: message.isDeleted
+                                  ? '[This message was deleted]'
+                                  : message.text,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                               isCurrentUser: isCurrentUser,
                               isRead: message.read,
                               readStatusText: readStatusText,
