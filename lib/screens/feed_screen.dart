@@ -8,6 +8,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
+import '../widgets/profile_preview_bubble.dart';
+import 'profile_screen.dart';
 
 class _CommentNode {
   _CommentNode({required this.id, required this.data});
@@ -149,6 +151,7 @@ class _FeedContentState extends State<FeedContent> {
   bool _isPosting = false;
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes;
+  OverlayEntry? _profilePreviewOverlay;
 
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
   FirebaseFirestore get _firestore =>
@@ -176,7 +179,44 @@ class _FeedContentState extends State<FeedContent> {
   @override
   void dispose() {
     _postController.dispose();
+    _profilePreviewOverlay?.remove();
     super.dispose();
+  }
+
+  void _showProfilePreview(String userId, Offset position) {
+    _profilePreviewOverlay?.remove();
+    _profilePreviewOverlay = OverlayEntry(
+      builder: (context) => GestureDetector(
+        onTap: () {
+          _profilePreviewOverlay?.remove();
+          _profilePreviewOverlay = null;
+        },
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.3),
+          child: ProfilePreviewBubble(
+            userId: userId,
+            position: position,
+            onProfileTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProfileScreen(
+                    userId: userId,
+                    isCurrentUser:
+                        userId == FirebaseAuth.instance.currentUser?.uid,
+                  ),
+                ),
+              );
+            },
+            onClose: () {
+              _profilePreviewOverlay?.remove();
+              _profilePreviewOverlay = null;
+            },
+          ),
+        ),
+      ),
+    );
+    Overlay.of(context).insert(_profilePreviewOverlay!);
   }
 
   DateTime _timestampToDate(dynamic value) {
@@ -1035,7 +1075,17 @@ class _FeedContentState extends State<FeedContent> {
                         children: [
                           Row(
                             children: [
-                              const CircleAvatar(child: Icon(Icons.person)),
+                              GestureDetector(
+                                onTapDown: (details) {
+                                  _showProfilePreview(
+                                    postAuthorId,
+                                    details.globalPosition,
+                                  );
+                                },
+                                child: const CircleAvatar(
+                                  child: Icon(Icons.person),
+                                ),
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Column(
