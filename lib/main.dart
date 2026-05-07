@@ -39,7 +39,8 @@ void main() async {
     debugPrint("Firebase initialization error: $e");
   }
 
-  runApp(const ClassmateApp());
+  final themeProvider = ThemeProvider();
+  runApp(ClassmateApp(themeProvider: themeProvider, home: const AuthScreen()));
 }
 
 class ClassmateApp extends StatefulWidget {
