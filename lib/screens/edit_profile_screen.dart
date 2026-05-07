@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/user_service.dart';
+import '../core/localization/app_localizations.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -56,6 +57,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!_formKey.currentState!.validate()) return;
     final user = _user;
     if (user == null) return;
+    
+    final loc = AppLocalizations.of(context);
 
     final newName = _nameController.text.trim();
     final newUsername = _usernameController.text.trim();
@@ -94,14 +97,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Email change requested'),
-            content: const Text(
-              'We saved your requested email. To complete an email change you may need to re-authenticate (sign out and sign in) or perform the change from your account settings.',
-            ),
+            title: Text(loc.t('email_change_requested')),
+            content: Text(loc.t('email_change_info')),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
+                child: Text(loc.t('ok')),
               ),
             ],
           ),
@@ -111,13 +112,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Profile updated')));
+      ).showSnackBar(SnackBar(content: Text(loc.t('profile_updated'))));
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Failed to save profile: $e')));
+      ).showSnackBar(SnackBar(content: Text(loc.t('failed_save_profile', params: {'error': e.toString()}))));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

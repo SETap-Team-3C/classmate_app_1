@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/theme/theme_provider.dart';
+import '../core/localization/app_localizations.dart';
 import 'profile_settings.dart';
 
 class GeneralSettingsScreen extends StatefulWidget {
@@ -21,9 +22,10 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final isDarkMode = widget.themeProvider.isDarkMode;
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings'), centerTitle: true),
+      appBar: AppBar(title: Text(loc.t('settings')), centerTitle: true),
       body: ListView(
         children: [
           // Account Section
@@ -32,15 +34,15 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Account',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  loc.t('settings_account'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   leading: const Icon(Icons.person),
-                  title: const Text('Email'),
-                  subtitle: Text(user?.email ?? 'Not available'),
+                  title: Text(loc.t('email')),
+                  subtitle: Text(user?.email ?? loc.t('not_available')),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -52,7 +54,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.edit),
-                  title: const Text('Edit Profile'),
+                  title: Text(loc.t('edit_profile')),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -73,22 +75,22 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Notifications',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  loc.t('notifications'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 SwitchListTile(
-                  title: const Text('Enable Notifications'),
-                  subtitle: const Text('Receive message notifications'),
+                  title: Text(loc.t('enable_notifications')),
+                  subtitle: Text(loc.t('receive_message_notifications')),
                   value: _notificationsEnabled,
                   onChanged: (value) {
                     setState(() => _notificationsEnabled = value);
                   },
                 ),
                 SwitchListTile(
-                  title: const Text('Sound'),
-                  subtitle: const Text('Play notification sound'),
+                  title: Text(loc.t('sound')),
+                  subtitle: Text(loc.t('play_notification_sound')),
                   value: _soundEnabled,
                   onChanged: (value) {
                     setState(() => _soundEnabled = value);
@@ -105,20 +107,20 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Appearance',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  loc.t('appearance'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   leading: const Icon(Icons.palette),
-                  title: const Text('Theme'),
-                  subtitle: Text(isDarkMode ? 'Dark' : 'Light'),
+                  title: Text(loc.t('theme')),
+                  subtitle: Text(isDarkMode ? loc.t('dark') : loc.t('light')),
                   onTap: () async {
                     final selected = await showDialog<String>(
                       context: context,
                       builder: (dialogContext) => AlertDialog(
-                        title: const Text('Select Theme'),
+                        title: Text(loc.t('select_theme')),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -128,7 +130,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                                     ? Icons.radio_button_unchecked
                                     : Icons.check_circle,
                               ),
-                              title: const Text('Light'),
+                              title: Text(loc.t('light')),
                               onTap: () =>
                                   Navigator.of(dialogContext).pop('light'),
                             ),
@@ -138,7 +140,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                                     ? Icons.check_circle
                                     : Icons.radio_button_unchecked,
                               ),
-                              title: const Text('Dark'),
+                              title: Text(loc.t('dark')),
                               onTap: () =>
                                   Navigator.of(dialogContext).pop('dark'),
                             ),
@@ -164,19 +166,19 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Privacy',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  loc.t('privacy'),
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 12),
                 ListTile(
                   leading: const Icon(Icons.lock),
-                  title: const Text('Privacy Policy'),
+                  title: Text(loc.t('privacy_policy')),
                   onTap: () {},
                 ),
                 ListTile(
                   leading: const Icon(Icons.description),
-                  title: const Text('Terms of Service'),
+                  title: Text(loc.t('terms_of_service')),
                   onTap: () {},
                 ),
               ],
@@ -192,16 +194,16 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                 final shouldLogout = await showDialog<bool>(
                   context: context,
                   builder: (dialogContext) => AlertDialog(
-                    title: const Text('Logout'),
-                    content: const Text('Are you sure you want to logout?'),
+                    title: Text(loc.t('logout')),
+                    content: Text(loc.t('logout_confirm')),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.of(dialogContext).pop(false),
-                        child: const Text('Cancel'),
+                        child: Text(loc.t('cancel')),
                       ),
                       TextButton(
                         onPressed: () => Navigator.of(dialogContext).pop(true),
-                        child: const Text('Logout'),
+                        child: Text(loc.t('logout')),
                       ),
                     ],
                   ),
@@ -215,7 +217,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                 }
               },
               icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
+              label: Text(loc.t('logout')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,

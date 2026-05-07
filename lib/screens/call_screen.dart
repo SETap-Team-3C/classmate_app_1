@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../core/localization/app_localizations.dart';
 
 class CallScreen extends StatefulWidget {
   const CallScreen({
@@ -25,20 +26,22 @@ class _CallScreenState extends State<CallScreen> {
   bool _isCalling = false;
 
   Future<void> _toggleCall() async {
+    final loc = AppLocalizations.of(context);
+    
     if (_isCalling) {
       setState(() {
         _isCalling = false;
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Call ended')));
+      ).showSnackBar(SnackBar(content: Text(loc.t('call_ended'))));
       return;
     }
 
     final phone = widget.userPhone?.trim() ?? '';
     if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No phone number found for this contact')),
+        SnackBar(content: Text(loc.t('no_phone_number_found'))),
       );
       return;
     }
@@ -54,18 +57,20 @@ class _CallScreenState extends State<CallScreen> {
       });
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Opening dialer for $phone')));
+      ).showSnackBar(SnackBar(content: Text(loc.t('opening_dialer_for', params: {'phone': phone}))));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the dialer')),
+        SnackBar(content: Text(loc.t('could_not_open_dialer'))),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    
     return Scaffold(
-      appBar: AppBar(title: Text('Call with ${widget.userName}')),
+      appBar: AppBar(title: Text(loc.t('call_with', params: {'name': widget.userName}))),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -95,7 +100,7 @@ class _CallScreenState extends State<CallScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'This opens the phone dialer using the saved contact number.',
+                loc.t('opens_phone_dialer_using_saved_contact'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -110,7 +115,7 @@ class _CallScreenState extends State<CallScreen> {
                   ? Theme.of(context).colorScheme.error
                   : Theme.of(context).colorScheme.secondary,
               icon: Icon(_isCalling ? Icons.call_end : Icons.call),
-              label: Text(_isCalling ? 'End Call' : 'Open Dialer'),
+              label: Text(_isCalling ? loc.t('end_call') : loc.t('open_dialer')),
             ),
           ],
         ),

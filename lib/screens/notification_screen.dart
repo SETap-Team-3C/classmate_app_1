@@ -1,6 +1,7 @@
 // created notification screen
 import 'package:flutter/material.dart';
 import '../services/notification_service.dart';
+import '../core/localization/app_localizations.dart';
 
 class NotificationScreen extends StatefulWidget {
   const NotificationScreen({super.key});
@@ -32,17 +33,18 @@ class _NotificationScreenState extends State<NotificationScreen> {
   @override
   Widget build(BuildContext context) {
     final svc = NotificationService();
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
+      appBar: AppBar(title: Text(loc.t('notifications'))),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'Recent Notifications',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            Text(
+              loc.t('recent_notifications'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
 
@@ -59,7 +61,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                     return ListTile(
                       leading: const Icon(Icons.notifications),
                       title: Text(msg),
-                      subtitle: const Text('Just now'),
+                      subtitle: Text(loc.t('just_now')),
                       onTap: () {
                         // preview or open details later
                         svc.showInAppNotification(context, 'Notification', msg);
@@ -74,12 +76,12 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: 'Title'),
+              decoration: InputDecoration(labelText: loc.t('title')),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _bodyController,
-              decoration: const InputDecoration(labelText: 'Body'),
+              decoration: InputDecoration(labelText: loc.t('body')),
               maxLines: 3,
             ),
             const SizedBox(height: 16),

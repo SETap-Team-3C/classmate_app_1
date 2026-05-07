@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import '../core/localization/app_localizations.dart';
 import 'call_screen.dart';
 
 class CallContactsScreen extends StatelessWidget {
@@ -20,9 +21,10 @@ class CallContactsScreen extends StatelessWidget {
     final firestore = FirebaseFirestore.instance;
     final auth = FirebaseAuth.instance;
     final currentUserId = auth.currentUser?.uid;
+    final loc = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Select Contact to Call')),
+      appBar: AppBar(title: Text(loc.t('select_contact_to_call'))),
       body: StreamBuilder<QuerySnapshot>(
         stream: firestore.collection('users').snapshots(),
         builder: (context, snapshot) {
@@ -31,7 +33,7 @@ class CallContactsScreen extends StatelessWidget {
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No users available'));
+            return Center(child: Text(loc.t('no_users_available')));
           }
 
           final users = snapshot.data!.docs
@@ -39,7 +41,7 @@ class CallContactsScreen extends StatelessWidget {
               .toList();
 
           if (users.isEmpty) {
-            return const Center(child: Text('No other users to call'));
+            return Center(child: Text(loc.t('no_users_to_call')));
           }
 
           return ListView.builder(
@@ -47,7 +49,7 @@ class CallContactsScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               final user = users[index];
               final data = user.data() as Map<String, dynamic>?;
-              final userName = _readStringField(data, 'name', 'Unknown User');
+              final userName = _readStringField(data, 'name', loc.t('unknown_user'));
               final userEmail = _readStringField(data, 'email');
               final userPhone = _readStringField(data, 'phone');
 
@@ -66,7 +68,7 @@ class CallContactsScreen extends StatelessWidget {
                     Text(
                       userPhone.isNotEmpty
                           ? userPhone
-                          : 'No phone number added',
+                          : loc.t('no_phone_number_added'),
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 12,

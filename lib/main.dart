@@ -1,9 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+import 'core/language_provider.dart';
+import 'core/localization/app_localizations.dart';
 import 'core/theme/theme_provider.dart';
+import 'firebase_options.dart';
 import 'screens/welcome_screen.dart';
 
 void main() async {
@@ -44,19 +48,42 @@ class ClassmateApp extends StatefulWidget {
 
 class _ClassmateAppState extends State<ClassmateApp> {
   final ThemeProvider _themeProvider = ThemeProvider();
+  final LanguageProvider _languageProvider = LanguageProvider();
+
+  @override
+  void initState() {
+    super.initState();
+    _languageProvider.loadLocale();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _themeProvider,
-      builder: (context, _) => MaterialApp(
-        title: 'Classmate',
-        debugShowCheckedModeBanner: false,
-        theme: _themeProvider.lightTheme,
-        darkTheme: _themeProvider.darkTheme,
-        themeMode: _themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-        home: WelcomeScreen(themeProvider: _themeProvider),
+    return LanguageInherited(
+      languageProvider: _languageProvider,
+      child: AnimatedBuilder(
+        animation: _themeProvider,
+        builder: (context, _) {
+          final languageProvider = LanguageInherited.of(context);
+          return MaterialApp(
+            title: 'Classmate',
+            debugShowCheckedModeBanner: false,
+            locale: languageProvider.locale,
+            supportedLocales: const [Locale('en'), Locale('es')],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              AppLocalizationsDelegate(),
+            ],
+            theme: _themeProvider.lightTheme,
+            darkTheme: _themeProvider.darkTheme,
+            themeMode:
+                _themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+            home: WelcomeScreen(themeProvider: _themeProvider),
+          );
+        },
       ),
     );
   }
 }
+

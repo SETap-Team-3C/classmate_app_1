@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import '../core/localization/app_localizations.dart';
 
 import '../core/theme/theme_provider.dart';
 import 'auth_gate.dart';
@@ -187,7 +188,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           ),
                                           const SizedBox(height: 28),
                                           Text(
-                                            'Classmate',
+                                            AppLocalizations.of(context).t('app_name'),
                                             textAlign: TextAlign.center,
                                             style: Theme.of(context)
                                                 .textTheme
@@ -199,7 +200,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           ),
                                           const SizedBox(height: 10),
                                           Text(
-                                            'Stay connected with your campus in one place.',
+                                            AppLocalizations.of(context).t('welcome_back'),
                                             textAlign: TextAlign.center,
                                             style: Theme.of(context)
                                                 .textTheme
@@ -238,7 +239,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           icon: const Icon(
                                             Icons.arrow_forward_rounded,
                                           ),
-                                          label: const Text('Continue'),
+                                          label: Text(AppLocalizations.of(context).t('continue')),
                                         ),
                                       ),
                                     ),
@@ -276,3 +277,4 @@ class _GlowCircle extends StatelessWidget {
     );
   }
 }
+
