@@ -9,6 +9,7 @@ import '../../../widets/app_logo.dart';
 import '../../../widets/enhanced_avatar.dart';
 import '../../general_settings_screen.dart';
 import '../../chat_page.dart';
+import '../login_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key, required this.themeProvider});

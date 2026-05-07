@@ -488,8 +488,6 @@ class SearchUser {
 }
 
 class UserSearchBottomSheet extends StatefulWidget {
-  const UserSearchBottomSheet({super.key});
-
   const UserSearchBottomSheet({
     super.key,    this.firestore,
     required this.currentUserId,

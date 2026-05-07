@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
-import '../core/utils/time_formatter.dart';
 import '../models/message.dart';
 import '../services/chat_service.dart';
 import '../widgets/message_bubble.dart';
@@ -300,35 +299,58 @@ class _ChatPageState extends State<ChatPage> {
                     ),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
-                        final err = snapshot.error;
-                        // If Firestore permission denied, show a friendly empty state                              isCurrentUser: isCurrentUser,
-                              isRead: message.read,
-                              readStatusText: readStatusText,
-                              isStarred: message.isStarredBy(currentUser.uid),
-                              onStarToggle: () async {
-                                await _chatService.toggleStar(
-                                  message.id,
-                                  currentUser.uid,
-                                );
-                              },
-                              onDeleteForMe: () async {
-                                await _chatService.deleteMessageForMe(
-                                  message.id,
-                                  currentUser.uid,
-                                );
-                              },
-                              onDeleteForEveryone: isCurrentUser
-                                  ? () async {
-                                      await _chatService.deleteMessage(
-                                        message.id,
-                                      );
-                                    }
-                                  : null,
-                            ),
+                        return Center(
+                          child: Text('Error loading messages: ${snapshot.error}'),
+                        );
+                      }
+                      if (!snapshot.hasData) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final messages = snapshot.data ?? [];
+                      return ListView.builder(
+                        reverse: true,
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isCurrentUser = message.senderId == currentUser.uid;
+                          final readStatusText = message.read ? 'Seen' : 'Sent';
+                          return MessageBubble(
+                            messageId: message.id,
+                            text: message.text,
+                            messageType: message.messageType,
+                            fileUrl: message.fileUrl,
+                            fileName: message.fileName,
+                            mimeType: message.mimeType,
+                            fileSize: message.fileSize,
+                            contactData: message.contactData,
+                            isDeleted: message.isDeleted,
+                            isCurrentUser: isCurrentUser,
+                            isRead: message.read,
+                            readStatusText: readStatusText,
+                            isStarred: message.isStarredBy(currentUser.uid),
+                            onStarToggle: () async {
+                              await _chatService.toggleStar(
+                                message.id,
+                                currentUser.uid,
+                              );
+                            },
+                            onDeleteForMe: () async {
+                              await _chatService.deleteMessageForMe(
+                                message.id,
+                                currentUser.uid,
+                              );
+                            },
+                            onDeleteForEveryone: isCurrentUser
+                                ? () async {
+                                    await _chatService.deleteMessage(
+                                      message.id,
+                                    );
+                                  }
+                                : null,
                           );
                         },
                       );
-                    },
+                    }
                   ),
           ),
           SafeArea(

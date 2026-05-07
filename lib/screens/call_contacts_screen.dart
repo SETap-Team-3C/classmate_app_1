@@ -29,18 +29,6 @@ class CallContactsScreen extends StatelessWidget {
       );
     }
 
-    if (currentUserId == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (currentUserId == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(title: Text(loc.t('select_contact_to_call'))),
       body: StreamBuilder<QuerySnapshot>(

@@ -1,0 +1,53 @@
+﻿Analyzing classmate_app_1...                                    
+
+warning - Unused import: '../core/utils/time_formatter.dart' - lib\screens\chat_page.dart:6:8 - unused_import
+  error - The named parameter 'messageId' is required, but there's no corresponding argument - lib\screens\chat_page.dart:318:34 - missing_required_argument
+  error - The named parameter 'text' is required, but there's no corresponding argument - lib\screens\chat_page.dart:318:34 - missing_required_argument
+  error - The named parameter 'message' isn't defined - lib\screens\chat_page.dart:319:29 - undefined_named_parameter
+warning - Unused import: 'notification_screen.dart' - lib\screens\home_screen.dart:8:8 - unused_import
+warning - The declaration '_buildFeedToggle' isn't referenced - lib\screens\home_screen.dart:42:10 - unused_element
+warning - The declaration '_signOut' isn't referenced - lib\screens\home_screen.dart:80:16 - unused_element
+warning - The value of the local variable 'currentUser' isn't used - lib\screens\home_screen.dart:121:11 - unused_local_variable
+warning - The value of the local variable 'isFeedPage' isn't used - lib\screens\home_screen.dart:122:11 - unused_local_variable
+  error - Too many positional arguments: 2 expected, but 3 found - lib\screens\home_screen.dart:155:19 - extra_positional_arguments
+  error - '_activeFeed' can't be used as a setter because it's final - lib\screens\home_screen.dart:156:49 - assignment_to_final
+  error - Expected to find ';' - lib\screens\home_screen.dart:167:20 - expected_token
+  error - Expected to find ')' - lib\screens\home_screen.dart:168:17 - expected_token
+  error - Expected to find '}' - lib\screens\home_screen.dart:168:17 - expected_token
+  error - Expected to find ')' - lib\screens\home_screen.dart:170:13 - expected_token
+  error - Expected to find ';' - lib\screens\home_screen.dart:182:7 - expected_token
+warning - Dead code - lib\screens\home_screen.dart:182:8 - dead_code
+  error - Expected an identifier - lib\screens\home_screen.dart:182:8 - missing_identifier
+  error - Unexpected text ';' - lib\screens\home_screen.dart:182:8 - unexpected_token
+warning - The label 'body' isn't used - lib\screens\home_screen.dart:183:7 - unused_label
+  error - Expected to find ';' - lib\screens\home_screen.dart:183:30 - expected_token
+  error - Expected an identifier - lib\screens\home_screen.dart:183:31 - missing_identifier
+  error - Unexpected text ';' - lib\screens\home_screen.dart:183:31 - unexpected_token
+warning - The label 'bottomNavigationBar' isn't used - lib\screens\home_screen.dart:184:7 - unused_label
+  error - Methods can't be invoked in constant expressions - lib\screens\home_screen.dart:197:41 - const_eval_method_invocation
+  error - Expected to find ';' - lib\screens\home_screen.dart:200:7 - expected_token
+  error - Expected an identifier - lib\screens\home_screen.dart:200:8 - missing_identifier
+  error - Expected to find ';' - lib\screens\home_screen.dart:200:8 - expected_token
+  error - Unexpected text ';' - lib\screens\home_screen.dart:200:8 - unexpected_token
+  error - Expected an identifier - lib\screens\home_screen.dart:201:5 - missing_identifier
+  error - Unexpected text ';' - lib\screens\home_screen.dart:201:5 - unexpected_token
+   info - Unnecessary empty statement - lib\screens\home_screen.dart:201:6 - empty_statements
+  error - The named parameter 'firestore' isn't defined - lib\screens\messages_screen.dart:134:11 - undefined_named_parameter
+  error - The named parameter 'currentUserId' isn't defined - lib\screens\messages_screen.dart:135:11 - undefined_named_parameter
+  error - The named parameter 'onUserSelected' isn't defined - lib\screens\messages_screen.dart:136:11 - undefined_named_parameter
+  error - All final variables must be initialized, but 'currentUserId', 'firestore', and 2 others aren't - lib\screens\messages_screen.dart:491:9 - final_not_initialized_constructor
+  error - The unnamed constructor is already defined - lib\screens\messages_screen.dart:493:9 - duplicate_constructor
+   info - The import of 'package:firebase_core/firebase_core.dart' is unnecessary because all of the used elements are also provided by the import of 'package:cloud_firestore/cloud_firestore.dart' - lib\services\chat_service.dart:4:8 - unnecessary_import
+warning - The declaration '_buildParticipants' isn't referenced - lib\services\chat_service.dart:26:16 - unused_element
+  error - The method '_waitForAuth' isn't defined for the type 'ChatService' - lib\services\chat_service.dart:293:45 - undefined_method
+  error - The method '_waitForAuth' isn't defined for the type 'ChatService' - lib\services\chat_service.dart:312:45 - undefined_method
+  error - The method '_waitForAuth' isn't defined for the type 'ChatService' - lib\services\chat_service.dart:329:45 - undefined_method
+warning - Unused import: 'package:flutter/material.dart' - test\screens\messages_screen_test.dart:2:8 - unused_import
+
+flutter : 43 issues found. (ran in 2.5s)
+At line:1 char:11
++ $output = flutter analyze 2>&1; $output | Out-File -FilePath analyze_ ...
++           ~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (43 issues found. (ran in 2.5s):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 

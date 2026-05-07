@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -18,14 +17,29 @@ class ChatService {
 
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
-  final FirebaseStorage _storage;String _buildChatId(String userA, String userB) {
+  final FirebaseStorage _storage;
+
+  String _buildChatId(String userA, String userB) {
     final ids = [userA, userB]..sort();
     return '${ids[0]}_${ids[1]}';
   }
 
-  List<String> _buildParticipants(String userA, String userB) {
-    final participants = [userA, userB]..sort();
-    return participants;
+  Future<User?> _waitForAuth({
+    Duration timeout = const Duration(seconds: 2),
+  }) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser != null) return currentUser;
+
+    try {
+      return await _auth
+          .authStateChanges()
+          .where((user) => user != null)
+          .cast<User>()
+          .first
+          .timeout(timeout);
+    } catch (_) {
+      return _auth.currentUser;
+    }
   }
 
   Future<void> sendMessage(String receiverId, String message) async {
