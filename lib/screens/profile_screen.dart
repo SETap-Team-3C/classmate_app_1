@@ -6,6 +6,7 @@ import 'package:classmate_app_1/widets/online_indicator.dart';
 import 'package:classmate_app_1/core/utils/time_formatter.dart';
 import 'package:classmate_app_1/core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
+import 'messages_screen.dart';
 import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -409,13 +410,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.pushNamed(
+                          Navigator.push(
                             context,
-                            '/chat',
-                            arguments: {
-                              'userId': widget.userId,
-                              'userName': name,
-                            },
+                            MaterialPageRoute(
+                              builder: (_) => MessagesScreen(
+                                initialTargetUserId: widget.userId,
+                                initialTargetUserName: name,
+                                themeProvider:
+                                    widget.themeProvider ?? ThemeProvider(),
+                              ),
+                            ),
                           );
                         },
                         icon: const Icon(Icons.message),

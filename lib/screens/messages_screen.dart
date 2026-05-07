@@ -13,6 +13,8 @@ class MessagesScreen extends StatefulWidget {
     this.auth,
     this.firestore,
     this.showTestEmptyState = false,
+    this.initialTargetUserId,
+    this.initialTargetUserName,
     this.onBack,
     required this.themeProvider,
   });
@@ -20,6 +22,8 @@ class MessagesScreen extends StatefulWidget {
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
   final bool showTestEmptyState;
+  final String? initialTargetUserId;
+  final String? initialTargetUserName;
   final VoidCallback? onBack;
   final ThemeProvider themeProvider;
 
@@ -28,6 +32,16 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
+  bool _didHandleInitialTarget = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openInitialTargetChatIfNeeded();
+    });
+  }
+
   FirebaseAuth? _tryGetAuth() {
     try {
       return widget.auth ?? FirebaseAuth.instance;
@@ -143,6 +157,40 @@ class _MessagesScreenState extends State<MessagesScreen> {
           },
         );
       },
+    );
+  }
+
+  Future<void> _openInitialTargetChatIfNeeded() async {
+    if (_didHandleInitialTarget) return;
+    _didHandleInitialTarget = true;
+
+    final targetUserId = widget.initialTargetUserId;
+    if (targetUserId == null || targetUserId.isEmpty) return;
+
+    final currentUser = _tryGetAuth()?.currentUser;
+    final firestore = _tryGetFirestore();
+    if (currentUser == null || firestore == null) return;
+
+    if (targetUserId == currentUser.uid) return;
+
+    var targetName = (widget.initialTargetUserName ?? '').trim();
+    if (targetName.isEmpty) {
+      final targetDoc = await firestore
+          .collection('users')
+          .doc(targetUserId)
+          .get();
+      targetName = (targetDoc.data()?['name'] ?? 'User').toString();
+    }
+
+    if (!mounted) return;
+    await _openChatWithUser(
+      currentUser: currentUser,
+      selectedUser: SearchUser(
+        id: targetUserId,
+        name: targetName,
+        username: '',
+        email: '',
+      ),
     );
   }
 
