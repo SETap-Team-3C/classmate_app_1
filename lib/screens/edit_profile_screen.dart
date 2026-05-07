@@ -201,8 +201,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _isLoadingProfilePicture = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile picture updated successfully'),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context).t('profile_picture_updated'),
+              ),
             ),
           );
         }
@@ -214,7 +216,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             _isLoadingProfilePicture = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to upload profile picture')),
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context).t('failed_upload_profile_picture'),
+              ),
+            ),
           );
         }
       }
@@ -225,9 +231,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           _profilePictureBytes = null;
           _isLoadingProfilePicture = false;
         });
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(
+                context,
+              ).t('error', params: {'error': e.toString()}),
+            ),
+          ),
+        );
       }
     }
   }
@@ -235,6 +247,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _showChangePasswordDialog() async {
     final user = _user;
     if (user == null) return;
+    final loc = AppLocalizations.of(context);
 
     final hasPasswordProvider = user.providerData.any(
       (provider) => provider.providerId == 'password',
@@ -242,11 +255,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!hasPasswordProvider) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Password change is only available for email/password accounts.',
-          ),
-        ),
+        SnackBar(content: Text(loc.t('password_change_only_email_accounts'))),
       );
       return;
     }
@@ -254,9 +263,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final email = user.email;
     if (email == null || email.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No account email found for this user.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(loc.t('no_account_email_found'))));
       return;
     }
 
@@ -273,31 +282,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         builder: (dialogContext) {
           return StatefulBuilder(
             builder: (context, setDialogState) => AlertDialog(
-              title: const Text('Change Password'),
+              title: Text(loc.t('change_password')),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: currentPasswordController,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Current Password',
+                    decoration: InputDecoration(
+                      labelText: loc.t('current_password'),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: newPasswordController,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'New Password',
+                    decoration: InputDecoration(
+                      labelText: loc.t('new_password'),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: confirmPasswordController,
                     obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Confirm New Password',
+                    decoration: InputDecoration(
+                      labelText: loc.t('confirm_new_password'),
                     ),
                   ),
                 ],
@@ -307,7 +316,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onPressed: isSubmitting
                       ? null
                       : () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Cancel'),
+                  child: Text(loc.t('cancel')),
                 ),
                 FilledButton(
                   onPressed: isSubmitting
@@ -321,8 +330,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                           if (currentPassword.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please enter current password.'),
+                              SnackBar(
+                                content: Text(
+                                  loc.t('please_enter_current_password'),
+                                ),
                               ),
                             );
                             return;
@@ -330,10 +341,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                           if (newPassword.length < 6) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'New password must be at least 6 characters.',
-                                ),
+                              SnackBar(
+                                content: Text(loc.t('new_password_min_6')),
                               ),
                             );
                             return;
@@ -341,8 +350,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                           if (newPassword != confirmPassword) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('New passwords do not match.'),
+                              SnackBar(
+                                content: Text(loc.t('new_password_mismatch')),
                               ),
                             );
                             return;
@@ -361,23 +370,24 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
                             if (!dialogContext.mounted) return;
                             ScaffoldMessenger.of(dialogContext).showSnackBar(
-                              const SnackBar(
-                                content: Text('Password updated successfully.'),
+                              SnackBar(
+                                content: Text(
+                                  loc.t('password_updated_successfully'),
+                                ),
                               ),
                             );
                             Navigator.of(dialogContext).pop();
                           } on FirebaseAuthException catch (e) {
                             if (!dialogContext.mounted) return;
 
-                            var message = 'Failed to update password.';
+                            var message = loc.t('password_update_failed');
                             if (e.code == 'wrong-password' ||
                                 e.code == 'invalid-credential') {
-                              message = 'Current password is incorrect.';
+                              message = loc.t('current_password_incorrect');
                             } else if (e.code == 'weak-password') {
-                              message = 'Please choose a stronger password.';
+                              message = loc.t('choose_stronger_password');
                             } else if (e.code == 'requires-recent-login') {
-                              message =
-                                  'Please log in again and try changing password.';
+                              message = loc.t('login_again_change_password');
                             }
 
                             ScaffoldMessenger.of(
@@ -386,8 +396,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           } catch (_) {
                             if (!dialogContext.mounted) return;
                             ScaffoldMessenger.of(dialogContext).showSnackBar(
-                              const SnackBar(
-                                content: Text('Failed to update password.'),
+                              SnackBar(
+                                content: Text(loc.t('password_update_failed')),
                               ),
                             );
                           } finally {
@@ -402,7 +412,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Update Password'),
+                      : Text(loc.t('update_password')),
                 ),
               ],
             ),
@@ -621,21 +631,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Full name'),
+                  decoration: InputDecoration(labelText: loc.t('full_name')),
                   validator: (v) => v == null || v.trim().isEmpty
-                      ? 'Please enter your name'
+                      ? loc.t('please_enter_name')
                       : null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(labelText: 'Username'),
+                  decoration: InputDecoration(labelText: loc.t('username')),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
-                      return 'Please enter a username';
+                      return loc.t('please_enter_username');
                     }
                     if (v.trim().length < 3) {
-                      return 'Username must be at least 3 characters';
+                      return loc.t('username_min_3');
                     }
                     return null;
                   },
@@ -643,19 +653,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone number'),
+                  decoration: InputDecoration(labelText: loc.t('phone')),
                   keyboardType: TextInputType.phone,
                   validator: (v) => null,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  decoration: InputDecoration(labelText: loc.t('email')),
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) {
-                    if (v == null || v.isEmpty) return 'Please enter an email';
+                    if (v == null || v.isEmpty) {
+                      return loc.t('please_enter_email');
+                    }
                     final emailRegex = RegExp(r"^[^@\s]+@[^@\s]+\.[^@\s]+");
-                    if (!emailRegex.hasMatch(v)) return 'Enter a valid email';
+                    if (!emailRegex.hasMatch(v)) {
+                      return loc.t('enter_valid_email');
+                    }
                     return null;
                   },
                 ),
@@ -680,7 +694,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 OutlinedButton.icon(
                   onPressed: _showChangePasswordDialog,
                   icon: const Icon(Icons.lock_outline),
-                  label: const Text('Change Password'),
+                  label: Text(loc.t('change_password')),
                 ),
                 const SizedBox(height: 20),
                 _loading
@@ -704,20 +718,32 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         height: 64,
         child: Row(
           children: [
-            _buildBottomNavItem(icon: Icons.update, label: 'Updates', index: 0),
-            _buildBottomNavItem(icon: Icons.call, label: 'Calls', index: 1),
+            _buildBottomNavItem(
+              icon: Icons.update,
+              label: loc.t('updates'),
+              index: 0,
+            ),
+            _buildBottomNavItem(
+              icon: Icons.call,
+              label: loc.t('calls'),
+              index: 1,
+            ),
             _buildBottomNavItem(
               icon: Icons.group,
-              label: 'Communities',
+              label: loc.t('communities'),
               index: 2,
             ),
             _buildBottomNavItem(
               icon: Icons.chat_bubble,
-              label: 'Chats',
+              label: loc.t('chats'),
               index: 3,
               badgeCount: 5,
             ),
-            _buildBottomNavItem(icon: Icons.person, label: 'You', index: 4),
+            _buildBottomNavItem(
+              icon: Icons.person,
+              label: loc.t('you'),
+              index: 4,
+            ),
           ],
         ),
       ),

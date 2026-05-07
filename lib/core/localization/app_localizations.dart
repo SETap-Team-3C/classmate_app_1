@@ -156,6 +156,11 @@ class AppLocalizations {
           'We saved your requested email. To complete an email change you may need to re-authenticate (sign out and sign in) or perform the change from your account settings.',
       'communities_placeholder': 'Communities placeholder',
       'username': 'Username',
+      'please_enter_name': 'Please enter your name',
+      'please_enter_username': 'Please enter a username',
+      'username_min_3': 'Username must be at least 3 characters',
+      'please_enter_email': 'Please enter an email',
+      'enter_valid_email': 'Enter a valid email',
       'username_validation_error':
           'Username can only use letters, numbers, and underscores. Underscores cannot be first or last.',
       'username_login_firestore_error':
@@ -306,6 +311,11 @@ class AppLocalizations {
           'Hemos guardado el correo solicitado. Para completar un cambio de correo, puede que necesites re-autenticarte (cerrar y volver a iniciar sesión) o realizar el cambio desde tu configuración de cuenta.',
       'communities_placeholder': 'Placeholder de comunidades',
       'username': 'Nombre de usuario',
+      'please_enter_name': 'Por favor ingresa tu nombre',
+      'please_enter_username': 'Por favor ingresa un nombre de usuario',
+      'username_min_3': 'El nombre de usuario debe tener al menos 3 caracteres',
+      'please_enter_email': 'Por favor ingresa un correo electrónico',
+      'enter_valid_email': 'Ingresa un correo electrónico válido',
       'username_validation_error':
           'El nombre de usuario solo puede usar letras, números y guiones bajos. Los guiones bajos no pueden estar al principio ni al final.',
       'username_login_firestore_error':
@@ -400,6 +410,11 @@ class AppLocalizations {
       'opens_phone_dialer_using_saved_contact': '这将使用保存的联系人号码打开电话拨号器。',
       'save': '保存',
       'selected_language_changed': '语言已切换为 {{language}}',
+      'please_enter_name': '请输入你的姓名',
+      'please_enter_username': '请输入用户名',
+      'username_min_3': '用户名至少需要 3 个字符',
+      'please_enter_email': '请输入电子邮箱',
+      'enter_valid_email': '请输入有效的电子邮箱',
     },
     'hi': {
       'app_name': 'Classmate',
@@ -543,6 +558,11 @@ class AppLocalizations {
           'हमने आपके अनुरोधित ईमेल को सहेज लिया है। ईमेल परिवर्तन को पूरा करने के लिए आपको पुनः प्रमाणित करने की आवश्यकता हो सकती है (साइन आउट और साइन इन करें) या अपनी खाता सेटिंग्स से परिवर्तन करें।',
       'communities_placeholder': 'समुदाय प्लेसहोल्डर',
       'username': 'उपयोगकर्ता नाम',
+      'please_enter_name': 'कृपया अपना नाम दर्ज करें',
+      'please_enter_username': 'कृपया उपयोगकर्ता नाम दर्ज करें',
+      'username_min_3': 'उपयोगकर्ता नाम कम से कम 3 अक्षरों का होना चाहिए',
+      'please_enter_email': 'कृपया ईमेल दर्ज करें',
+      'enter_valid_email': 'मान्य ईमेल दर्ज करें',
       'username_validation_error':
           'उपयोगकर्ता नाम केवल अक्षर, संख्या और अंडरस्कोर का उपयोग कर सकता है। अंडरस्कोर पहला या आखिरी नहीं हो सकता।',
       'username_login_firestore_error':
@@ -700,6 +720,12 @@ class AppLocalizations {
           'Nous avons enregistré l’e-mail demandé. Pour terminer un changement d’e-mail, vous devrez peut-être vous réauthentifier (vous déconnecter puis vous reconnecter) ou effectuer le changement depuis les paramètres de votre compte.',
       'communities_placeholder': 'Espace réservé aux communautés',
       'username': 'Nom d’utilisateur',
+      'please_enter_name': 'Veuillez saisir votre nom',
+      'please_enter_username': 'Veuillez saisir un nom d’utilisateur',
+      'username_min_3':
+          'Le nom d’utilisateur doit contenir au moins 3 caractères',
+      'please_enter_email': 'Veuillez saisir un e-mail',
+      'enter_valid_email': 'Saisissez un e-mail valide',
       'username_validation_error':
           'Le nom d’utilisateur ne peut utiliser que des lettres, des chiffres et des underscores. Les underscores ne peuvent pas être au début ni à la fin.',
       'username_login_firestore_error':
