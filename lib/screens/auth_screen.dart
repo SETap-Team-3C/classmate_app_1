@@ -1,12 +1,11 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key, this.auth, this.firestore});
-
-  final FirebaseAuth? auth;
-  final FirebaseFirestore? firestore;
+  const AuthScreen({super.key});
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -14,177 +13,130 @@ class AuthScreen extends StatefulWidget {
 
 class _AuthScreenState extends State<AuthScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _identifierController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   bool _isLogin = true;
   bool _isLoading = false;
 
-  FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore =>
-      widget.firestore ?? FirebaseFirestore.instance;
+  Future<User?> _waitForAuthenticatedUser({
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final existing = FirebaseAuth.instance.currentUser;
+    if (existing != null) return existing;
 
-  bool _isValidUsername(String username) {
-    final usernameRegex = RegExp(r'^[A-Za-z0-9](?:[A-Za-z0-9_]*[A-Za-z0-9])?$');
-    return usernameRegex.hasMatch(username);
-  }
-
-  bool _isAdminUsername(String username) {
-    final normalized = username.toLowerCase();
-    return normalized == 'bot1' || normalized == 'bot2';
+    try {
+      return await FirebaseAuth.instance
+          .authStateChanges()
+          .firstWhere((user) => user != null)
+          .timeout(timeout);
+    } catch (_) {
+      return FirebaseAuth.instance.currentUser;
+    }
   }
 
   @override
   void dispose() {
     _nameController.dispose();
-    _identifierController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    final identifier = _identifierController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-    final username = _nameController.text.trim();
+    final fullName = _nameController.text.trim();
 
-    if (identifier.isEmpty ||
-        password.isEmpty ||
-        (!_isLogin && username.isEmpty)) {
+    if (email.isEmpty || password.isEmpty || (!_isLogin && fullName.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all required fields.')),
       );
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isLoading = true);
 
     try {
       if (_isLogin) {
-        String emailForLogin = identifier;
+        final credential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: email, password: password)
+            .timeout(const Duration(seconds: 15));
 
-        if (!identifier.contains('@')) {
-          if (!_isValidUsername(identifier)) {
-            throw FirebaseAuthException(
-              code: 'invalid-username',
-              message:
-                  'Username can only use letters, numbers, and underscores. Underscores cannot be first or last.',
-            );
-          }
-
-          QuerySnapshot<Map<String, dynamic>> usernameQuery;
-          try {
-            usernameQuery = await _firestore
-                .collection('users')
-                .where('usernameLower', isEqualTo: identifier.toLowerCase())
-                .limit(1)
-                .get();
-          } on FirebaseException catch (_) {
-            throw FirebaseAuthException(
-              code: 'permission-denied',
-              message:
-                  'Username login needs Firestore read access. Temporarily log in with email, or update rules for username lookup.',
-            );
-          }
-
-          if (usernameQuery.docs.isEmpty) {
-            throw FirebaseAuthException(
-              code: 'user-not-found',
-              message: 'No user found with that username.',
-            );
-          }
-
-          emailForLogin = (usernameQuery.docs.first.data()['email'] ?? '')
-              .toString();
-          if (emailForLogin.isEmpty) {
-            throw FirebaseAuthException(
-              code: 'invalid-email',
-              message: 'Account email is missing for this username.',
-            );
-          }
+        final activeUser = await _waitForAuthenticatedUser();
+        if (activeUser == null) {
+          throw FirebaseAuthException(
+            code: 'auth-not-ready',
+            message:
+                'Login completed but FirebaseAuth.currentUser is still null.',
+          );
         }
 
-        final credential = await _auth.signInWithEmailAndPassword(
-          email: emailForLogin,
-          password: password,
-        );
-
-        final userDoc = await _firestore
-            .collection('users')
-            .doc(credential.user!.uid)
-            .get();
-        final existingName = (userDoc.data()?['name'] ?? '').toString();
-        final fallbackName = emailForLogin.split('@').first;
-        final resolvedName = existingName.isEmpty ? fallbackName : existingName;
-
-        await _firestore.collection('users').doc(credential.user!.uid).set({
-          'name': resolvedName,
-          'email': emailForLogin,
-          'usernameLower': resolvedName.toLowerCase(),
-          'isAdmin': _isAdminUsername(resolvedName),
-        }, SetOptions(merge: true));
+        debugPrint('Login success UID: ${activeUser.uid}');
+        debugPrint('Login success email: ${credential.user?.email}');
       } else {
-        if (identifier.isEmpty || !identifier.contains('@')) {
+        if (!email.contains('@')) {
           throw FirebaseAuthException(
             code: 'invalid-email',
             message: 'Please enter a valid email for sign up.',
           );
         }
 
-        if (!_isValidUsername(username)) {
+        final credential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(email: email, password: password)
+            .timeout(const Duration(seconds: 15));
+
+        final activeUser = await _waitForAuthenticatedUser();
+        if (activeUser == null) {
           throw FirebaseAuthException(
-            code: 'invalid-username',
+            code: 'auth-not-ready',
             message:
-                'Username can only use letters, numbers, and underscores. Underscores cannot be first or last.',
+                'Signup completed but FirebaseAuth.currentUser is still null.',
           );
         }
 
-        final usernameLower = username.toLowerCase();
+        debugPrint('Signup success UID: ${activeUser.uid}');
 
-        final credential = await _auth.createUserWithEmailAndPassword(
-          email: identifier,
-          password: password,
-        );
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(activeUser.uid)
+            .set({
+          'uid': activeUser.uid,
+          'name': fullName,
+          'email': credential.user?.email ?? email,
+          'createdAt': Timestamp.now(),
+        }, SetOptions(merge: true));
 
-        try {
-          final usernameTaken = await _firestore
-              .collection('users')
-              .where('usernameLower', isEqualTo: usernameLower)
-              .limit(1)
-              .get();
-
-          final takenByAnother = usernameTaken.docs.any(
-            (doc) => doc.id != credential.user!.uid,
-          );
-
-          if (takenByAnother) {
-            await credential.user?.delete();
-            await _auth.signOut();
-            throw FirebaseAuthException(
-              code: 'username-already-in-use',
-              message: 'That username is already taken. Please choose another.',
-            );
-          }
-
-          await _firestore.collection('users').doc(credential.user!.uid).set({
-            'name': username,
-            'email': identifier,
-            'usernameLower': usernameLower,
-            'isAdmin': _isAdminUsername(username),
-          }, SetOptions(merge: true));
-        } on FirebaseException catch (error) {
-          await credential.user?.delete();
-          await _auth.signOut();
-          throw FirebaseAuthException(
-            code: error.code,
-            message: error.message ?? 'Could not create account profile.',
-          );
-        }
+        debugPrint('Signup Firestore profile created for UID: ${activeUser.uid}');
       }
-    } on FirebaseAuthException catch (error) {
+
+      final confirmedUser = FirebaseAuth.instance.currentUser;
+      if (confirmedUser == null) {
+        throw FirebaseAuthException(
+          code: 'auth-not-ready',
+          message: 'Authentication finished but currentUser is null.',
+        );
+      }
+
+      debugPrint('Authenticated UID: ${confirmedUser.uid}');
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Authentication successful')),
+      );
+    } on TimeoutException {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Authentication timed out. Please try again.'),
+        ),
+      );
+    } on FirebaseAuthException catch (error) {
+      messenger.showSnackBar(
         SnackBar(content: Text(error.message ?? 'Authentication failed.')),
       );
     } on FirebaseException catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(error.message ?? 'Authentication failed.')),
       );
     } finally {
@@ -217,7 +169,6 @@ class _AuthScreenState extends State<AuthScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // App logo + name header
             Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -228,9 +179,10 @@ class _AuthScreenState extends State<AuthScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.primary.withOpacity(0.20),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .primary
+                            .withValues(alpha: 0.20),
                         blurRadius: 20,
                         spreadRadius: 2,
                       ),
@@ -255,16 +207,12 @@ class _AuthScreenState extends State<AuthScreen> {
             if (!_isLogin)
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Username'),
+                decoration: const InputDecoration(labelText: 'Full Name'),
               ),
             TextField(
-              controller: _identifierController,
-              keyboardType: _isLogin
-                  ? TextInputType.text
-                  : TextInputType.emailAddress,
-              decoration: InputDecoration(
-                labelText: _isLogin ? 'Username | Email' : 'Email',
-              ),
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: const InputDecoration(labelText: 'Email'),
             ),
             TextField(
               controller: _passwordController,
