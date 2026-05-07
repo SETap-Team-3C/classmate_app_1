@@ -20,6 +20,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
+  final _bioController = TextEditingController();
 
   bool _loading = false;
   bool _isLoadingProfilePicture = false;
@@ -51,6 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (data != null) {
         _nameController.text = (data['name'] ?? '').toString();
         _phoneController.text = (data['phone'] ?? '').toString();
+        _bioController.text = (data['bio'] ?? '').toString();
         _usernameController.text = (data['username'] ?? user.displayName ?? '')
             .toString();
         _profilePictureUrl = (data['profilePictureUrl'] ?? user.photoURL)
@@ -75,6 +77,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final newName = _nameController.text.trim();
     final newUsername = _usernameController.text.trim();
     final newPhone = _phoneController.text.trim();
+    final newBio = _bioController.text.trim();
     final newEmail = _emailController.text.trim();
 
     setState(() => _loading = true);
@@ -90,6 +93,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'name': newName,
         'username': newUsername,
         'phone': newPhone,
+        'bio': newBio,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -234,6 +238,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _usernameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
+    _bioController.dispose();
     super.dispose();
   }
 
@@ -467,6 +472,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     if (v == null || v.isEmpty) return 'Please enter an email';
                     final emailRegex = RegExp(r"^[^@\s]+@[^@\s]+\.[^@\s]+");
                     if (!emailRegex.hasMatch(v)) return 'Enter a valid email';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _bioController,
+                  decoration: InputDecoration(
+                    labelText: loc.t('bio'),
+                    alignLabelWithHint: true,
+                  ),
+                  minLines: 3,
+                  maxLines: 5,
+                  maxLength: 200,
+                  validator: (value) {
+                    if (value != null && value.length > 200) {
+                      return loc.t('bio_too_long');
+                    }
                     return null;
                   },
                 ),

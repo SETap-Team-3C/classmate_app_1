@@ -58,6 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final userData = snapshot.data!.data() as Map<String, dynamic>;
         final name = userData['name'] ?? 'Unknown';
         final email = userData['email'] ?? '';
+        final bio = (userData['bio'] ?? '').toString();
         final username =
             userData['username'] ?? 'user${widget.userId.substring(0, 5)}';
         final profilePictureUrl =
@@ -181,6 +182,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           .withValues(alpha: 0.7),
                                 fontWeight: FontWeight.w500,
                               ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+
+                  // Bio Section
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                loc.t('bio'),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                bio.isEmpty ? loc.t('not_available') : bio,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
