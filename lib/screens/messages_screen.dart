@@ -12,12 +12,14 @@ class MessagesScreen extends StatefulWidget {
     this.auth,
     this.firestore,
     this.showTestEmptyState = false,
+    this.onBack,
     required this.themeProvider,
   });
 
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
   final bool showTestEmptyState;
+  final VoidCallback? onBack;
   final ThemeProvider themeProvider;
 
   @override
@@ -25,9 +27,21 @@ class MessagesScreen extends StatefulWidget {
 }
 
 class _MessagesScreenState extends State<MessagesScreen> {
-  FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
-  FirebaseFirestore get _firestore =>
-      widget.firestore ?? FirebaseFirestore.instance;
+  FirebaseAuth? _tryGetAuth() {
+    try {
+      return widget.auth ?? FirebaseAuth.instance;
+    } catch (_) {
+      return widget.auth;
+    }
+  }
+
+  FirebaseFirestore? _tryGetFirestore() {
+    try {
+      return widget.firestore ?? FirebaseFirestore.instance;
+    } catch (_) {
+      return widget.firestore;
+    }
+  }
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
@@ -63,14 +77,17 @@ class _MessagesScreenState extends State<MessagesScreen> {
     }
 
     final chatId = _buildChatId(currentUser.uid, selectedUser.id);
-    final currentUserDoc = await _firestore
+    final firestore = _tryGetFirestore();
+    if (firestore == null) return;
+
+    final currentUserDoc = await firestore
         .collection('users')
         .doc(currentUser.uid)
         .get();
     final currentUsername = (currentUserDoc.data()?['name'] ?? '').toString();
 
     try {
-      await _firestore.collection('chats').doc(chatId).set({
+      await firestore.collection('chats').doc(chatId).set({
         'participants': [currentUser.uid, selectedUser.id],
         'usernames': {
           currentUser.uid: currentUsername,
@@ -103,8 +120,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 
   Future<void> _showAddUserDialog() async {
-    final currentUser = _auth.currentUser;
+    final currentUser = _tryGetAuth()?.currentUser;
     if (currentUser == null) return;
+    final firestore = _tryGetFirestore();
+    if (firestore == null) return;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -112,7 +131,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       showDragHandle: true,
       builder: (context) {
         return UserSearchBottomSheet(
-          firestore: _firestore,
+          firestore: firestore,
           currentUserId: currentUser.uid,
           onUserSelected: (selectedUser) async {
             Navigator.pop(context);
@@ -152,7 +171,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
+    final currentUser = widget.showTestEmptyState ? null : _tryGetAuth()?.currentUser;
+    final firestore = widget.showTestEmptyState ? null : _tryGetFirestore();
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -168,7 +188,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
             child: Row(
               children: [
                 IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    if (widget.onBack != null) {
+                      widget.onBack!();
+                      return;
+                    }
+                    Navigator.maybePop(context);
+                  },
                   icon: const Icon(Icons.arrow_back),
                 ),
                 Expanded(
@@ -245,12 +271,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
             ),
           ),
           Expanded(
-            child: widget.showTestEmptyState
+            child: widget.showTestEmptyState || currentUser == null || firestore == null
                 ? const Center(child: Text('No chats yet. Tap + to start one.'))
                 : StreamBuilder<QuerySnapshot>(
-                    stream: _firestore
+                stream: firestore
                         .collection('chats')
-                        .where('participants', arrayContains: currentUser?.uid)
+                        .where('participants', arrayContains: currentUser.uid)
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
@@ -315,7 +341,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                             chatData['participants'] ?? [],
                           );
                           final otherUserId = participants.firstWhere(
-                            (id) => id != currentUser?.uid,
+                            (id) => id != currentUser.uid,
                             orElse: () => '',
                           );
 
@@ -332,12 +358,12 @@ class _MessagesScreenState extends State<MessagesScreen> {
                               chatData['lastTimestamp'] as Timestamp?;
 
                           return FutureBuilder<int>(
-                            future: _firestore
+                            future: firestore
                                 .collection('messages')
                                 .where('chatId', isEqualTo: chatId)
                                 .where(
                                   'receiverId',
-                                  isEqualTo: currentUser?.uid,
+                                  isEqualTo: currentUser.uid,
                                 )
                                 .where('read', isEqualTo: false)
                                 .count()
@@ -373,7 +399,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: cs.surface,
+<<<<<<< HEAD
                                     border: Border.all(color: cs.outline),
+=======
+                                    border: Border.all(
+                                      color: cs.secondary.withOpacity(0.60),
+                                    ),
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   padding: const EdgeInsets.symmetric(
@@ -400,10 +432,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: unreadCount > 0
+<<<<<<< HEAD
                                                   ? cs.error
                                                   : cs.onSurface.withValues(
                                                       alpha: 0.7,
                                                     ),
+=======
+                                                  ? cs.primary
+                                                  : cs.secondary,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                                               fontWeight: unreadCount > 0
                                                   ? FontWeight.bold
                                                   : FontWeight.normal,
@@ -425,9 +462,13 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                               _formatTimeAgo(lastTimestamp),
                                               style: TextStyle(
                                                 fontSize: 12,
+<<<<<<< HEAD
                                                 color: cs.onSurface.withValues(
                                                   alpha: 0.7,
                                                 ),
+=======
+                                                color: cs.secondary,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                                               ),
                                             ),
                                           ],
@@ -465,8 +506,14 @@ class SearchUser {
 }
 
 class UserSearchBottomSheet extends StatefulWidget {
+  const UserSearchBottomSheet({super.key});
+
+<<<<<<< HEAD
   const UserSearchBottomSheet({
     super.key,
+=======
+  const UserSearchBottomSheet({super.key,
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
     this.firestore,
     required this.currentUserId,
     required this.onUserSelected,

@@ -19,10 +19,31 @@ class ChatService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth _auth;
   final FirebaseStorage _storage;
+<<<<<<< HEAD
+=======
+
+  
+  Future<User?> _waitForAuth({Duration timeout = const Duration(seconds: 5)}) async {
+    final existing = _auth.currentUser;
+    if (existing != null) return existing;
+
+    try {
+      final user = await _auth.authStateChanges().firstWhere((u) => u != null).timeout(timeout);
+      return user;
+    } catch (_) {
+      return _auth.currentUser;
+    }
+  }
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
 
   String _buildChatId(String userA, String userB) {
     final ids = [userA, userB]..sort();
     return '${ids[0]}_${ids[1]}';
+  }
+
+  List<String> _buildParticipants(String userA, String userB) {
+    final participants = [userA, userB]..sort();
+    return participants;
   }
 
   Future<void> sendMessage(String receiverId, String message) async {
@@ -34,6 +55,16 @@ class ChatService {
     if (trimmed.isEmpty) return;
 
     try {
+<<<<<<< HEAD
+=======
+      // Ensure auth state is ready before preparing message context.
+      final user = await _waitForAuth();
+      if (user == null) {
+        debugPrint('[sendTextMessage] auth not ready, aborting send');
+        return;
+      }
+
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
       final prepared = await _prepareMessageContext(receiverId);
       final messageDoc = _firestore.collection('messages').doc();
       final messageModel = Message(
@@ -71,6 +102,15 @@ class ChatService {
     StreamSubscription<TaskSnapshot>? uploadSubscription;
 
     try {
+<<<<<<< HEAD
+=======
+      final user = await _waitForAuth();
+      if (user == null) {
+        debugPrint('[sendImageMessage] auth not ready, aborting send');
+        return;
+      }
+
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
       final prepared = await _prepareMessageContext(receiverId);
       await _ensureChatDocument(
         chatId: prepared.chatId,
@@ -83,11 +123,24 @@ class ChatService {
         '[sendImageMessage] ensured chat doc exists for ${prepared.chatId}',
       );
 
+<<<<<<< HEAD
       final messageDoc = _firestore.collection('messages').doc();
       final bytes = await imageFile.readAsBytes();
       final safeName = _sanitizeFileName(imageFile.name.isNotEmpty
           ? imageFile.name
           : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg');
+=======
+      debugPrint('[sendImageMessage] senderUid=${prepared.user.uid}');
+      debugPrint('[sendImageMessage] auth currentUser: ${_auth.currentUser?.uid}');
+
+      final messageDoc = _firestore.collection('messages').doc();
+      final bytes = await imageFile.readAsBytes();
+      final safeName = _sanitizeFileName(
+        imageFile.name.isNotEmpty
+            ? imageFile.name
+            : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
       final contentType = _inferImageContentType(safeName);
 
       debugPrint(
@@ -162,7 +215,13 @@ class ChatService {
       if (storageRef != null) {
         try {
           await storageRef.delete();
+<<<<<<< HEAD
           debugPrint('[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}');
+=======
+          debugPrint(
+            '[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}',
+          );
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
         } catch (_) {
           // Ignore cleanup errors.
         }
@@ -182,7 +241,11 @@ class ChatService {
     required String receiverName,
   }) async {
     await _firestore.collection('chats').doc(chatId).set({
+<<<<<<< HEAD
       'participants': [senderUid, receiverId],
+=======
+      'participants': _buildParticipants(senderUid, receiverId),
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
       'usernames': {senderUid: senderName, receiverId: receiverName},
       'lastTimestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
@@ -199,7 +262,14 @@ class ChatService {
 
     final chatId = _buildChatId(user.uid, receiverId);
     final senderDoc = await _firestore.collection('users').doc(user.uid).get();
+<<<<<<< HEAD
     final receiverDoc = await _firestore.collection('users').doc(receiverId).get();
+=======
+    final receiverDoc = await _firestore
+        .collection('users')
+        .doc(receiverId)
+        .get();
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
     final senderName = (senderDoc.data()?['name'] ?? user.displayName ?? '')
         .toString();
     final receiverName = (receiverDoc.data()?['name'] ?? '').toString();
@@ -223,6 +293,18 @@ class ChatService {
   }) async {
     final batch = _firestore.batch();
     batch.set(messageDoc, message.toCreateMap());
+<<<<<<< HEAD
+=======
+
+    batch.set(_firestore.collection('chats').doc(chatId), {
+      'participants': _buildParticipants(senderUid, receiverId),
+      'usernames': {senderUid: senderName, receiverId: receiverName},
+      'lastMessage': message.previewText,
+      'lastTimestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
     batch.set(
       _firestore.collection('chats').doc(chatId),
       {
@@ -233,7 +315,22 @@ class ChatService {
       },
       SetOptions(merge: true),
     );
+<<<<<<< HEAD
     await batch.commit();
+=======
+    try {
+      await batch.commit();
+    } catch (e) {
+      debugPrint('[commitMessage] ERROR: $e');
+      debugPrint('[commitMessage] ERROR type: ${e.runtimeType}');
+      if (e is FirebaseException) {
+        debugPrint(
+          '[commitMessage] FirebaseException code=${e.code}, message=${e.message}, plugin=${e.plugin}',
+        );
+      }
+      rethrow;
+    }
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
   }
 
   String _sanitizeFileName(String fileName) {
@@ -286,6 +383,21 @@ class ChatService {
   }
 
   Future<void> deleteMessage(String messageId) async {
+    
+    try {
+      debugPrint('🚨 deleteMessage CALLED for id=$messageId');
+      debugPrint(StackTrace.current.toString());
+    } catch (_) {
+      
+    }
+
+    final user = _auth.currentUser ?? await _waitForAuth();
+    if (user == null) {
+      debugPrint('User not logged in, abort delete');
+      debugPrint('[deleteMessage] auth not ready, skipping delete');
+      return;
+    }
+
     try {
       await _firestore.collection('messages').doc(messageId).update({
         'isDeleted': true,
@@ -298,6 +410,12 @@ class ChatService {
   }
 
   Future<void> deleteMessageForMe(String messageId, String userId) async {
+    final user = _auth.currentUser ?? await _waitForAuth();
+    if (user == null) {
+      debugPrint('[deleteMessageForMe] auth not ready, skipping deleteForMe');
+      return;
+    }
+
     try {
       await _firestore.collection('messages').doc(messageId).update({
         'deletedFor': FieldValue.arrayUnion([userId]),
@@ -309,6 +427,12 @@ class ChatService {
   }
 
   Future<void> editMessage(String messageId, String newText) async {
+    final user = _auth.currentUser ?? await _waitForAuth();
+    if (user == null) {
+      debugPrint('[editMessage] auth not ready, skipping edit');
+      return;
+    }
+
     try {
       await _firestore.collection('messages').doc(messageId).update({
         'text': newText,
@@ -319,7 +443,6 @@ class ChatService {
       rethrow;
     }
   }
-
 
   Future<void> toggleStar(String messageId, String userId) async {
     try {
@@ -349,7 +472,6 @@ class ChatService {
     }
   }
 
-  
   Stream<List<Message>> getStarredMessages(String userId) {
     return _firestore
         .collection('messages')

@@ -7,7 +7,7 @@ import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
 // import '../../widets/app_logo.dart'; // unused after switching to image asset
 import '../../widets/custom_textfield.dart';
-import 'home/chat_list_screen.dart';
+import '../home_screen.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -79,12 +79,19 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => isLoading = false);
 
       if (error == null) {
+<<<<<<< HEAD
         debugPrint('Login successful, navigating to chat list');
+=======
+        print('Login successful, navigating to feed');
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => ChatListScreen(themeProvider: widget.themeProvider),
+            builder: (_) => HomeScreen(
+              title: 'Classmate',
+              themeProvider: widget.themeProvider,
+            ),
           ),
         );
         return;

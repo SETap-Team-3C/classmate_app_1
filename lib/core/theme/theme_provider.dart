@@ -83,7 +83,8 @@ class ThemeProvider extends ChangeNotifier {
       useMaterial3: true,
       brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blue,
+        seedColor: Colors.deepPurple,
+        secondary: const Color(0xFFE1BEE7),
         brightness: Brightness.light,
       ),
       appBarTheme: const AppBarTheme(
@@ -98,7 +99,8 @@ class ThemeProvider extends ChangeNotifier {
       useMaterial3: true,
       brightness: Brightness.dark,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blue,
+        seedColor: Colors.deepPurple,
+        secondary: const Color(0xFFE1BEE7),
         brightness: Brightness.dark,
       ),
       appBarTheme: const AppBarTheme(

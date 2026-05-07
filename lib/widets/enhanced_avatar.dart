@@ -4,12 +4,14 @@ class EnhancedAvatar extends StatelessWidget {
   final String name;
   final double radius;
   final String? backgroundColor;
+  final String? imageUrl;
 
   const EnhancedAvatar({
     super.key,
     required this.name,
     this.radius = 24,
     this.backgroundColor,
+    this.imageUrl,
   });
 
   static Color getColorForInitial(String initial) {
@@ -37,8 +39,11 @@ class EnhancedAvatar extends StatelessWidget {
     return CircleAvatar(
       radius: radius,
       backgroundColor: bgColor,
+      backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+          ? NetworkImage(imageUrl!)
+          : null,
       child: Text(
-        initial,
+        imageUrl != null && imageUrl!.isNotEmpty ? '' : initial,
         style: TextStyle(
           fontSize: radius * 0.8,
           fontWeight: FontWeight.bold,

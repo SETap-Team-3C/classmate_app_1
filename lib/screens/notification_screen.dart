@@ -17,7 +17,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
     text: 'This is a test notification',
   );
   final List<String> _messages = [
-    'Welcome to Classmate!',
+    'Welcome to ClassMates!',
     'Your assignment is due tomorrow',
     'New message from Raj',
   ];

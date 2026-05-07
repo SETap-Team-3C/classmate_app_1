@@ -9,7 +9,6 @@ import '../../../widets/app_logo.dart';
 import '../../../widets/enhanced_avatar.dart';
 import '../../general_settings_screen.dart';
 import '../../chat_page.dart';
-import '../login_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key, required this.themeProvider});
@@ -116,8 +115,12 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   await FirebaseAuth.instance.signOut();
 
                   if (!mounted) return;
+<<<<<<< HEAD
 
                   navigator.pushAndRemoveUntil(
+=======
+                  Navigator.of(context).pushAndRemoveUntil(
+>>>>>>> 14385910f59a87a61a685f73ad29ced2e0acaa28
                     MaterialPageRoute(
                       builder: (_) =>
                           LoginScreen(themeProvider: widget.themeProvider),

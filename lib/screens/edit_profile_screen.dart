@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:typed_data';
 import '../services/user_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -21,6 +22,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool _loading = false;
   bool _isLoadingProfilePicture = false;
   final UserService _userService = UserService();
+  String? _profilePictureUrl;
+  Uint8List? _profilePictureBytes;
 
   User? get _user => FirebaseAuth.instance.currentUser;
   FirebaseFirestore get _fs => FirebaseFirestore.instance;
@@ -37,6 +40,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
     _emailController.text = user.email ?? '';
     _usernameController.text = user.displayName ?? '';
+    _profilePictureUrl = user.photoURL;
+    _profilePictureBytes = null;
 
     try {
       final doc = await _fs.collection('users').doc(user.uid).get();
@@ -46,6 +51,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _phoneController.text = (data['phone'] ?? '').toString();
         _usernameController.text = (data['username'] ?? user.displayName ?? '')
             .toString();
+        _profilePictureUrl = (data['profilePictureUrl'] ?? user.photoURL)
+            ?.toString();
+      }
+
+      if (mounted) {
+        setState(() {});
       }
     } catch (_) {
       // ignore load errors — user can still edit email
@@ -141,6 +152,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       debugPrint('✅ Image selected: ${pickedFile.name}');
 
+      final previewBytes = await pickedFile.readAsBytes();
+
+      if (mounted) {
+        setState(() {
+          _profilePictureBytes = previewBytes;
+        });
+      }
+
       setState(() {
         _isLoadingProfilePicture = true;
       });
@@ -150,9 +169,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       if (downloadUrl != null) {
         debugPrint('✅ Upload successful: $downloadUrl');
-        await _user?.reload();
         if (mounted) {
           setState(() {
+            _profilePictureUrl = downloadUrl;
+            _profilePictureBytes = null;
             _isLoadingProfilePicture = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
@@ -165,6 +185,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         debugPrint('❌ Upload failed - returned null');
         if (mounted) {
           setState(() {
+            _profilePictureBytes = null;
             _isLoadingProfilePicture = false;
           });
           ScaffoldMessenger.of(context).showSnackBar(
@@ -176,6 +197,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       debugPrint('❌ Error: $e');
       if (mounted) {
         setState(() {
+          _profilePictureBytes = null;
           _isLoadingProfilePicture = false;
         });
         ScaffoldMessenger.of(
@@ -277,10 +299,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: Colors.grey[300],
-                        backgroundImage: _user?.photoURL != null
-                            ? NetworkImage(_user!.photoURL!)
+                        backgroundImage: _profilePictureBytes != null
+                            ? MemoryImage(_profilePictureBytes!)
+                            : _profilePictureUrl != null
+                            ? NetworkImage(_profilePictureUrl!)
                             : null,
-                        child: _user?.photoURL == null
+                        child:
+                            _profilePictureBytes == null &&
+                                _profilePictureUrl == null
                             ? Icon(
                                 Icons.person,
                                 size: 60,

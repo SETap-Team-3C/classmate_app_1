@@ -21,6 +21,12 @@ class CallContactsScreen extends StatelessWidget {
     final auth = FirebaseAuth.instance;
     final currentUserId = auth.currentUser?.uid;
 
+    if (currentUserId == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Select Contact to Call')),
       body: StreamBuilder<QuerySnapshot>(

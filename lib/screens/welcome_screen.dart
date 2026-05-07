@@ -187,7 +187,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                           ),
                                           const SizedBox(height: 28),
                                           Text(
-                                            'Classmate',
+                                            'ClassMates',
                                             textAlign: TextAlign.center,
                                             style: Theme.of(context)
                                                 .textTheme

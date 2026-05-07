@@ -135,10 +135,10 @@ class UserService {
       debugPrint('✅ Auth updated');
 
       debugPrint('📝 Updating Firestore user document...');
-      await _firestore.collection('users').doc(user.uid).update({
+      await _firestore.collection('users').doc(user.uid).set({
         'profilePictureUrl': downloadUrl,
         'updatedAt': FieldValue.serverTimestamp(),
-      });
+      }, SetOptions(merge: true));
       debugPrint('✅ Firestore updated');
 
       return downloadUrl;
