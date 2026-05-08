@@ -51,7 +51,14 @@ class ChatService {
     if (trimmed.isEmpty) return;
 
     try {
-final prepared = await _prepareMessageContext(receiverId);
+      final prepared = await _prepareMessageContext(receiverId);
+      await _ensureChatDocument(
+        chatId: prepared.chatId,
+        senderUid: prepared.user.uid,
+        receiverId: receiverId,
+        senderName: prepared.senderName,
+        receiverName: prepared.receiverName,
+      );
       final messageDoc = _firestore.collection('messages').doc();
       final messageModel = Message(
         id: messageDoc.id,
@@ -276,12 +283,23 @@ await batch.commit();  }
         .where("chatId", isEqualTo: chatId)
         .snapshots()
         .map((snapshot) {
-          final all = snapshot.docs
-              .map((doc) => Message.fromDocument(doc))
-              .toList();
-          return all
-              .where((m) => !(m.deletedFor?.contains(userId) ?? false))
-              .toList();
+          final all = snapshot.docs.map((doc) => Message.fromDocument(doc)).toList();
+
+          final visible = all.where((m) => !(m.deletedFor?.contains(userId) ?? false));
+
+          final byId = <String, Message>{};
+          for (final message in visible) {
+            byId[message.id] = message;
+          }
+
+          final deduped = byId.values.toList()
+            ..sort((a, b) {
+              final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
+              final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
+              return bMillis.compareTo(aMillis);
+            });
+
+          return deduped;
         });
   }
 
