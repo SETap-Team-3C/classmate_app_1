@@ -165,13 +165,7 @@ class MessageBubble extends StatelessWidget {
       );
     }
 
-    return Text(
-      text,
-      style: TextStyle(
-        fontSize: 16,
-        color: isCurrentUser ? cs.onPrimaryContainer : cs.onSurface,
-      ),
-    );
+    return const SizedBox.shrink();
   }
 
   Future<void> _confirmAndPerform(
