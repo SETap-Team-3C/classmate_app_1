@@ -19,6 +19,26 @@ class ChatService {
   final FirebaseAuth _auth;
   final FirebaseStorage _storage;
 
+<<<<<<< HEAD
+=======
+  Future<User?> _waitForAuth({
+    Duration timeout = const Duration(seconds: 5),
+  }) async {
+    final existing = _auth.currentUser;
+    if (existing != null) return existing;
+
+    try {
+      final user = await _auth
+          .authStateChanges()
+          .firstWhere((u) => u != null)
+          .timeout(timeout);
+      return user;
+    } catch (_) {
+      return _auth.currentUser;
+    }
+  }
+
+>>>>>>> 934481e (Fix: combine Firestore writes into single WriteBatch in _commitMessage to avoid reuse after commit)
   String _buildChatId(String userA, String userB) {
     final ids = [userA, userB]..sort();
     return '${ids[0]}_${ids[1]}';
@@ -106,7 +126,16 @@ class ChatService {
         '[sendImageMessage] ensured chat doc exists for ${prepared.chatId}',
       );
 
+<<<<<<< HEAD
 final messageDoc = _firestore.collection('messages').doc();
+=======
+      debugPrint('[sendImageMessage] senderUid=${prepared.user.uid}');
+      debugPrint(
+        '[sendImageMessage] auth currentUser: ${_auth.currentUser?.uid}',
+      );
+
+      final messageDoc = _firestore.collection('messages').doc();
+>>>>>>> 934481e (Fix: combine Firestore writes into single WriteBatch in _commitMessage to avoid reuse after commit)
       final bytes = await imageFile.readAsBytes();
       final safeName = _sanitizeFileName(imageFile.name.isNotEmpty
           ? imageFile.name
@@ -241,6 +270,7 @@ final messageDoc = _firestore.collection('messages').doc();
     required String receiverName,
   }) async {
     final batch = _firestore.batch();
+<<<<<<< HEAD
     batch.set(messageDoc, message.toCreateMap());batch.set(
       _firestore.collection('chats').doc(chatId),
       {
@@ -252,6 +282,31 @@ final messageDoc = _firestore.collection('messages').doc();
       SetOptions(merge: true),
     );
 await batch.commit();  }
+=======
+    batch.set(messageDoc, message.toCreateMap());
+
+    // Update chat document atomically together with the message write.
+    batch.set(_firestore.collection('chats').doc(chatId), {
+      'participants': _buildParticipants(senderUid, receiverId),
+      'usernames': {senderUid: senderName, receiverId: receiverName},
+      'lastMessage': message.previewText,
+      'lastTimestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    try {
+      await batch.commit();
+    } catch (e) {
+      debugPrint('[commitMessage] ERROR: $e');
+      debugPrint('[commitMessage] ERROR type: ${e.runtimeType}');
+      if (e is FirebaseException) {
+        debugPrint(
+          '[commitMessage] FirebaseException code=${e.code}, message=${e.message}, plugin=${e.plugin}',
+        );
+      }
+      rethrow;
+    }
+  }
+>>>>>>> 934481e (Fix: combine Firestore writes into single WriteBatch in _commitMessage to avoid reuse after commit)
 
   String _sanitizeFileName(String fileName) {
     return fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -314,13 +369,10 @@ await batch.commit();  }
   }
 
   Future<void> deleteMessage(String messageId) async {
-    
     try {
       debugPrint('🚨 deleteMessage CALLED for id=$messageId');
       debugPrint(StackTrace.current.toString());
-    } catch (_) {
-      
-    }
+    } catch (_) {}
 
     final user = _auth.currentUser ?? await _waitForAuth();
     if (user == null) {
