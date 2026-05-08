@@ -38,6 +38,9 @@ class _ChatPageState extends State<ChatPage> {
 
   bool _isUploadingAttachment = false;
   double? _uploadProgress;
+  bool _isSending = false;
+  String? _lastSendFingerprint;
+  DateTime? _lastSendAt;
 
   @override
   void dispose() {
@@ -50,8 +53,28 @@ class _ChatPageState extends State<ChatPage> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    if (_isSending) return;
+
+    final now = DateTime.now();
+    final fingerprint = '${widget.receiverId}|$text';
+    final isRapidDuplicate =
+        _lastSendFingerprint == fingerprint &&
+        _lastSendAt != null &&
+        now.difference(_lastSendAt!).inMilliseconds < 800;
+    if (isRapidDuplicate) return;
+
+    if (mounted) {
+      setState(() {
+        _isSending = true;
+      });
+    } else {
+      _isSending = true;
+    }
+
     try {
       await _chatService.sendMessage(widget.receiverId, text);
+      _lastSendFingerprint = fingerprint;
+      _lastSendAt = now;
       _messageController.clear();
       final currentUser = _auth.currentUser;
       if (currentUser != null) {
@@ -73,6 +96,14 @@ class _ChatPageState extends State<ChatPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      } else {
+        _isSending = false;
+      }
     }
   }
 
@@ -314,39 +345,42 @@ class _ChatPageState extends State<ChatPage> {
                           final message = messages[index];
                           final isCurrentUser = message.senderId == currentUser.uid;
                           final readStatusText = message.read ? 'Seen' : 'Sent';
-                          return MessageBubble(
-                            messageId: message.id,
-                            text: message.text,
-                            messageType: message.messageType,
-                            fileUrl: message.fileUrl,
-                            fileName: message.fileName,
-                            mimeType: message.mimeType,
-                            fileSize: message.fileSize,
-                            contactData: message.contactData,
-                            isDeleted: message.isDeleted,
-                            isCurrentUser: isCurrentUser,
-                            isRead: message.read,
-                            readStatusText: readStatusText,
-                            isStarred: message.isStarredBy(currentUser.uid),
-                            onStarToggle: () async {
-                              await _chatService.toggleStar(
-                                message.id,
-                                currentUser.uid,
-                              );
-                            },
-                            onDeleteForMe: () async {
-                              await _chatService.deleteMessageForMe(
-                                message.id,
-                                currentUser.uid,
-                              );
-                            },
-                            onDeleteForEveryone: isCurrentUser
-                                ? () async {
-                                    await _chatService.deleteMessage(
-                                      message.id,
-                                    );
-                                  }
-                                : null,
+                          return KeyedSubtree(
+                            key: ValueKey(message.id),
+                            child: MessageBubble(
+                              messageId: message.id,
+                              text: message.text,
+                              messageType: message.messageType,
+                              fileUrl: message.fileUrl,
+                              fileName: message.fileName,
+                              mimeType: message.mimeType,
+                              fileSize: message.fileSize,
+                              contactData: message.contactData,
+                              isDeleted: message.isDeleted,
+                              isCurrentUser: isCurrentUser,
+                              isRead: message.read,
+                              readStatusText: readStatusText,
+                              isStarred: message.isStarredBy(currentUser.uid),
+                              onStarToggle: () async {
+                                await _chatService.toggleStar(
+                                  message.id,
+                                  currentUser.uid,
+                                );
+                              },
+                              onDeleteForMe: () async {
+                                await _chatService.deleteMessageForMe(
+                                  message.id,
+                                  currentUser.uid,
+                                );
+                              },
+                              onDeleteForEveryone: isCurrentUser
+                                  ? () async {
+                                      await _chatService.deleteMessage(
+                                        message.id,
+                                      );
+                                    }
+                                  : null,
+                            ),
                           );
                         },
                       );
@@ -368,7 +402,11 @@ class _ChatPageState extends State<ChatPage> {
                     child: TextField(
                       controller: _messageController,
                       textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _sendMessage(),
+                      onSubmitted: (_) {
+                        if (!_isSending && !_isUploadingAttachment) {
+                          _sendMessage();
+                        }
+                      },
                       onChanged: (value) async {
                         final currentUser = _auth.currentUser;
                         if (currentUser != null) {
@@ -401,14 +439,16 @@ class _ChatPageState extends State<ChatPage> {
                   ),
                   const SizedBox(width: 8),
                   IconButton(
-                    icon: _isUploadingAttachment
+                    icon: (_isUploadingAttachment || _isSending)
                         ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.send),
-                    onPressed: _isUploadingAttachment ? null : _sendMessage,
+                    onPressed: (_isUploadingAttachment || _isSending)
+                        ? null
+                        : _sendMessage,
                   ),
                 ],
               ),
