@@ -48,6 +48,9 @@ class Message {
   final bool isDeleted;
   final List<String>? starredBy;
   final List<String>? deletedFor;
+  final Map<String, List<String>>?
+  reactions; // e.g. {'👍': ['userId1', 'userId2']}
+  final String? replyToId; // ID of message being replied to
 
   Message({
     this.id = '',
@@ -72,6 +75,8 @@ class Message {
     this.isDeleted = false,
     this.starredBy,
     this.deletedFor,
+    this.reactions,
+    this.replyToId,
   });
 
   factory Message.fromMap(String id, Map<String, dynamic> data) {
@@ -80,22 +85,24 @@ class Message {
       chatId: (data['chatId'] ?? '').toString(),
       senderId: (data['senderId'] ?? '').toString(),
       receiverId: (data['receiverId'] ?? '').toString(),
-        messageType: _messageTypeFromString(
+      messageType: _messageTypeFromString(
         (data['messageType'] ?? 'text').toString(),
-        ),
+      ),
       text: (data['text'] ?? '').toString(),
-        fileUrl: data['fileUrl']?.toString(),
-        fileName: data['fileName']?.toString(),
-        mimeType: data['mimeType']?.toString(),
-        fileSize: data['fileSize'] is num ? (data['fileSize'] as num).toInt() : null,
-        thumbnailUrl: data['thumbnailUrl']?.toString(),
-        imageWidth: data['imageWidth'] is num
+      fileUrl: data['fileUrl']?.toString(),
+      fileName: data['fileName']?.toString(),
+      mimeType: data['mimeType']?.toString(),
+      fileSize: data['fileSize'] is num
+          ? (data['fileSize'] as num).toInt()
+          : null,
+      thumbnailUrl: data['thumbnailUrl']?.toString(),
+      imageWidth: data['imageWidth'] is num
           ? (data['imageWidth'] as num).toDouble()
           : null,
-        imageHeight: data['imageHeight'] is num
+      imageHeight: data['imageHeight'] is num
           ? (data['imageHeight'] as num).toDouble()
           : null,
-        contactData: data['contactData'] is Map
+      contactData: data['contactData'] is Map
           ? Map<String, dynamic>.from(data['contactData'] as Map)
           : null,
       timestamp: data['timestamp'] is Timestamp
@@ -108,12 +115,25 @@ class Message {
           ? data['editedAt'] as Timestamp
           : null,
       isDeleted: data['isDeleted'] == true,
-        starredBy: data['starredBy'] is List
+      starredBy: data['starredBy'] is List
           ? List<String>.from(data['starredBy'].map((e) => e.toString()))
           : <String>[],
-        deletedFor: data['deletedFor'] is List
+      deletedFor: data['deletedFor'] is List
           ? List<String>.from(data['deletedFor'].map((e) => e.toString()))
           : <String>[],
+      reactions: data['reactions'] is Map
+          ? Map<String, List<String>>.from(
+              (data['reactions'] as Map).map(
+                (k, v) => MapEntry(
+                  k.toString(),
+                  v is List
+                      ? List<String>.from(v.map((e) => e.toString()))
+                      : <String>[],
+                ),
+              ),
+            )
+          : null,
+      replyToId: data['replyToId']?.toString(),
     );
   }
 

@@ -449,13 +449,17 @@ class ChatService {
         .where('chatId', isEqualTo: chatId)
         .get();
 
-    final allMessages = snapshot.docs.map((doc) => Message.fromDocument(doc)).toList();
+    final allMessages = snapshot.docs
+        .map((doc) => Message.fromDocument(doc))
+        .toList();
 
     // Filter by search query (case-insensitive)
     final filtered = allMessages
-        .where((m) =>
-            m.text.toLowerCase().contains(query.toLowerCase()) &&
-            !(m.deletedFor?.contains(userId) ?? false))
+        .where(
+          (m) =>
+              m.text.toLowerCase().contains(query.toLowerCase()) &&
+              !(m.deletedFor?.contains(userId) ?? false),
+        )
         .toList();
 
     // Sort by timestamp descending
@@ -487,6 +491,46 @@ class ChatService {
         .doc(userId)
         .snapshots()
         .map((snap) => snap.data()?['isOnline'] as bool? ?? false);
+  }
+
+  // Toggle reaction on a message
+  Future<void> toggleReaction(
+    String messageId,
+    String userId,
+    String emoji,
+  ) async {
+    try {
+      final docRef = _firestore.collection('messages').doc(messageId);
+      final snapshot = await docRef.get();
+      if (!snapshot.exists) return;
+
+      final data = snapshot.data();
+      final reactions = data?['reactions'] is Map
+          ? Map<String, dynamic>.from(data!['reactions'] as Map)
+          : <String, dynamic>{};
+
+      final reactionUsers = reactions[emoji] is List
+          ? List<String>.from(
+              (reactions[emoji] as List).map((e) => e.toString()),
+            )
+          : <String>[];
+
+      if (reactionUsers.contains(userId)) {
+        reactionUsers.remove(userId);
+        if (reactionUsers.isEmpty) {
+          reactions.remove(emoji);
+        } else {
+          reactions[emoji] = reactionUsers;
+        }
+      } else {
+        reactionUsers.add(userId);
+        reactions[emoji] = reactionUsers;
+      }
+
+      await docRef.update({'reactions': reactions.isEmpty ? null : reactions});
+    } catch (e) {
+      debugPrint('[ChatService] Error toggling reaction: $e');
+    }
   }
 }
 
