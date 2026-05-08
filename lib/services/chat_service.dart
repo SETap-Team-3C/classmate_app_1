@@ -434,6 +434,60 @@ class ChatService {
         .snapshots()
         .map((snap) => snap.docs.map((d) => Message.fromDocument(d)).toList());
   }
+
+  // Search messages in a chat by text
+  Future<List<Message>> searchMessagesInChat(
+    String userId,
+    String otherUserId,
+    String query,
+  ) async {
+    if (query.isEmpty) return [];
+
+    final chatId = _buildChatId(userId, otherUserId);
+    final snapshot = await _firestore
+        .collection('messages')
+        .where('chatId', isEqualTo: chatId)
+        .get();
+
+    final allMessages = snapshot.docs.map((doc) => Message.fromDocument(doc)).toList();
+
+    // Filter by search query (case-insensitive)
+    final filtered = allMessages
+        .where((m) =>
+            m.text.toLowerCase().contains(query.toLowerCase()) &&
+            !(m.deletedFor?.contains(userId) ?? false))
+        .toList();
+
+    // Sort by timestamp descending
+    filtered.sort((a, b) {
+      final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
+      final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
+      return bMillis.compareTo(aMillis);
+    });
+
+    return filtered;
+  }
+
+  // Set user online status
+  Future<void> setOnlineStatus(String userId, bool isOnline) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'isOnline': isOnline,
+        'lastSeen': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('[ChatService] Error setting online status: $e');
+    }
+  }
+
+  // Get user online status stream
+  Stream<bool> getUserOnlineStatus(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((snap) => snap.data()?['isOnline'] as bool? ?? false);
+  }
 }
 
 class _MessageContext {

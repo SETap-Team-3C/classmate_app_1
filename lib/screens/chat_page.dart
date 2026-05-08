@@ -33,6 +33,7 @@ class _ChatPageState extends State<ChatPage> {
       widget.chatService ?? ChatService(auth: _auth);
 
   final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -41,10 +42,13 @@ class _ChatPageState extends State<ChatPage> {
   bool _isSending = false;
   String? _lastSendFingerprint;
   DateTime? _lastSendAt;
+  bool _showSearchResults = false;
+  List<Message> _searchResults = [];
 
   @override
   void dispose() {
     _messageController.dispose();
+    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -118,6 +122,34 @@ class _ChatPageState extends State<ChatPage> {
           .update({'isTyping': isTyping});
     } catch (_) {
       // Ignore typing state failures.
+    }
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _showSearchResults = false;
+        _searchResults = [];
+      });
+      return;
+    }
+
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
+
+      final results = await _chatService.searchMessagesInChat(
+        currentUser.uid,
+        widget.receiverId,
+        query,
+      );
+
+      setState(() {
+        _searchResults = results;
+        _showSearchResults = true;
+      });
+    } catch (e) {
+      debugPrint('[ChatPage] Search error: $e');
     }
   }
 
