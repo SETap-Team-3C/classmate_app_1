@@ -1,278 +1,226 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
-import '../core/theme/theme_provider.dart';
-import 'auth_gate.dart';
+import 'auth_screen.dart';
 
-class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key, required this.themeProvider});
+class WelcomeScreen extends StatelessWidget {
+  const WelcomeScreen({super.key});
 
-  final ThemeProvider themeProvider;
-
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _fadeAnimation;
-  late final Animation<double> _scaleAnimation;
-  late final Animation<Offset> _slideAnimation;
-  late final Animation<double> _titleFadeAnimation;
-  late final Animation<Offset> _titleSlideAnimation;
-  late final Animation<double> _buttonFadeAnimation;
-  late final Animation<Offset> _buttonSlideAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..forward();
-
-    final curvedAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutCubic,
+  void _openLogin(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => const AuthScreen()),
     );
-
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(curvedAnimation);
-    _scaleAnimation = Tween<double>(
-      begin: 0.92,
-      end: 1,
-    ).animate(curvedAnimation);
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(curvedAnimation);
-
-    _titleFadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.20, 0.70, curve: Curves.easeOut),
-    );
-    _titleSlideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _controller,
-            curve: const Interval(0.20, 0.70, curve: Curves.easeOutCubic),
-          ),
-        );
-    _buttonFadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.42, 1.0, curve: Curves.easeOut),
-    );
-    _buttonSlideAnimation =
-        Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero).animate(
-          CurvedAnimation(
-            parent: _controller,
-            curve: const Interval(0.42, 1.0, curve: Curves.easeOutCubic),
-          ),
-        );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.10),
-              Theme.of(context).colorScheme.surface,
-              Theme.of(context).colorScheme.secondary.withValues(alpha: 0.08),
-            ],
+      body: Stack(
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  cs.primary.withValues(alpha: 0.10),
+                  cs.secondary.withValues(alpha: 0.05),
+                  cs.surface,
+                ],
+              ),
+            ),
           ),
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: -80,
-              left: -60,
-              child: _GlowCircle(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.16),
-                size: 180,
+          Positioned(
+            top: 70,
+            left: 26,
+            child: Icon(
+              Icons.chat_bubble_outline,
+              size: 44,
+              color: cs.primary.withValues(alpha: 0.12),
+            ),
+          ),
+          Positioned(
+            top: 150,
+            right: 24,
+            child: Icon(
+              Icons.message_outlined,
+              size: 52,
+              color: cs.secondary.withValues(alpha: 0.12),
+            ),
+          ),
+          Positioned(
+            bottom: 150,
+            left: 36,
+            child: Icon(
+              Icons.forum_outlined,
+              size: 56,
+              color: cs.primary.withValues(alpha: 0.10),
+            ),
+          ),
+          Positioned(
+            bottom: 90,
+            right: 28,
+            child: Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: cs.primary.withValues(alpha: 0.08),
               ),
             ),
-            Positioned(
-              bottom: -90,
-              right: -70,
-              child: _GlowCircle(
-                color: Theme.of(
-                  context,
-                ).colorScheme.secondary.withValues(alpha: 0.14),
-                size: 220,
+          ),
+          Positioned(
+            top: 28,
+            right: 86,
+            child: Container(
+              width: 26,
+              height: 26,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: cs.secondary.withValues(alpha: 0.10),
               ),
             ),
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(28),
-                          child: BackdropFilter(
-                            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-                            child: Container(
-                              padding: const EdgeInsets.fromLTRB(
-                                32,
-                                36,
-                                32,
-                                32,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.surface.withValues(alpha: 0.72),
-                                borderRadius: BorderRadius.circular(28),
-                                border: Border.all(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.outline.withValues(alpha: 0.12),
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.10),
-                                    blurRadius: 28,
-                                    offset: const Offset(0, 16),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  FadeTransition(
-                                    opacity: _titleFadeAnimation,
-                                    child: SlideTransition(
-                                      position: _titleSlideAnimation,
-                                      child: Column(
-                                        children: [
-                                          Container(
-                                            width: 160,
-                                            height: 160,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .primary
-                                                      .withValues(alpha: 0.20),
-                                                  blurRadius: 20,
-                                                  spreadRadius: 2,
-                                                ),
-                                              ],
-                                            ),
-                                            child: Image.asset(
-                                              'assets/app_logo.png',
-                                              fit: BoxFit.contain,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 28),
-                                          Text(
-                                            'ClassMates',
-                                            textAlign: TextAlign.center,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .headlineMedium
-                                                ?.copyWith(
-                                                  fontSize: 32,
-                                                  fontWeight: FontWeight.w700,
-                                                ),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          Text(
-                                            'Stay connected with your campus in one place.',
-                                            textAlign: TextAlign.center,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodyMedium
-                                                ?.copyWith(
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurfaceVariant,
-                                                  fontSize: 16,
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 36),
-                                  FadeTransition(
-                                    opacity: _buttonFadeAnimation,
-                                    child: SlideTransition(
-                                      position: _buttonSlideAnimation,
-                                      child: SizedBox(
-                                        width: double.infinity,
-                                        height: 60,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () {
-                                            Navigator.pushReplacement(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => AuthGate(
-                                                  themeProvider:
-                                                      widget.themeProvider,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          icon: const Icon(
-                                            Icons.arrow_forward_rounded,
-                                          ),
-                                          label: const Text('Continue'),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+          ),
+          Positioned(
+            top: 250,
+            left: 22,
+            child: Container(
+              width: 16,
+              height: 16,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: cs.primary.withValues(alpha: 0.12),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 320,
+            right: 40,
+            child: Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: cs.secondary.withValues(alpha: 0.11),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 240,
+            right: 78,
+            child: Icon(
+              Icons.more_horiz,
+              size: 34,
+              color: cs.primary.withValues(alpha: 0.10),
+            ),
+          ),
+          Positioned(
+            bottom: 210,
+            left: 92,
+            child: Icon(
+              Icons.more_horiz,
+              size: 28,
+              color: cs.secondary.withValues(alpha: 0.10),
+            ),
+          ),
+          Positioned(
+            top: 410,
+            left: 34,
+            child: Container(
+              width: 120,
+              height: 44,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                color: cs.primary.withValues(alpha: 0.05),
+                border: Border.all(
+                  color: cs.primary.withValues(alpha: 0.06),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+          Positioned(
+            top: 470,
+            right: 20,
+            child: Container(
+              width: 96,
+              height: 38,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(19),
+                color: cs.secondary.withValues(alpha: 0.05),
+                border: Border.all(
+                  color: cs.secondary.withValues(alpha: 0.06),
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 170,
+                      height: 170,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: cs.surface,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: cs.primary.withValues(alpha: 0.20),
+                            blurRadius: 24,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/app_logo.png',
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    Text(
+                      'Welcome to Classmate',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Stay connected with your classmates',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: cs.onSurface.withValues(alpha: 0.75),
+                          ),
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => _openLogin(context),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: const Text('Get Started / Login'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
-    );
-  }
-}
-
-class _GlowCircle extends StatelessWidget {
-  const _GlowCircle({required this.color, required this.size});
-
-  final Color color;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 }
