@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -18,22 +16,6 @@ class _AuthScreenState extends State<AuthScreen> {
 
   bool _isLogin = true;
   bool _isLoading = false;
-
-  Future<User?> _waitForAuthenticatedUser({
-    Duration timeout = const Duration(seconds: 5),
-  }) async {
-    final existing = FirebaseAuth.instance.currentUser;
-    if (existing != null) return existing;
-
-    try {
-      return await FirebaseAuth.instance
-          .authStateChanges()
-          .firstWhere((user) => user != null)
-          .timeout(timeout);
-    } catch (_) {
-      return FirebaseAuth.instance.currentUser;
-    }
-  }
 
   @override
   void dispose() {
@@ -64,7 +46,7 @@ class _AuthScreenState extends State<AuthScreen> {
             .signInWithEmailAndPassword(email: email, password: password)
             .timeout(const Duration(seconds: 15));
 
-        final activeUser = await _waitForAuthenticatedUser();
+        final activeUser = credential.user ?? FirebaseAuth.instance.currentUser;
         if (activeUser == null) {
           throw FirebaseAuthException(
             code: 'auth-not-ready',
@@ -75,6 +57,10 @@ class _AuthScreenState extends State<AuthScreen> {
 
         debugPrint('Login success UID: ${activeUser.uid}');
         debugPrint('Login success email: ${credential.user?.email}');
+
+        if (mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
       } else {
         if (!email.contains('@')) {
           throw FirebaseAuthException(
@@ -87,7 +73,7 @@ class _AuthScreenState extends State<AuthScreen> {
             .createUserWithEmailAndPassword(email: email, password: password)
             .timeout(const Duration(seconds: 15));
 
-        final activeUser = await _waitForAuthenticatedUser();
+        final activeUser = credential.user ?? FirebaseAuth.instance.currentUser;
         if (activeUser == null) {
           throw FirebaseAuthException(
             code: 'auth-not-ready',
@@ -109,6 +95,10 @@ class _AuthScreenState extends State<AuthScreen> {
         }, SetOptions(merge: true));
 
         debugPrint('Signup Firestore profile created for UID: ${activeUser.uid}');
+
+        if (mounted) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
       }} on FirebaseAuthException catch (error) {
       messenger.showSnackBar(
         SnackBar(content: Text(error.message ?? 'Authentication failed.')),
