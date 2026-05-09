@@ -532,6 +532,63 @@ class ChatService {
       debugPrint('[ChatService] Error toggling reaction: $e');
     }
   }
+
+  // Get last seen time formatted for display
+  Future<String> getLastSeenDisplay(String userId) async {
+    try {
+      final snapshot = await _firestore.collection('users').doc(userId).get();
+      final lastSeen = snapshot.data()?['lastSeen'] as Timestamp?;
+      if (lastSeen == null) return 'never';
+
+      final now = DateTime.now();
+      final diff = now.difference(lastSeen.toDate());
+
+      if (diff.inSeconds < 60) return 'just now';
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+      if (diff.inHours < 24) return '${diff.inHours}h ago';
+      if (diff.inDays < 7) return '${diff.inDays}d ago';
+      return 'a week ago';
+    } catch (e) {
+      debugPrint('[ChatService] Error getting last seen: $e');
+      return 'unknown';
+    }
+  }
+
+  // Get unread message count for a specific chat
+  Future<int> getUnreadCountForChat(String chatId, String currentUserId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('messages')
+          .where('chatId', isEqualTo: chatId)
+          .where('receiverId', isEqualTo: currentUserId)
+          .where('read', isEqualTo: false)
+          .count()
+          .get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      debugPrint('[ChatService] Error getting unread count: $e');
+      return 0;
+    }
+  }
+
+  // Get user-friendly error message
+  String getUserFriendlyError(dynamic error) {
+    if (error is FirebaseException) {
+      switch (error.code) {
+        case 'permission-denied':
+          return 'You don\'t have permission to perform this action.';
+        case 'not-found':
+          return 'The conversation or message was not found.';
+        case 'unavailable':
+          return 'Service is temporarily unavailable. Please try again.';
+        case 'network-error':
+          return 'Network error. Please check your connection.';
+        default:
+          return 'An error occurred: ${error.message}';
+      }
+    }
+    return 'An unexpected error occurred. Please try again.';
+  }
 }
 
 class _MessageContext {
