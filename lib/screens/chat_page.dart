@@ -42,8 +42,6 @@ class _ChatPageState extends State<ChatPage> {
   bool _isSending = false;
   String? _lastSendFingerprint;
   DateTime? _lastSendAt;
-  bool _showSearchResults = false;
-  List<Message> _searchResults = [];
 
   @override
   void dispose() {
@@ -125,32 +123,88 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  Future<void> _performSearch(String query) async {
-    if (query.isEmpty) {
-      setState(() {
-        _showSearchResults = false;
-        _searchResults = [];
-      });
-      return;
-    }
+  Future<void> _openSearchBottomSheet() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
 
-    try {
-      final currentUser = _auth.currentUser;
-      if (currentUser == null) return;
+    final queryController = TextEditingController();
+    List<Message> results = [];
 
-      final results = await _chatService.searchMessagesInChat(
-        currentUser.uid,
-        widget.receiverId,
-        query,
-      );
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> runSearch(String query) async {
+              final trimmed = query.trim();
+              if (trimmed.isEmpty) {
+                setModalState(() => results = []);
+                return;
+              }
 
-      setState(() {
-        _searchResults = results;
-        _showSearchResults = true;
-      });
-    } catch (e) {
-      debugPrint('[ChatPage] Search error: $e');
-    }
+              try {
+                final found = await _chatService.searchMessagesInChat(
+                  currentUser.uid,
+                  widget.receiverId,
+                  trimmed,
+                );
+                setModalState(() => results = found);
+              } catch (e) {
+                debugPrint('[ChatPage] Search error: $e');
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 8,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: queryController,
+                    decoration: const InputDecoration(
+                      labelText: 'Search messages',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: runSearch,
+                  ),
+                  const SizedBox(height: 12),
+                  if (results.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Text('No results yet'),
+                    )
+                  else
+                    SizedBox(
+                      height: 300,
+                      child: ListView.separated(
+                        itemCount: results.length,
+                        separatorBuilder: (_, __) => const Divider(height: 8),
+                        itemBuilder: (context, index) {
+                          final message = results[index];
+                          return ListTile(
+                            title: Text(message.text),
+                            subtitle: Text(message.previewText),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    queryController.dispose();
   }
 
   Future<void> _pickAndSendImage(ImageSource source) async {
@@ -284,6 +338,13 @@ class _ChatPageState extends State<ChatPage> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Search messages',
+            onPressed: _openSearchBottomSheet,
+            icon: const Icon(Icons.search),
+          ),
+        ],
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
