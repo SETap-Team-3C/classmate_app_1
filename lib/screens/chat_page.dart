@@ -199,9 +199,9 @@ class _ChatPageState extends State<ChatPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send image: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -363,7 +363,9 @@ class _ChatPageState extends State<ChatPage> {
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
                         return Center(
-                          child: Text('Error loading messages: ${snapshot.error}'),
+                          child: Text(
+                            'Error loading messages: ${snapshot.error}',
+                          ),
                         );
                       }
                       if (!snapshot.hasData) {
@@ -375,7 +377,8 @@ class _ChatPageState extends State<ChatPage> {
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final message = messages[index];
-                          final isCurrentUser = message.senderId == currentUser.uid;
+                          final isCurrentUser =
+                              message.senderId == currentUser.uid;
                           final readStatusText = message.read ? 'Seen' : 'Sent';
                           return KeyedSubtree(
                             key: ValueKey(message.id),
@@ -416,7 +419,7 @@ class _ChatPageState extends State<ChatPage> {
                           );
                         },
                       );
-                    }
+                    },
                   ),
           ),
           SafeArea(
