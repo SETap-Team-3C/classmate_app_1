@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -108,7 +109,23 @@ class ChatService {
       );
 
       final messageDoc = _firestore.collection('messages').doc();
-      final bytes = await imageFile.readAsBytes();
+
+      // Read bytes with error handling
+      late List<int> bytes;
+      try {
+        bytes = await imageFile.readAsBytes();
+      } catch (e) {
+        debugPrint('[sendImageMessage] Error reading file bytes: $e');
+        throw Exception('Failed to read image file. Please try another image.');
+      }
+
+      // Validate file size (max 5MB)
+      if (bytes.length > 5 * 1024 * 1024) {
+        throw Exception(
+          'Image is too large. Please use an image smaller than 5MB.',
+        );
+      }
+
       final safeName = _sanitizeFileName(
         imageFile.name.isNotEmpty
             ? imageFile.name
@@ -127,7 +144,7 @@ class ChatService {
       debugPrint('[sendImageMessage] uploading to: $storagePath');
 
       uploadTask = storageRef.putData(
-        bytes,
+        Uint8List.fromList(bytes),
         SettableMetadata(contentType: contentType),
       );
 
