@@ -5,7 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/message.dart';
 import '../services/chat_service.dart';
+import '../services/block_service.dart';
 import '../widgets/message_bubble.dart';
+import '../core/localization/app_localizations.dart';
 
 class ChatPage extends StatefulWidget {
   final String receiverId;
@@ -302,6 +304,64 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  Future<void> _showBlockDialog(bool isCurrentlyBlocked) async {
+    final loc = AppLocalizations.of(context);
+    final blockService = BlockService();
+
+    final shouldProceed = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          isCurrentlyBlocked
+              ? loc.t('unblock_account_confirm_title')
+              : loc.t('block_account_confirm_title'),
+        ),
+        content: Text(
+          isCurrentlyBlocked
+              ? loc.t('unblock_account_confirm_body')
+              : loc.t('block_account_confirm_body'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(loc.t('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              isCurrentlyBlocked
+                  ? loc.t('unblock_account')
+                  : loc.t('block_account'),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldProceed != true) return;
+
+    if (isCurrentlyBlocked) {
+      await blockService.unblockUser(widget.receiverId);
+    } else {
+      await blockService.blockUser(widget.receiverId);
+      if (!mounted) return;
+      // Close the DM after blocking
+      Navigator.pop(context);
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isCurrentlyBlocked
+              ? loc.t('account_unblocked')
+              : loc.t('account_blocked'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
@@ -339,6 +399,17 @@ class _ChatPageState extends State<ChatPage> {
           icon: const Icon(Icons.arrow_back),
         ),
         actions: [
+          StreamBuilder<bool>(
+            stream: BlockService().isUserBlocked(widget.receiverId),
+            builder: (context, blockSnapshot) {
+              final isBlocked = blockSnapshot.data ?? false;
+              return IconButton(
+                tooltip: isBlocked ? 'Unblock user' : 'Block user',
+                onPressed: () => _showBlockDialog(isBlocked),
+                icon: Icon(isBlocked ? Icons.block : Icons.person_add),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Search messages',
             onPressed: _openSearchBottomSheet,

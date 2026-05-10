@@ -1129,6 +1129,7 @@ class _FeedContentState extends State<FeedContent> {
             const Divider(height: 1),
             Expanded(
               child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                key: ValueKey(blockedUserIds),
                 stream: firestore
                     .collection(_collectionName)
                     .orderBy('createdAt', descending: true)
