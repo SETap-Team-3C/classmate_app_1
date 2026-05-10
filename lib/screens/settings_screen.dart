@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../core/language_provider.dart';
 import '../core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'login_activity_screen.dart';
+import '../services/auth_service.dart';
 import 'auth/login_screen.dart';
 
 import '../core/theme/theme_provider.dart';
@@ -127,6 +129,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
                       },
                     ),
+                      ListTile(
+                        leading: Icon(Icons.devices, color: muted),
+                        title: Text(
+                          AppLocalizations.of(context).t('login_activity'),
+                          style: tt.bodyMedium,
+                        ),
+                        subtitle: Text(
+                          AppLocalizations.of(context).t('login_activity_description'),
+                          style: tt.bodySmall?.copyWith(color: muted),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginActivityScreen(),
+                            ),
+                          );
+                        },
+                      ),
                   ],
                 ),
               ),
@@ -406,7 +427,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     );
 
                     if (shouldLogout != true) return;
-                    await FirebaseAuth.instance.signOut();
+                    await AuthService().logout();
                     if (!mounted) return;
                     if (!context.mounted) return;
                     Navigator.of(context).pushAndRemoveUntil(

@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'dart:async' show TimeoutException;
 
+import 'login_activity_service.dart';
+
 class AuthService {
   FirebaseAuth get _auth => FirebaseAuth.instance;
 
@@ -55,6 +57,7 @@ class AuthService {
       }
 
       debugPrint('Signup successful for uid: $uid');
+      await LoginActivityService().ensureCurrentSession();
       return null;
     } on FirebaseAuthException catch (e) {
       debugPrint('Firebase auth signup error: ${e.code} - ${e.message}');
@@ -90,6 +93,7 @@ class AuthService {
       }
 
       debugPrint('Login successful for user: ${userCredential.user?.email}');
+      await LoginActivityService().ensureCurrentSession();
       return null;
     } on TimeoutException catch (e) {
       debugPrint('Login timeout: $e');
@@ -105,7 +109,7 @@ class AuthService {
 
   // 🚪 LOGOUT
   Future<void> logout() async {
-    await _auth.signOut();
+    await LoginActivityService().logoutCurrentSession();
   }
 
   // 👤 CURRENT USER

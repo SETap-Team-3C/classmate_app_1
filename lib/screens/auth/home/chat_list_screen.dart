@@ -4,6 +4,7 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/theme_provider.dart';
+import '../../../services/auth_service.dart';
 import '../../../services/user_service.dart';
 import '../../../widets/app_logo.dart';
 import '../../../widets/enhanced_avatar.dart';
@@ -113,7 +114,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                   await UserService().setUserOnline(false);
 
                   // Sign out
-                  await FirebaseAuth.instance.signOut();
+                  await AuthService().logout();
 
                   if (!mounted) return;
 
