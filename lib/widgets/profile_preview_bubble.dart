@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:classmate_app_1/core/localization/app_localizations.dart';
+import 'package:classmate_app_1/services/block_service.dart';
 
 class ProfilePreviewBubble extends StatelessWidget {
   final String userId;
   final Offset position;
   final VoidCallback onProfileTap;
-  final Future<void> Function() onBlockTap;
+  final Future<void> Function(bool isCurrentlyBlocked) onBlockTap;
   final VoidCallback onClose;
 
   const ProfilePreviewBubble({
@@ -123,18 +124,32 @@ class ProfilePreviewBubble extends StatelessWidget {
                       ),
                       if (canBlock) ...[
                         const SizedBox(height: 8),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              await onBlockTap();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Block account'),
-                          ),
+                        StreamBuilder<bool>(
+                          stream: BlockService().isUserBlocked(userId),
+                          builder: (context, blockedSnapshot) {
+                            final isBlocked = blockedSnapshot.data ?? false;
+                            final loc = AppLocalizations.of(context);
+
+                            return SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  await onBlockTap(isBlocked);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isBlocked
+                                      ? Colors.orange
+                                      : Colors.red,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: Text(
+                                  isBlocked
+                                      ? loc.t('unblock_account')
+                                      : loc.t('block_account'),
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ],

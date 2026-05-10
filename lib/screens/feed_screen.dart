@@ -210,11 +210,12 @@ class _FeedContentState extends State<FeedContent> {
                 ),
               );
             },
-            onBlockTap: () async {
+            onBlockTap: (isCurrentlyBlocked) async {
               final currentUserId = _auth.currentUser?.uid;
               if (currentUserId == null || currentUserId == userId) {
                 return;
               }
+              final loc = AppLocalizations.of(context);
 
               // Close the preview overlay first so the dialog opens on the main feed.
               _profilePreviewOverlay?.remove();
@@ -222,35 +223,55 @@ class _FeedContentState extends State<FeedContent> {
 
               if (!mounted) return;
 
-              final shouldBlock = await showDialog<bool>(
+              final shouldProceed = await showDialog<bool>(
                 context: context,
                 useRootNavigator: true,
                 builder: (dialogContext) => AlertDialog(
-                  title: const Text('Block account?'),
-                  content: const Text(
-                    'You will no longer see this account\'s posts or replies.',
+                  title: Text(
+                    isCurrentlyBlocked
+                        ? loc.t('unblock_account_confirm_title')
+                        : loc.t('block_account_confirm_title'),
+                  ),
+                  content: Text(
+                    isCurrentlyBlocked
+                        ? loc.t('unblock_account_confirm_body')
+                        : loc.t('block_account_confirm_body'),
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(dialogContext).pop(false),
-                      child: const Text('Cancel'),
+                      child: Text(loc.t('cancel')),
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(dialogContext).pop(true),
-                      child: const Text('Block account'),
+                      child: Text(
+                        isCurrentlyBlocked
+                            ? loc.t('unblock_account')
+                            : loc.t('block_account'),
+                      ),
                     ),
                   ],
                 ),
               );
 
-              if (shouldBlock != true) return;
+              if (shouldProceed != true) return;
 
-              await _blockService.blockUser(userId);
+              if (isCurrentlyBlocked) {
+                await _blockService.unblockUser(userId);
+              } else {
+                await _blockService.blockUser(userId);
+              }
 
               if (!mounted) return;
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Account blocked')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    isCurrentlyBlocked
+                        ? loc.t('account_unblocked')
+                        : loc.t('account_blocked'),
+                  ),
+                ),
+              );
             },
             onClose: () {
               _profilePreviewOverlay?.remove();
