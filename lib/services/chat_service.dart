@@ -51,7 +51,14 @@ class ChatService {
     if (trimmed.isEmpty) return;
 
     try {
-final prepared = await _prepareMessageContext(receiverId);
+      final prepared = await _prepareMessageContext(receiverId);
+      await _ensureChatDocument(
+        chatId: prepared.chatId,
+        senderUid: prepared.user.uid,
+        receiverId: receiverId,
+        senderName: prepared.senderName,
+        receiverName: prepared.receiverName,
+      );
       final messageDoc = _firestore.collection('messages').doc();
       final messageModel = Message(
         id: messageDoc.id,
@@ -87,7 +94,8 @@ final prepared = await _prepareMessageContext(receiverId);
     Reference? storageRef;
     StreamSubscription<TaskSnapshot>? uploadSubscription;
 
-    try {final prepared = await _prepareMessageContext(receiverId);
+    try {
+      final prepared = await _prepareMessageContext(receiverId);
       await _ensureChatDocument(
         chatId: prepared.chatId,
         senderUid: prepared.user.uid,
@@ -99,11 +107,30 @@ final prepared = await _prepareMessageContext(receiverId);
         '[sendImageMessage] ensured chat doc exists for ${prepared.chatId}',
       );
 
-final messageDoc = _firestore.collection('messages').doc();
-      final bytes = await imageFile.readAsBytes();
-      final safeName = _sanitizeFileName(imageFile.name.isNotEmpty
-          ? imageFile.name
-          : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg');      final contentType = _inferImageContentType(safeName);
+      final messageDoc = _firestore.collection('messages').doc();
+
+      // Read bytes with error handling
+      late List<int> bytes;
+      try {
+        bytes = await imageFile.readAsBytes();
+      } catch (e) {
+        debugPrint('[sendImageMessage] Error reading file bytes: $e');
+        throw Exception('Failed to read image file. Please try another image.');
+      }
+
+      // Validate file size (max 5MB)
+      if (bytes.length > 5 * 1024 * 1024) {
+        throw Exception(
+          'Image is too large. Please use an image smaller than 5MB.',
+        );
+      }
+
+      final safeName = _sanitizeFileName(
+        imageFile.name.isNotEmpty
+            ? imageFile.name
+            : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+      final contentType = _inferImageContentType(safeName);
 
       debugPrint(
         '[sendImageMessage] start: chatId=${prepared.chatId}, receiver=$receiverId, '
@@ -116,7 +143,7 @@ final messageDoc = _firestore.collection('messages').doc();
       debugPrint('[sendImageMessage] uploading to: $storagePath');
 
       uploadTask = storageRef.putData(
-        bytes,
+        Uint8List.fromList(bytes),
         SettableMetadata(contentType: contentType),
       );
 
@@ -177,7 +204,10 @@ final messageDoc = _firestore.collection('messages').doc();
       if (storageRef != null) {
         try {
           await storageRef.delete();
-          debugPrint('[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}');        } catch (_) {
+          debugPrint(
+            '[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}',
+          );
+        } catch (_) {
           // Ignore cleanup errors.
         }
       }
@@ -196,7 +226,8 @@ final messageDoc = _firestore.collection('messages').doc();
     required String receiverName,
   }) async {
     await _firestore.collection('chats').doc(chatId).set({
-      'participants': [senderUid, receiverId],      'usernames': {senderUid: senderName, receiverId: receiverName},
+      'participants': [senderUid, receiverId],
+      'usernames': {senderUid: senderName, receiverId: receiverName},
       'lastTimestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -212,7 +243,11 @@ final messageDoc = _firestore.collection('messages').doc();
 
     final chatId = _buildChatId(user.uid, receiverId);
     final senderDoc = await _firestore.collection('users').doc(user.uid).get();
-    final receiverDoc = await _firestore.collection('users').doc(receiverId).get();    final senderName = (senderDoc.data()?['name'] ?? user.displayName ?? '')
+    final receiverDoc = await _firestore
+        .collection('users')
+        .doc(receiverId)
+        .get();
+    final senderName = (senderDoc.data()?['name'] ?? user.displayName ?? '')
         .toString();
     final receiverName = (receiverDoc.data()?['name'] ?? '').toString();
 
@@ -234,17 +269,28 @@ final messageDoc = _firestore.collection('messages').doc();
     required String receiverName,
   }) async {
     final batch = _firestore.batch();
-    batch.set(messageDoc, message.toCreateMap());batch.set(
-      _firestore.collection('chats').doc(chatId),
-      {
-        'participants': [senderUid, receiverId],
-        'usernames': {senderUid: senderName, receiverId: receiverName},
-        'lastMessage': message.previewText,
-        'lastTimestamp': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-await batch.commit();  }
+    batch.set(messageDoc, message.toCreateMap());
+
+    batch.set(_firestore.collection('chats').doc(chatId), {
+      'participants': [senderUid, receiverId],
+      'usernames': {senderUid: senderName, receiverId: receiverName},
+      'lastMessage': message.previewText,
+      'lastTimestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
+    try {
+      await batch.commit();
+    } catch (e) {
+      debugPrint('[commitMessage] ERROR: $e');
+      debugPrint('[commitMessage] ERROR type: ${e.runtimeType}');
+      if (e is FirebaseException) {
+        debugPrint(
+          '[commitMessage] FirebaseException code=${e.code}, message=${e.message}, plugin=${e.plugin}',
+        );
+      }
+      rethrow;
+    }
+  }
 
   String _sanitizeFileName(String fileName) {
     return fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -279,9 +325,24 @@ await batch.commit();  }
           final all = snapshot.docs
               .map((doc) => Message.fromDocument(doc))
               .toList();
-          return all
-              .where((m) => !(m.deletedFor?.contains(userId) ?? false))
-              .toList();
+
+          final visible = all.where(
+            (m) => !(m.deletedFor?.contains(userId) ?? false),
+          );
+
+          final byId = <String, Message>{};
+          for (final message in visible) {
+            byId[message.id] = message;
+          }
+
+          final deduped = byId.values.toList()
+            ..sort((a, b) {
+              final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
+              final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
+              return bMillis.compareTo(aMillis);
+            });
+
+          return deduped;
         });
   }
 
@@ -296,13 +357,10 @@ await batch.commit();  }
   }
 
   Future<void> deleteMessage(String messageId) async {
-    
     try {
       debugPrint('🚨 deleteMessage CALLED for id=$messageId');
       debugPrint(StackTrace.current.toString());
-    } catch (_) {
-      
-    }
+    } catch (_) {}
 
     final user = _auth.currentUser ?? await _waitForAuth();
     if (user == null) {
@@ -391,6 +449,161 @@ await batch.commit();  }
         .where('starredBy', arrayContains: userId)
         .snapshots()
         .map((snap) => snap.docs.map((d) => Message.fromDocument(d)).toList());
+  }
+
+  // Search messages in a chat by text
+  Future<List<Message>> searchMessagesInChat(
+    String userId,
+    String otherUserId,
+    String query,
+  ) async {
+    if (query.isEmpty) return [];
+
+    final chatId = _buildChatId(userId, otherUserId);
+    final snapshot = await _firestore
+        .collection('messages')
+        .where('chatId', isEqualTo: chatId)
+        .get();
+
+    final allMessages = snapshot.docs
+        .map((doc) => Message.fromDocument(doc))
+        .toList();
+
+    // Filter by search query (case-insensitive)
+    final filtered = allMessages
+        .where(
+          (m) =>
+              m.text.toLowerCase().contains(query.toLowerCase()) &&
+              !(m.deletedFor?.contains(userId) ?? false),
+        )
+        .toList();
+
+    // Sort by timestamp descending
+    filtered.sort((a, b) {
+      final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
+      final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
+      return bMillis.compareTo(aMillis);
+    });
+
+    return filtered;
+  }
+
+  // Set user online status
+  Future<void> setOnlineStatus(String userId, bool isOnline) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'isOnline': isOnline,
+        'lastSeen': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('[ChatService] Error setting online status: $e');
+    }
+  }
+
+  // Get user online status stream
+  Stream<bool> getUserOnlineStatus(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((snap) => snap.data()?['isOnline'] as bool? ?? false);
+  }
+
+  // Toggle reaction on a message
+  Future<void> toggleReaction(
+    String messageId,
+    String userId,
+    String emoji,
+  ) async {
+    try {
+      final docRef = _firestore.collection('messages').doc(messageId);
+      final snapshot = await docRef.get();
+      if (!snapshot.exists) return;
+
+      final data = snapshot.data();
+      final reactions = data?['reactions'] is Map
+          ? Map<String, dynamic>.from(data!['reactions'] as Map)
+          : <String, dynamic>{};
+
+      final reactionUsers = reactions[emoji] is List
+          ? List<String>.from(
+              (reactions[emoji] as List).map((e) => e.toString()),
+            )
+          : <String>[];
+
+      if (reactionUsers.contains(userId)) {
+        reactionUsers.remove(userId);
+        if (reactionUsers.isEmpty) {
+          reactions.remove(emoji);
+        } else {
+          reactions[emoji] = reactionUsers;
+        }
+      } else {
+        reactionUsers.add(userId);
+        reactions[emoji] = reactionUsers;
+      }
+
+      await docRef.update({'reactions': reactions.isEmpty ? null : reactions});
+    } catch (e) {
+      debugPrint('[ChatService] Error toggling reaction: $e');
+    }
+  }
+
+  // Get last seen time formatted for display
+  Future<String> getLastSeenDisplay(String userId) async {
+    try {
+      final snapshot = await _firestore.collection('users').doc(userId).get();
+      final lastSeen = snapshot.data()?['lastSeen'] as Timestamp?;
+      if (lastSeen == null) return 'never';
+
+      final now = DateTime.now();
+      final diff = now.difference(lastSeen.toDate());
+
+      if (diff.inSeconds < 60) return 'just now';
+      if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+      if (diff.inHours < 24) return '${diff.inHours}h ago';
+      if (diff.inDays < 7) return '${diff.inDays}d ago';
+      return 'a week ago';
+    } catch (e) {
+      debugPrint('[ChatService] Error getting last seen: $e');
+      return 'unknown';
+    }
+  }
+
+  // Get unread message count for a specific chat
+  Future<int> getUnreadCountForChat(String chatId, String currentUserId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('messages')
+          .where('chatId', isEqualTo: chatId)
+          .where('receiverId', isEqualTo: currentUserId)
+          .where('read', isEqualTo: false)
+          .count()
+          .get();
+      return snapshot.count ?? 0;
+    } catch (e) {
+      debugPrint('[ChatService] Error getting unread count: $e');
+      return 0;
+    }
+  }
+
+  // Get user-friendly error message
+  String getUserFriendlyError(dynamic error) {
+    if (error is FirebaseException) {
+      switch (error.code) {
+        case 'permission-denied':
+          return 'You don\'t have permission to perform this action.';
+        case 'not-found':
+          return 'The conversation or message was not found.';
+        case 'unavailable':
+          return 'Service is temporarily unavailable. Please try again.';
+        case 'network-error':
+          return 'Network error. Please check your connection.';
+        default:
+          return 'An error occurred: ${error.message}';
+      }
+    }
+    return 'An unexpected error occurred. Please try again.';
   }
 }
 
