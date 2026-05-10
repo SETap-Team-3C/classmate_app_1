@@ -216,8 +216,15 @@ class _FeedContentState extends State<FeedContent> {
                 return;
               }
 
+              // Close the preview overlay first so the dialog opens on the main feed.
+              _profilePreviewOverlay?.remove();
+              _profilePreviewOverlay = null;
+
+              if (!mounted) return;
+
               final shouldBlock = await showDialog<bool>(
                 context: context,
+                useRootNavigator: true,
                 builder: (dialogContext) => AlertDialog(
                   title: const Text('Block account?'),
                   content: const Text(
@@ -239,8 +246,6 @@ class _FeedContentState extends State<FeedContent> {
               if (shouldBlock != true) return;
 
               await _blockService.blockUser(userId);
-              _profilePreviewOverlay?.remove();
-              _profilePreviewOverlay = null;
 
               if (!mounted) return;
               ScaffoldMessenger.of(
