@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:classmate_app_1/core/localization/app_localizations.dart';
 
 class ProfilePreviewBubble extends StatelessWidget {
   final String userId;
   final Offset position;
   final VoidCallback onProfileTap;
+  final Future<void> Function() onBlockTap;
   final VoidCallback onClose;
 
   const ProfilePreviewBubble({
@@ -13,6 +15,7 @@ class ProfilePreviewBubble extends StatelessWidget {
     required this.userId,
     required this.position,
     required this.onProfileTap,
+    required this.onBlockTap,
     required this.onClose,
   });
 
@@ -67,6 +70,9 @@ class ProfilePreviewBubble extends StatelessWidget {
                 }
 
                 final userData = snapshot.data!.data() as Map<String, dynamic>;
+                final currentUserId = FirebaseAuth.instance.currentUser?.uid;
+                final canBlock =
+                    currentUserId != null && currentUserId != userId;
                 final username =
                     userData['username'] ?? 'user${userId.substring(0, 5)}';
                 final bio = (userData['bio'] ?? '').toString();
@@ -115,24 +121,22 @@ class ProfilePreviewBubble extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Block account coming soon'),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
+                      if (canBlock) ...[
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () async {
+                              await onBlockTap();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Block account'),
                           ),
-                          child: const Text('Block account'),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 );

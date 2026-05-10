@@ -8,6 +8,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
+import '../services/block_service.dart';
 import '../widgets/profile_preview_bubble.dart';
 import 'profile_screen.dart';
 
@@ -148,6 +149,7 @@ class FeedContent extends StatefulWidget {
 class _FeedContentState extends State<FeedContent> {
   final TextEditingController _postController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
+  final BlockService _blockService = BlockService();
   bool _isPosting = false;
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes;
@@ -208,6 +210,43 @@ class _FeedContentState extends State<FeedContent> {
                 ),
               );
             },
+            onBlockTap: () async {
+              final currentUserId = _auth.currentUser?.uid;
+              if (currentUserId == null || currentUserId == userId) {
+                return;
+              }
+
+              final shouldBlock = await showDialog<bool>(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Block account?'),
+                  content: const Text(
+                    'You will no longer see this account\'s posts or replies.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      child: const Text('Block account'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (shouldBlock != true) return;
+
+              await _blockService.blockUser(userId);
+              _profilePreviewOverlay?.remove();
+              _profilePreviewOverlay = null;
+
+              if (!mounted) return;
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Account blocked')));
+            },
             onClose: () {
               _profilePreviewOverlay?.remove();
               _profilePreviewOverlay = null;
@@ -253,6 +292,30 @@ class _FeedContentState extends State<FeedContent> {
       return _compareByCreatedAt(leftData, rightData, descending: true);
     });
     return sorted;
+  }
+
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _filterBlockedPosts(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    Set<String> blockedUserIds,
+  ) {
+    if (blockedUserIds.isEmpty) return docs;
+
+    return docs.where((doc) {
+      final userId = (doc.data()['userId'] ?? '').toString();
+      return !blockedUserIds.contains(userId);
+    }).toList();
+  }
+
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _filterBlockedComments(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+    Set<String> blockedUserIds,
+  ) {
+    if (blockedUserIds.isEmpty) return docs;
+
+    return docs.where((doc) {
+      final userId = (doc.data()['userId'] ?? '').toString();
+      return !blockedUserIds.contains(userId);
+    }).toList();
   }
 
   List<_CommentNode> _buildCommentTree(
@@ -725,7 +788,11 @@ class _FeedContentState extends State<FeedContent> {
     }
   }
 
-  Future<void> _showComments(String postId, String postAuthorId) async {
+  Future<void> _showComments(
+    String postId,
+    String postAuthorId,
+    Set<String> blockedUserIds,
+  ) async {
     final commentController = TextEditingController();
     String? replyTargetId;
     String? replyTargetName;
@@ -789,15 +856,20 @@ class _FeedContentState extends State<FeedContent> {
                           }
 
                           final comments = snapshot.data?.docs ?? [];
-                          if (comments.isEmpty) {
+                          final visibleComments = _filterBlockedComments(
+                            comments,
+                            blockedUserIds,
+                          );
+
+                          if (visibleComments.isEmpty) {
                             return const Center(
                               child: Text('No comments yet.'),
                             );
                           }
 
-                          final nodes = _buildCommentTree(comments);
+                          final nodes = _buildCommentTree(visibleComments);
                           final childrenByParent = <String, List<String>>{};
-                          for (final doc in comments) {
+                          for (final doc in visibleComments) {
                             final parentId =
                                 (doc.data()['parentCommentId'] ?? '')
                                     .toString();
@@ -960,303 +1032,342 @@ class _FeedContentState extends State<FeedContent> {
       );
     }
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              TextField(
-                controller: _postController,
-                minLines: 1,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  hintText: loc.t('what_is_on_your_mind'),
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 8),
-              if (_selectedImageBytes != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.memory(
-                    _selectedImageBytes!,
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              const SizedBox(height: 8),
-              Row(
+    return StreamBuilder<Set<String>>(
+      stream: _blockService.watchBlockedUserIds(),
+      builder: (context, blockedSnapshot) {
+        final blockedUserIds = blockedSnapshot.data ?? <String>{};
+
+        return Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
                 children: [
-                  OutlinedButton.icon(
-                    onPressed: _isPosting ? null : _pickImage,
-                    icon: const Icon(Icons.photo_library_outlined),
-                    label: const Text('Photo'),
-                  ),
-                  const SizedBox(width: 8),
-                  if (_selectedImage != null)
-                    TextButton(
-                      onPressed: _isPosting
-                          ? null
-                          : () => setState(() {
-                              _selectedImage = null;
-                              _selectedImageBytes = null;
-                            }),
-                      child: const Text('Remove'),
+                  TextField(
+                    controller: _postController,
+                    minLines: 1,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: loc.t('what_is_on_your_mind'),
+                      border: OutlineInputBorder(),
                     ),
-                  const Spacer(),
-                  FilledButton(
-                    onPressed: _isPosting ? null : _createPost,
-                    child: _isPosting
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Post'),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_selectedImageBytes != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.memory(
+                        _selectedImageBytes!,
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: _isPosting ? null : _pickImage,
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: const Text('Photo'),
+                      ),
+                      const SizedBox(width: 8),
+                      if (_selectedImage != null)
+                        TextButton(
+                          onPressed: _isPosting
+                              ? null
+                              : () => setState(() {
+                                  _selectedImage = null;
+                                  _selectedImageBytes = null;
+                                }),
+                          child: const Text('Remove'),
+                        ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: _isPosting ? null : _createPost,
+                        child: _isPosting
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Post'),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        Expanded(
-          child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: firestore
-                .collection(_collectionName)
-                .orderBy('createdAt', descending: true)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
+            ),
+            const Divider(height: 1),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: firestore
+                    .collection(_collectionName)
+                    .orderBy('createdAt', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-              if (snapshot.hasError) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text('Could not load posts: ${snapshot.error}'),
-                  ),
-                );
-              }
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text('Could not load posts: ${snapshot.error}'),
+                      ),
+                    );
+                  }
 
-              final docs = _sortedPosts(snapshot.data?.docs ?? []);
-              if (docs.isEmpty) {
-                return const Center(
-                  child: Text('No posts yet. Create the first one.'),
-                );
-              }
+                  final docs = _filterBlockedPosts(
+                    _sortedPosts(snapshot.data?.docs ?? []),
+                    blockedUserIds,
+                  );
+                  if (docs.isEmpty) {
+                    return const Center(
+                      child: Text('No posts yet. Create the first one.'),
+                    );
+                  }
 
-              return ListView.separated(
-                padding: const EdgeInsets.all(12),
-                itemCount: docs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final postDoc = docs[index];
-                  final data = postDoc.data();
-                  final postId = postDoc.id;
-                  final postAuthorId = (data['userId'] ?? '').toString();
-                  final currentUserId = _auth.currentUser?.uid;
-                  final isCurrentUserPost =
-                      currentUserId != null && postAuthorId == currentUserId;
-                  final isPinned = data['isPinned'] == true;
-                  final name = (data['userName'] ?? 'User').toString();
-                  final text = (data['text'] ?? '').toString();
-                  final imageUrl = (data['imageUrl'] ?? '').toString();
-                  final timeLabel = _formatCreatedAt(data['createdAt']);
+                  return ListView.separated(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: docs.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (context, index) {
+                      final postDoc = docs[index];
+                      final data = postDoc.data();
+                      final postId = postDoc.id;
+                      final postAuthorId = (data['userId'] ?? '').toString();
+                      final currentUserId = _auth.currentUser?.uid;
+                      final isCurrentUserPost =
+                          currentUserId != null &&
+                          postAuthorId == currentUserId;
+                      final isPinned = data['isPinned'] == true;
+                      final name = (data['userName'] ?? 'User').toString();
+                      final text = (data['text'] ?? '').toString();
+                      final imageUrl = (data['imageUrl'] ?? '').toString();
+                      final timeLabel = _formatCreatedAt(data['createdAt']);
 
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                      return Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              GestureDetector(
-                                onTapDown: (details) {
-                                  _showProfilePreview(
-                                    postAuthorId,
-                                    details.globalPosition,
-                                  );
-                                },
-                                child: const CircleAvatar(
-                                  child: Icon(Icons.person),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
+                              Row(
+                                children: [
+                                  GestureDetector(
+                                    onTapDown: (details) {
+                                      _showProfilePreview(
+                                        postAuthorId,
+                                        details.globalPosition,
+                                      );
+                                    },
+                                    child: const CircleAvatar(
+                                      child: Icon(Icons.person),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Expanded(
-                                          child: Text(
-                                            name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w600,
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
                                             ),
+                                            if (isPinned)
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 4,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.amber.shade100,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                        999,
+                                                      ),
+                                                ),
+                                                child: const Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.push_pin,
+                                                      size: 12,
+                                                    ),
+                                                    SizedBox(width: 4),
+                                                    Text(
+                                                      'Pinned',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        Text(
+                                          timeLabel,
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
                                           ),
                                         ),
-                                        if (isPinned)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 8,
-                                              vertical: 4,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: Colors.amber.shade100,
-                                              borderRadius:
-                                                  BorderRadius.circular(999),
-                                            ),
-                                            child: const Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.push_pin, size: 12),
-                                                SizedBox(width: 4),
-                                                Text(
-                                                  'Pinned',
-                                                  style: TextStyle(
-                                                    fontSize: 11,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
                                       ],
                                     ),
-                                    Text(
-                                      timeLabel,
-                                      style: const TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 12,
+                                  ),
+                                  if (isCurrentUserPost)
+                                    PopupMenuButton<String>(
+                                      tooltip: 'Post options',
+                                      onSelected: (value) async {
+                                        if (value == 'delete') {
+                                          await _deletePost(postId);
+                                        }
+                                      },
+                                      itemBuilder: (context) =>
+                                          <PopupMenuEntry<String>>[
+                                            const PopupMenuItem<String>(
+                                              value: 'delete',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.delete,
+                                                    color: Colors.red,
+                                                  ),
+                                                  SizedBox(width: 8),
+                                                  Text('Delete'),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                      child: const Padding(
+                                        padding: EdgeInsets.only(left: 8),
+                                        child: Icon(Icons.more_vert),
                                       ),
                                     ),
-                                  ],
-                                ),
+                                ],
                               ),
-                              if (isCurrentUserPost)
-                                PopupMenuButton<String>(
-                                  tooltip: 'Post options',
-                                  onSelected: (value) async {
-                                    if (value == 'delete') {
-                                      await _deletePost(postId);
-                                    }
-                                  },
-                                  itemBuilder: (context) =>
-                                      <PopupMenuEntry<String>>[
-                                        const PopupMenuItem<String>(
-                                          value: 'delete',
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.delete,
-                                                color: Colors.red,
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text('Delete'),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                  child: const Padding(
-                                    padding: EdgeInsets.only(left: 8),
-                                    child: Icon(Icons.more_vert),
+                              const SizedBox(height: 10),
+                              if (text.isNotEmpty) Text(text),
+                              if (text.isNotEmpty && imageUrl.isNotEmpty)
+                                const SizedBox(height: 10),
+                              if (imageUrl.isNotEmpty)
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(10),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => const Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: Text('Image could not be loaded.'),
+                                    ),
                                   ),
                                 ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          if (text.isNotEmpty) Text(text),
-                          if (text.isNotEmpty && imageUrl.isNotEmpty)
-                            const SizedBox(height: 10),
-                          if (imageUrl.isNotEmpty)
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.network(
-                                imageUrl,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => const Padding(
-                                  padding: EdgeInsets.all(8.0),
-                                  child: Text('Image could not be loaded.'),
-                                ),
-                              ),
-                            ),
-                          const SizedBox(height: 12),
-                          StreamBuilder<QuerySnapshot>(
-                            stream: _firestore
-                                .collection(_collectionName)
-                                .doc(postId)
-                                .collection('likes')
-                                .snapshots(),
-                            builder: (context, likeSnapshot) {
-                              final likeCount =
-                                  likeSnapshot.data?.docs.length ?? 0;
-                              final currentUser = _auth.currentUser;
-                              final isLiked =
-                                  likeSnapshot.data?.docs.any(
-                                    (doc) => doc.id == currentUser?.uid,
-                                  ) ??
-                                  false;
-
-                              return StreamBuilder<QuerySnapshot>(
+                              const SizedBox(height: 12),
+                              StreamBuilder<QuerySnapshot>(
                                 stream: _firestore
                                     .collection(_collectionName)
                                     .doc(postId)
-                                    .collection('comments')
+                                    .collection('likes')
                                     .snapshots(),
-                                builder: (context, commentSnapshot) {
-                                  final commentCount =
-                                      commentSnapshot.data?.docs.length ?? 0;
+                                builder: (context, likeSnapshot) {
+                                  final likeCount =
+                                      likeSnapshot.data?.docs.length ?? 0;
+                                  final currentUser = _auth.currentUser;
+                                  final isLiked =
+                                      likeSnapshot.data?.docs.any(
+                                        (doc) => doc.id == currentUser?.uid,
+                                      ) ??
+                                      false;
 
-                                  return Row(
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          isLiked
-                                              ? Icons.favorite
-                                              : Icons.favorite_border,
-                                          color: isLiked ? Colors.red : null,
-                                        ),
-                                        onPressed: () =>
-                                            _toggleLike(postId, isLiked),
-                                      ),
-                                      Text(
-                                        likeCount.toString(),
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.comment_outlined,
-                                        ),
-                                        onPressed: () =>
-                                            _showComments(postId, postAuthorId),
-                                      ),
-                                      Text(
-                                        commentCount.toString(),
-                                        style: const TextStyle(fontSize: 12),
-                                      ),
-                                    ],
+                                  return StreamBuilder<
+                                    QuerySnapshot<Map<String, dynamic>>
+                                  >(
+                                    stream: _firestore
+                                        .collection(_collectionName)
+                                        .doc(postId)
+                                        .collection('comments')
+                                        .snapshots(),
+                                    builder: (context, commentSnapshot) {
+                                      final rawComments =
+                                          commentSnapshot.data?.docs ?? [];
+                                      final visibleComments =
+                                          _filterBlockedComments(
+                                            rawComments,
+                                            blockedUserIds,
+                                          );
+                                      final commentCount =
+                                          visibleComments.length;
+
+                                      return Row(
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(
+                                              isLiked
+                                                  ? Icons.favorite
+                                                  : Icons.favorite_border,
+                                              color: isLiked
+                                                  ? Colors.red
+                                                  : null,
+                                            ),
+                                            onPressed: () =>
+                                                _toggleLike(postId, isLiked),
+                                          ),
+                                          Text(
+                                            likeCount.toString(),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          IconButton(
+                                            icon: const Icon(
+                                              Icons.comment_outlined,
+                                            ),
+                                            onPressed: () => _showComments(
+                                              postId,
+                                              postAuthorId,
+                                              blockedUserIds,
+                                            ),
+                                          ),
+                                          Text(
+                                            commentCount.toString(),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      );
+                                    },
                                   );
                                 },
-                              );
-                            },
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
                 },
-              );
-            },
-          ),
-        ),
-      ],
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
