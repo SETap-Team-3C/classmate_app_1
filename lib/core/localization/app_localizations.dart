@@ -63,6 +63,10 @@ class AppLocalizations {
       'account_unblocked': 'Account unblocked',
       'blocked_user_chat_not_allowed':
           'You have blocked this account. Unblock to start chatting.',
+      'blocked_users': 'Blocked users',
+      'manage_blocked_users':
+          'View accounts you have blocked and unblock them here.',
+      'no_blocked_users': 'You have not blocked any accounts yet.',
       'login_activity': 'Login Activity',
       'login_activity_description':
           'See the devices signed in to your account and revoke access from any of them.',

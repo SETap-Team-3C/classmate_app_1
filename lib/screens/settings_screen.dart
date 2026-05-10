@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/language_provider.dart';
 import '../core/localization/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_activity_screen.dart';
 import '../services/auth_service.dart';
+import '../services/block_service.dart';
 import 'auth/login_screen.dart';
 
 import '../core/theme/theme_provider.dart';
@@ -12,6 +14,18 @@ import '../core/theme/theme_provider.dart';
 import 'edit_profile_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'terms_of_service_screen.dart';
+
+class _BlockedUserEntry {
+  _BlockedUserEntry({
+    required this.userId,
+    required this.displayName,
+    required this.email,
+  });
+
+  final String userId;
+  final String displayName;
+  final String email;
+}
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, required this.themeProvider});
@@ -23,6 +37,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  final BlockService _blockService = BlockService();
   bool _notificationsEnabled = true;
   bool _soundEnabled = true;
   String _selectedLanguage = 'English';
@@ -65,6 +80,137 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ).t('selected_language_changed', params: {'language': language}),
         ),
       ),
+    );
+  }
+
+  Future<List<_BlockedUserEntry>> _loadBlockedUsers(
+    Set<String> blockedUserIds,
+  ) async {
+    if (blockedUserIds.isEmpty) return const [];
+
+    final usersCollection = FirebaseFirestore.instance.collection('users');
+    final entries = await Future.wait(
+      blockedUserIds.map((userId) async {
+        final doc = await usersCollection.doc(userId).get();
+        final data = doc.data() ?? <String, dynamic>{};
+        final displayName = (data['displayName'] ?? data['name'] ?? 'User')
+            .toString();
+        final email = (data['email'] ?? '').toString();
+        return _BlockedUserEntry(
+          userId: userId,
+          displayName: displayName,
+          email: email,
+        );
+      }),
+    );
+
+    final sorted = entries.toList();
+    sorted.sort((left, right) {
+      final leftName = left.displayName.toLowerCase();
+      final rightName = right.displayName.toLowerCase();
+      return leftName.compareTo(rightName);
+    });
+    return sorted;
+  }
+
+  Future<void> _showBlockedUsersSheet() async {
+    final loc = AppLocalizations.of(context);
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: StreamBuilder<Set<String>>(
+              stream: _blockService.watchBlockedUserIds(),
+              builder: (context, blockedSnapshot) {
+                final blockedUserIds = blockedSnapshot.data ?? <String>{};
+
+                return FutureBuilder<List<_BlockedUserEntry>>(
+                  future: _loadBlockedUsers(blockedUserIds),
+                  builder: (context, usersSnapshot) {
+                    if (usersSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const SizedBox(
+                        height: 240,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+
+                    final blockedUsers = usersSnapshot.data ?? const [];
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          loc.t('blocked_users'),
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          loc.t('manage_blocked_users'),
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        if (blockedUsers.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 32),
+                            child: Center(
+                              child: Text(loc.t('no_blocked_users')),
+                            ),
+                          )
+                        else
+                          SizedBox(
+                            height: 420,
+                            child: ListView.separated(
+                              itemCount: blockedUsers.length,
+                              separatorBuilder: (_, __) => const Divider(),
+                              itemBuilder: (context, index) {
+                                final user = blockedUsers[index];
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: const CircleAvatar(
+                                    child: Icon(Icons.person),
+                                  ),
+                                  title: Text(user.displayName),
+                                  subtitle: user.email.isEmpty
+                                      ? Text(user.userId)
+                                      : Text(user.email),
+                                  trailing: TextButton(
+                                    onPressed: () async {
+                                      await _blockService.unblockUser(
+                                        user.userId,
+                                      );
+                                      if (!mounted) return;
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            loc.t('account_unblocked'),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                    child: Text(loc.t('unblock_account')),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -129,25 +275,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         );
                       },
                     ),
-                      ListTile(
-                        leading: Icon(Icons.devices, color: muted),
-                        title: Text(
-                          AppLocalizations.of(context).t('login_activity'),
-                          style: tt.bodyMedium,
-                        ),
-                        subtitle: Text(
-                          AppLocalizations.of(context).t('login_activity_description'),
-                          style: tt.bodySmall?.copyWith(color: muted),
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const LoginActivityScreen(),
-                            ),
-                          );
-                        },
+                    ListTile(
+                      leading: Icon(Icons.devices, color: muted),
+                      title: Text(
+                        AppLocalizations.of(context).t('login_activity'),
+                        style: tt.bodyMedium,
                       ),
+                      subtitle: Text(
+                        AppLocalizations.of(
+                          context,
+                        ).t('login_activity_description'),
+                        style: tt.bodySmall?.copyWith(color: muted),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginActivityScreen(),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -389,6 +537,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ),
                         );
                       },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.block, color: muted),
+                      title: Text(
+                        AppLocalizations.of(context).t('blocked_users'),
+                        style: tt.bodyMedium,
+                      ),
+                      subtitle: Text(
+                        AppLocalizations.of(context).t('manage_blocked_users'),
+                        style: tt.bodySmall?.copyWith(color: muted),
+                      ),
+                      onTap: _showBlockedUsersSheet,
                     ),
                   ],
                 ),
