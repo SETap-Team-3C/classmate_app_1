@@ -182,13 +182,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                       : Text(user.email),
                                   trailing: TextButton(
                                     onPressed: () async {
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
                                       await _blockService.unblockUser(
                                         user.userId,
                                       );
                                       if (!mounted) return;
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
+                                      messenger.showSnackBar(
                                         SnackBar(
                                           content: Text(
                                             loc.t('account_unblocked'),

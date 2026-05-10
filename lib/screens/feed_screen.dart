@@ -256,6 +256,8 @@ class _FeedContentState extends State<FeedContent> {
 
               if (shouldProceed != true) return;
 
+              final messenger = ScaffoldMessenger.of(context);
+
               if (isCurrentlyBlocked) {
                 await _blockService.unblockUser(userId);
               } else {
@@ -263,7 +265,7 @@ class _FeedContentState extends State<FeedContent> {
               }
 
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text(
                     isCurrentlyBlocked
