@@ -197,13 +197,19 @@ class LoginActivityService {
     final user = _auth.currentUser;
     final sessionId = await getCurrentSessionId();
 
-    if (user != null && sessionId != null && sessionId.isNotEmpty) {
-      await revokeSession(userId: user.uid, sessionId: sessionId);
+    try {
+      if (user != null && sessionId != null && sessionId.isNotEmpty) {
+        try {
+          await revokeSession(userId: user.uid, sessionId: sessionId);
+        } catch (e) {
+          debugPrint('Failed to revoke current session during logout: $e');
+        }
+      }
+
+      await _auth.signOut();
+    } finally {
+      final prefs = await _prefs;
+      await prefs.remove(_sessionIdKey);
     }
-
-    await _auth.signOut();
-
-    final prefs = await _prefs;
-    await prefs.remove(_sessionIdKey);
   }
 }
