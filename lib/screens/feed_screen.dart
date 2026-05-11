@@ -11,6 +11,7 @@ import '../core/theme/theme_provider.dart';
 import '../services/block_service.dart';
 import '../services/hashtag_service.dart';
 import '../widgets/profile_preview_bubble.dart';
+import '../widgets/hashtag_text.dart';
 import 'profile_screen.dart';
 
 class _CommentNode {
@@ -648,7 +649,13 @@ class _FeedContentState extends State<FeedContent> {
             if (text.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: Text(text),
+                child: HashtagText(
+                  text,
+                  onHashtagTap: (hashtag) {
+                    // TODO: Navigate to hashtag screen in Part 3
+                    debugPrint('Tapped hashtag: $hashtag');
+                  },
+                ),
               ),
             if (hasChildren) ...[
               const SizedBox(height: 10),
@@ -1316,7 +1323,14 @@ class _FeedContentState extends State<FeedContent> {
                                 ],
                               ),
                               const SizedBox(height: 10),
-                              if (text.isNotEmpty) Text(text),
+                              if (text.isNotEmpty)
+                                HashtagText(
+                                  text,
+                                  onHashtagTap: (hashtag) {
+                                    // TODO: Navigate to hashtag screen in Part 3
+                                    debugPrint('Tapped hashtag: $hashtag');
+                                  },
+                                ),
                               if (text.isNotEmpty && imageUrl.isNotEmpty)
                                 const SizedBox(height: 10),
                               if (imageUrl.isNotEmpty)
