@@ -13,6 +13,7 @@ import '../services/hashtag_service.dart';
 import '../widgets/profile_preview_bubble.dart';
 import '../widgets/hashtag_text.dart';
 import 'profile_screen.dart';
+import 'hashtag_browser_screen.dart';
 
 class _CommentNode {
   _CommentNode({required this.id, required this.data});
@@ -652,8 +653,15 @@ class _FeedContentState extends State<FeedContent> {
                 child: HashtagText(
                   text,
                   onHashtagTap: (hashtag) {
-                    // TODO: Navigate to hashtag screen in Part 3
-                    debugPrint('Tapped hashtag: $hashtag');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => HashtagBrowserScreen(
+                          hashtag: hashtag,
+                          feedType: 'class',
+                        ),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -1327,8 +1335,16 @@ class _FeedContentState extends State<FeedContent> {
                                 HashtagText(
                                   text,
                                   onHashtagTap: (hashtag) {
-                                    // TODO: Navigate to hashtag screen in Part 3
-                                    debugPrint('Tapped hashtag: $hashtag');
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            HashtagBrowserScreen(
+                                              hashtag: hashtag,
+                                              feedType: widget.feedType,
+                                            ),
+                                      ),
+                                    );
                                   },
                                 ),
                               if (text.isNotEmpty && imageUrl.isNotEmpty)
