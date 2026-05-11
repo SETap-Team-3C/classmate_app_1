@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/hashtag_service.dart';
 import '../services/block_service.dart';
-import '../core/localization/app_localizations.dart';
 import '../widgets/hashtag_text.dart';
 import 'profile_screen.dart';
 
@@ -22,14 +21,12 @@ class HashtagBrowserScreen extends StatefulWidget {
 }
 
 class _HashtagBrowserScreenState extends State<HashtagBrowserScreen> {
-  final HashtagService _hashtagService = HashtagService();
-  final BlockService _blockService = BlockService();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  late final HashtagService _hashtagService = HashtagService();
+  late final BlockService _blockService = BlockService();
+  late final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
-    final loc = AppLocalizations.of(context);
-
     return Scaffold(
       appBar: AppBar(title: Text('#${widget.hashtag}'), centerTitle: true),
       body: StreamBuilder<Set<String>>(
@@ -91,7 +88,6 @@ class _HashtagBrowserScreenState extends State<HashtagBrowserScreen> {
                 itemBuilder: (context, index) {
                   final postDoc = visiblePosts[index];
                   final data = postDoc.data();
-                  final postId = postDoc.id;
                   final postAuthorId = (data['userId'] ?? '').toString();
                   final name = (data['userName'] ?? 'User').toString();
                   final text = (data['text'] ?? '').toString();

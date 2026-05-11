@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/hashtag_service.dart';
+import 'package:flutter/gestures.dart';
 
 class HashtagText extends StatelessWidget {
   const HashtagText(
