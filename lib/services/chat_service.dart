@@ -94,7 +94,8 @@ class ChatService {
     Reference? storageRef;
     StreamSubscription<TaskSnapshot>? uploadSubscription;
 
-    try {final prepared = await _prepareMessageContext(receiverId);
+    try {
+      final prepared = await _prepareMessageContext(receiverId);
       await _ensureChatDocument(
         chatId: prepared.chatId,
         senderUid: prepared.user.uid,
@@ -106,11 +107,14 @@ class ChatService {
         '[sendImageMessage] ensured chat doc exists for ${prepared.chatId}',
       );
 
-final messageDoc = _firestore.collection('messages').doc();
+      final messageDoc = _firestore.collection('messages').doc();
       final bytes = await imageFile.readAsBytes();
-      final safeName = _sanitizeFileName(imageFile.name.isNotEmpty
-          ? imageFile.name
-          : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg');      final contentType = _inferImageContentType(safeName);
+      final safeName = _sanitizeFileName(
+        imageFile.name.isNotEmpty
+            ? imageFile.name
+            : 'image_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
+      final contentType = _inferImageContentType(safeName);
 
       debugPrint(
         '[sendImageMessage] start: chatId=${prepared.chatId}, receiver=$receiverId, '
@@ -184,7 +188,10 @@ final messageDoc = _firestore.collection('messages').doc();
       if (storageRef != null) {
         try {
           await storageRef.delete();
-          debugPrint('[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}');        } catch (_) {
+          debugPrint(
+            '[sendImageMessage] cleaned up failed upload: ${storageRef.fullPath}',
+          );
+        } catch (_) {
           // Ignore cleanup errors.
         }
       }
@@ -203,7 +210,8 @@ final messageDoc = _firestore.collection('messages').doc();
     required String receiverName,
   }) async {
     await _firestore.collection('chats').doc(chatId).set({
-      'participants': [senderUid, receiverId],      'usernames': {senderUid: senderName, receiverId: receiverName},
+      'participants': [senderUid, receiverId],
+      'usernames': {senderUid: senderName, receiverId: receiverName},
       'lastTimestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
@@ -219,7 +227,11 @@ final messageDoc = _firestore.collection('messages').doc();
 
     final chatId = _buildChatId(user.uid, receiverId);
     final senderDoc = await _firestore.collection('users').doc(user.uid).get();
-    final receiverDoc = await _firestore.collection('users').doc(receiverId).get();    final senderName = (senderDoc.data()?['name'] ?? user.displayName ?? '')
+    final receiverDoc = await _firestore
+        .collection('users')
+        .doc(receiverId)
+        .get();
+    final senderName = (senderDoc.data()?['name'] ?? user.displayName ?? '')
         .toString();
     final receiverName = (receiverDoc.data()?['name'] ?? '').toString();
 
@@ -241,17 +253,15 @@ final messageDoc = _firestore.collection('messages').doc();
     required String receiverName,
   }) async {
     final batch = _firestore.batch();
-    batch.set(messageDoc, message.toCreateMap());batch.set(
-      _firestore.collection('chats').doc(chatId),
-      {
-        'participants': [senderUid, receiverId],
-        'usernames': {senderUid: senderName, receiverId: receiverName},
-        'lastMessage': message.previewText,
-        'lastTimestamp': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
-await batch.commit();  }
+    batch.set(messageDoc, message.toCreateMap());
+    batch.set(_firestore.collection('chats').doc(chatId), {
+      'participants': [senderUid, receiverId],
+      'usernames': {senderUid: senderName, receiverId: receiverName},
+      'lastMessage': message.previewText,
+      'lastTimestamp': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    await batch.commit();
+  }
 
   String _sanitizeFileName(String fileName) {
     return fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
@@ -283,9 +293,13 @@ await batch.commit();  }
         .where("chatId", isEqualTo: chatId)
         .snapshots()
         .map((snapshot) {
-          final all = snapshot.docs.map((doc) => Message.fromDocument(doc)).toList();
+          final all = snapshot.docs
+              .map((doc) => Message.fromDocument(doc))
+              .toList();
 
-          final visible = all.where((m) => !(m.deletedFor?.contains(userId) ?? false));
+          final visible = all.where(
+            (m) => !(m.deletedFor?.contains(userId) ?? false),
+          );
 
           final byId = <String, Message>{};
           for (final message in visible) {
@@ -314,19 +328,14 @@ await batch.commit();  }
   }
 
   Future<void> deleteMessage(String messageId) async {
-    
-    try {
-      debugPrint('🚨 deleteMessage CALLED for id=$messageId');
-      debugPrint(StackTrace.current.toString());
-    } catch (_) {
-      
-    }
+    debugPrint('🚨 deleteMessage CALLED for id=$messageId');
 
-    final user = _auth.currentUser ?? await _waitForAuth();
+    final user = _auth.currentUser;
     if (user == null) {
-      debugPrint('User not logged in, abort delete');
-      debugPrint('[deleteMessage] auth not ready, skipping delete');
-      return;
+      throw FirebaseAuthException(
+        code: 'not-authenticated',
+        message: 'User must be signed in to delete messages.',
+      );
     }
 
     try {
@@ -334,24 +343,33 @@ await batch.commit();  }
         'isDeleted': true,
         'text': '[This message was deleted]',
       });
+      debugPrint('✅ deleteMessage SUCCESS for id=$messageId');
     } catch (e) {
+      debugPrint('❌ deleteMessage FAILED for id=$messageId: $e');
       ErrorHandler.logError(e, context: 'deleteMessage');
       rethrow;
     }
   }
 
   Future<void> deleteMessageForMe(String messageId, String userId) async {
-    final user = _auth.currentUser ?? await _waitForAuth();
+    final user = _auth.currentUser;
     if (user == null) {
-      debugPrint('[deleteMessageForMe] auth not ready, skipping deleteForMe');
-      return;
+      throw FirebaseAuthException(
+        code: 'not-authenticated',
+        message: 'User must be signed in to delete messages.',
+      );
     }
 
     try {
+      debugPrint(
+        '[deleteMessageForMe] deleting for userId=$userId, messageId=$messageId',
+      );
       await _firestore.collection('messages').doc(messageId).update({
         'deletedFor': FieldValue.arrayUnion([userId]),
       });
+      debugPrint('✅ deleteMessageForMe SUCCESS for id=$messageId');
     } catch (e) {
+      debugPrint('❌ deleteMessageForMe FAILED for id=$messageId: $e');
       ErrorHandler.logError(e, context: 'deleteMessageForMe');
       rethrow;
     }
