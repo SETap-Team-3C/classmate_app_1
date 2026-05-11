@@ -504,6 +504,30 @@ class _ChatPageState extends State<ChatPage> {
                         return const Center(child: CircularProgressIndicator());
                       }
                       final messages = snapshot.data ?? [];
+
+                      final unreadIncomingMessages = messages
+                          .where(
+                            (message) =>
+                                !message.read &&
+                                message.senderId != currentUser.uid,
+                          )
+                          .toList();
+
+                      if (unreadIncomingMessages.isNotEmpty) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (!mounted) return;
+                          for (final message in unreadIncomingMessages) {
+                            _chatService
+                                .markMessageAsRead(message.id, currentUser.uid)
+                                .catchError((error) {
+                              debugPrint(
+                                '[ChatPage] Failed to mark message as read: ${message.id} -> $error',
+                              );
+                            });
+                          }
+                        });
+                      }
+
                       return ListView.builder(
                         reverse: true,
                         itemCount: messages.length,
