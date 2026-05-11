@@ -516,6 +516,7 @@ class ChatService {
         .snapshots()
         .map((snap) => snap.docs.map((d) => Message.fromDocument(d)).toList());
   }
+
   Future<List<Message>> searchMessagesInChat(
     String userId,
     String otherUserId,
