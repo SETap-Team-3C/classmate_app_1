@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -108,10 +109,6 @@ class ChatService {
       );
 
       final messageDoc = _firestore.collection('messages').doc();
-<<<<<<< HEAD
-      final bytes = await imageFile.readAsBytes();
-=======
-
       // Read bytes with error handling
       late List<int> bytes;
       try {
@@ -127,8 +124,6 @@ class ChatService {
           'Image is too large. Please use an image smaller than 5MB.',
         );
       }
-
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
       final safeName = _sanitizeFileName(
         imageFile.name.isNotEmpty
             ? imageFile.name
@@ -274,19 +269,12 @@ class ChatService {
   }) async {
     final batch = _firestore.batch();
     batch.set(messageDoc, message.toCreateMap());
-<<<<<<< HEAD
-=======
-
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
     batch.set(_firestore.collection('chats').doc(chatId), {
       'participants': [senderUid, receiverId],
       'usernames': {senderUid: senderName, receiverId: receiverName},
       'lastMessage': message.previewText,
       'lastTimestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
-<<<<<<< HEAD
-    await batch.commit();
-=======
 
     try {
       await batch.commit();
@@ -300,7 +288,6 @@ class ChatService {
       }
       rethrow;
     }
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
   }
 
   String _sanitizeFileName(String fileName) {
@@ -328,33 +315,61 @@ class ChatService {
   Stream<List<Message>> getMessages(String userId, String otherUserId) {
     final chatId = _buildChatId(userId, otherUserId);
 
-    return _firestore
-        .collection("messages")
-        .where("chatId", isEqualTo: chatId)
-        .snapshots()
-        .map((snapshot) {
-          final all = snapshot.docs
-              .map((doc) => Message.fromDocument(doc))
-              .toList();
+    return Stream<List<Message>>.multi((controller) {
+      List<Message> currentMessages = <Message>[];
+      Set<String> hiddenMessageIds = <String>{};
+      StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? messageSub;
+      StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? userSub;
 
-          final visible = all.where(
-            (m) => !(m.deletedFor?.contains(userId) ?? false),
-          );
+      void emit() {
+        final visible = currentMessages.where(
+          (message) =>
+              !(message.deletedFor?.contains(userId) ?? false) &&
+              !hiddenMessageIds.contains(message.id),
+        );
 
-          final byId = <String, Message>{};
-          for (final message in visible) {
-            byId[message.id] = message;
-          }
+        final byId = <String, Message>{};
+        for (final message in visible) {
+          byId[message.id] = message;
+        }
 
-          final deduped = byId.values.toList()
-            ..sort((a, b) {
-              final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
-              final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
-              return bMillis.compareTo(aMillis);
-            });
+        final deduped = byId.values.toList()
+          ..sort((a, b) {
+            final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
+            final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
+            return bMillis.compareTo(aMillis);
+          });
 
-          return deduped;
-        });
+        controller.add(deduped);
+      }
+
+      messageSub = _firestore
+          .collection('messages')
+          .where('chatId', isEqualTo: chatId)
+          .snapshots()
+          .listen((snapshot) {
+            currentMessages = snapshot.docs
+                .map((doc) => Message.fromDocument(doc))
+                .toList();
+            emit();
+          }, onError: controller.addError);
+
+      userSub = _firestore.collection('users').doc(userId).snapshots().listen((
+        snapshot,
+      ) {
+        final data = snapshot.data();
+        final hiddenIds = data?['hiddenMessageIds'];
+        hiddenMessageIds = hiddenIds is List
+            ? hiddenIds.map((value) => value.toString()).toSet()
+            : <String>{};
+        emit();
+      }, onError: controller.addError);
+
+      controller.onCancel = () async {
+        await messageSub?.cancel();
+        await userSub?.cancel();
+      };
+    });
   }
 
   Future<int> getUnreadCount(String chatId, String currentUserId) async {
@@ -368,14 +383,7 @@ class ChatService {
   }
 
   Future<void> deleteMessage(String messageId) async {
-<<<<<<< HEAD
     debugPrint('🚨 deleteMessage CALLED for id=$messageId');
-=======
-    try {
-      debugPrint('🚨 deleteMessage CALLED for id=$messageId');
-      debugPrint(StackTrace.current.toString());
-    } catch (_) {}
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
 
     final user = _auth.currentUser;
     if (user == null) {
@@ -384,18 +392,12 @@ class ChatService {
         message: 'User must be signed in to delete messages.',
       );
     }
+
     final docRef = _firestore.collection('messages').doc(messageId);
     try {
-<<<<<<< HEAD
-      await _firestore.collection('messages').doc(messageId).update({
-        'isDeleted': true,
-        'text': '[This message was deleted]',
-      });
-      debugPrint('✅ deleteMessage SUCCESS for id=$messageId');
-    } catch (e) {
-      debugPrint('❌ deleteMessage FAILED for id=$messageId: $e');
-=======
-      debugPrint('[deleteMessage] Reading message doc to verify ownership: $messageId');
+      debugPrint(
+        '[deleteMessage] Reading message doc to verify ownership: $messageId',
+      );
       final snapshot = await docRef.get();
       if (!snapshot.exists) {
         debugPrint('[deleteMessage] ❌ Message not found: $messageId');
@@ -410,7 +412,9 @@ class ChatService {
       final senderId = data?['senderId']?.toString();
 
       if (senderId != user.uid) {
-        debugPrint('[deleteMessage] ❌ Current user (${user.uid}) is not the sender ($senderId)');
+        debugPrint(
+          '[deleteMessage] ❌ Current user (${user.uid}) is not the sender ($senderId)',
+        );
         throw FirebaseException(
           plugin: 'cloud_firestore',
           code: 'permission-denied',
@@ -418,12 +422,18 @@ class ChatService {
         );
       }
 
-      debugPrint('[deleteMessage] Attempting to delete message for everyone: $messageId');
-      await docRef.delete();
-      debugPrint('[deleteMessage] ✅ Successfully deleted message document: $messageId');
+      debugPrint(
+        '[deleteMessage] Marking message as deleted for everyone: $messageId',
+      );
+      await docRef.update({
+        'isDeleted': true,
+        'text': '[This message was deleted]',
+      });
+      debugPrint(
+        '[deleteMessage] ✅ Successfully marked message deleted: $messageId',
+      );
     } catch (e) {
       debugPrint('[deleteMessage] ❌ Error deleting for everyone: $e');
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
       ErrorHandler.logError(e, context: 'deleteMessage');
       rethrow;
     }
@@ -437,20 +447,12 @@ class ChatService {
         message: 'User must be signed in to delete messages.',
       );
     }
+
     final docRef = _firestore.collection('messages').doc(messageId);
     try {
-<<<<<<< HEAD
       debugPrint(
-        '[deleteMessageForMe] deleting for userId=$userId, messageId=$messageId',
+        '[deleteMessageForMe] Attempting to delete for user: $userId, message: $messageId',
       );
-      await _firestore.collection('messages').doc(messageId).update({
-        'deletedFor': FieldValue.arrayUnion([userId]),
-      });
-      debugPrint('✅ deleteMessageForMe SUCCESS for id=$messageId');
-    } catch (e) {
-      debugPrint('❌ deleteMessageForMe FAILED for id=$messageId: $e');
-=======
-      debugPrint('[deleteMessageForMe] Attempting to delete for user: $userId, message: $messageId');
       final snapshot = await docRef.get();
       if (!snapshot.exists) {
         debugPrint('[deleteMessageForMe] ❌ Message not found: $messageId');
@@ -466,7 +468,9 @@ class ChatService {
       final receiverId = data?['receiverId']?.toString();
 
       if (user.uid != senderId && user.uid != receiverId) {
-        debugPrint('[deleteMessageForMe] ❌ User ${user.uid} is not a participant (sender: $senderId, receiver: $receiverId)');
+        debugPrint(
+          '[deleteMessageForMe] ❌ User ${user.uid} is not a participant (sender: $senderId, receiver: $receiverId)',
+        );
         throw FirebaseException(
           plugin: 'cloud_firestore',
           code: 'permission-denied',
@@ -474,17 +478,18 @@ class ChatService {
         );
       }
 
-      await docRef.update({
-        'deletedFor': FieldValue.arrayUnion([userId]),
-      });
+      await _firestore.collection('users').doc(user.uid).set({
+        'hiddenMessageIds': FieldValue.arrayUnion([messageId]),
+      }, SetOptions(merge: true));
       debugPrint('[deleteMessageForMe] ✅ Successfully deleted for me');
     } on FirebaseException catch (fe) {
-      debugPrint('[deleteMessageForMe] ❌ FirebaseException: code=${fe.code}, message=${fe.message}');
+      debugPrint(
+        '[deleteMessageForMe] ❌ FirebaseException: code=${fe.code}, message=${fe.message}',
+      );
       ErrorHandler.logError(fe, context: 'deleteMessageForMe');
       rethrow;
     } catch (e) {
       debugPrint('[deleteMessageForMe] ❌ Error deleting for me: $e');
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
       ErrorHandler.logError(e, context: 'deleteMessageForMe');
       rethrow;
     }
@@ -510,7 +515,9 @@ class ChatService {
 
   Future<void> toggleStar(String messageId, String userId) async {
     try {
-      debugPrint('[toggleStar] Attempting to toggle star for message: $messageId, user: $userId');
+      debugPrint(
+        '[toggleStar] Attempting to toggle star for message: $messageId, user: $userId',
+      );
       final docRef = _firestore.collection('messages').doc(messageId);
       final snapshot = await docRef.get();
       if (!snapshot.exists) {
@@ -539,7 +546,9 @@ class ChatService {
         debugPrint('[toggleStar] ✅ Star added');
       }
     } on FirebaseException catch (fe) {
-      debugPrint('[toggleStar] ❌ FirebaseException: code=${fe.code}, message=${fe.message}');
+      debugPrint(
+        '[toggleStar] ❌ FirebaseException: code=${fe.code}, message=${fe.message}',
+      );
       ErrorHandler.logError(fe, context: 'toggleStar');
       rethrow;
     } catch (e) {
@@ -556,6 +565,7 @@ class ChatService {
         .snapshots()
         .map((snap) => snap.docs.map((d) => Message.fromDocument(d)).toList());
   }
+
   Future<List<Message>> searchMessagesInChat(
     String userId,
     String otherUserId,
