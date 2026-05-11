@@ -461,17 +461,15 @@ class _MessagesScreenState extends State<MessagesScreen> {
                           final lastTimestamp =
                               chatData['lastTimestamp'] as Timestamp?;
 
-                          return FutureBuilder<int>(
-                            future: firestore
+                          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            stream: firestore
                                 .collection('messages')
                                 .where('chatId', isEqualTo: chatId)
                                 .where('receiverId', isEqualTo: currentUser.uid)
                                 .where('read', isEqualTo: false)
-                                .count()
-                                .get()
-                                .then((snapshot) => snapshot.count ?? 0),
+                                .snapshots(),
                             builder: (context, unreadSnapshot) {
-                              final unreadCount = unreadSnapshot.data ?? 0;
+                              final unreadCount = unreadSnapshot.data?.docs.length ?? 0;
                               final unreadText = unreadCount == 0
                                   ? ''
                                   : unreadCount > 3
