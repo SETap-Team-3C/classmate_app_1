@@ -399,27 +399,14 @@ class MessageBubble extends StatelessWidget {
                   ),
                 ),
               ),
-              // Show options menu (delete for me, delete for everyone, star/unstar)
-              if (onDeleteForMe != null ||
-                  onDeleteForEveryone != null ||
-                  onStarToggle != null ||
-                  onDelete != null)
+              // Show options menu (delete for everyone and generic delete)
+              if (onDeleteForEveryone != null || onDelete != null)
                 Positioned(
                   right: 6,
                   top: 6,
                   child: PopupMenuButton<String>(
                     tooltip: 'Message options',
                     onSelected: (value) async {
-                      if (value == 'delete_me' && onDeleteForMe != null) {
-                        await _confirmAndPerform(
-                          context,
-                          title: 'Delete Message',
-                          confirmText:
-                              'Are you sure you want to delete your message?',
-                          action: onDeleteForMe,
-                        );
-                        return;
-                      }
                       if (value == 'delete_everyone' &&
                           onDeleteForEveryone != null) {
                         await _confirmAndPerform(
@@ -429,10 +416,6 @@ class MessageBubble extends StatelessWidget {
                               'This will remove the message for everyone in the chat. Continue?',
                           action: onDeleteForEveryone,
                         );
-                        return;
-                      }
-                      if (value == 'star' && onStarToggle != null) {
-                        onStarToggle?.call();
                         return;
                       }
                       if (value == 'delete_generic' && onDelete != null) {
@@ -448,40 +431,6 @@ class MessageBubble extends StatelessWidget {
                     },
                     itemBuilder: (BuildContext context) {
                       final items = <PopupMenuEntry<String>>[];
-
-                      if (onStarToggle != null) {
-                        items.add(
-                          PopupMenuItem<String>(
-                            value: 'star',
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isStarred ? Icons.star : Icons.star_border,
-                                  color: isStarred
-                                      ? cs.secondary
-                                      : cs.onSurface,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(isStarred ? 'Unstar' : 'Star'),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (onDeleteForMe != null) {
-                        items.add(
-                          PopupMenuItem<String>(
-                            value: 'delete_me',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete_outline, color: cs.onSurface),
-                                const SizedBox(width: 8),
-                                const Text('Delete for me'),
-                              ],
-                            ),                          ),
-                        );
-                      }
 
                       // Single 'Delete' entry for older tests that rely on a single callback.
                       if (onDelete != null) {
