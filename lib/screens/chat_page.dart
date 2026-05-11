@@ -528,50 +528,28 @@ class _ChatPageState extends State<ChatPage> {
                               isRead: message.read,
                               readStatusText: readStatusText,
                               isStarred: message.isStarredBy(currentUser.uid),
-                              onStarToggle: () async {
-                                try {
-                                  await _chatService.toggleStar(
-                                    message.id,
-                                    currentUser.uid,
-                                  );
-                                } catch (e) {
-                                  if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('Error: ${e.toString()}'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              },
                               onDeleteForMe: () async {
                                 try {
                                   await _chatService.deleteMessageForMe(
                                     message.id,
                                     currentUser.uid,
                                   );
-<<<<<<< HEAD
-=======
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                       content: Text('Message deleted for you'),
                                     ),
                                   );
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
                                 } catch (e) {
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-<<<<<<< HEAD
-                                      content: Text('Failed to delete: $e'),
+                                      content: Text(
+                                        'Failed to delete: ${e.toString()}',
+                                      ),
                                       backgroundColor: Theme.of(
                                         context,
                                       ).colorScheme.error,
-=======
-                                      content: Text('Error: ${e.toString()}'),
-                                      backgroundColor: Colors.red,
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
                                     ),
                                   );
                                 }
@@ -582,7 +560,16 @@ class _ChatPageState extends State<ChatPage> {
                                         await _chatService.deleteMessage(
                                           message.id,
                                         );
-<<<<<<< HEAD
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Message deleted for everyone',
+                                            ),
+                                          ),
+                                        );
                                       } catch (e) {
                                         if (!mounted) return;
                                         ScaffoldMessenger.of(
@@ -590,25 +577,11 @@ class _ChatPageState extends State<ChatPage> {
                                         ).showSnackBar(
                                           SnackBar(
                                             content: Text(
-                                              'Failed to delete for everyone: $e',
+                                              'Failed to delete for everyone: ${e.toString()}',
                                             ),
                                             backgroundColor: Theme.of(
                                               context,
                                             ).colorScheme.error,
-=======
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('Message deleted for everyone'),
-                                          ),
-                                        );
-                                      } catch (e) {
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text('Error: ${e.toString()}'),
-                                            backgroundColor: Colors.red,
->>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
                                           ),
                                         );
                                       }
