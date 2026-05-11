@@ -12,6 +12,7 @@ import '../services/block_service.dart';
 import '../services/hashtag_service.dart';
 import '../widgets/profile_preview_bubble.dart';
 import '../widgets/hashtag_text.dart';
+import '../widgets/trending_hashtags_widget.dart';
 import 'profile_screen.dart';
 import 'hashtag_browser_screen.dart';
 
@@ -1201,12 +1202,21 @@ class _FeedContentState extends State<FeedContent> {
                     );
                   }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: docs.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (context, index) {
-                      final postDoc = docs[index];
+                  return Column(
+                    children: [
+                      TrendingHashtagsWidget(
+                        feedType: widget.feedType,
+                        limit: 5,
+                        compact: true,
+                      ),
+                      Expanded(
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(12),
+                          itemCount: docs.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final postDoc = docs[index];
                       final data = postDoc.data();
                       final postId = postDoc.id;
                       final postAuthorId = (data['userId'] ?? '').toString();
@@ -1446,6 +1456,10 @@ class _FeedContentState extends State<FeedContent> {
                         ),
                       );
                     },
+                          ),
+                        ),
+                      ),
+                    ],
                   );
                 },
               ),
