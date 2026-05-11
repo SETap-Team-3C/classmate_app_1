@@ -75,6 +75,8 @@ class _ChatPageState extends State<ChatPage> {
       _isSending = true;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
+
     try {
       await _chatService.sendMessage(widget.receiverId, text);
       _lastSendFingerprint = fingerprint;
@@ -97,9 +99,9 @@ class _ChatPageState extends State<ChatPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to send message: $e')),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -211,6 +213,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Future<void> _pickAndSendImage(ImageSource source) async {
     if (_isUploadingAttachment) return;
+    final messenger = ScaffoldMessenger.of(context);
 
     try {
       final pickedImage = await _imagePicker.pickImage(
@@ -255,9 +258,9 @@ class _ChatPageState extends State<ChatPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to send image: $e')));
+      messenger.showSnackBar(
+        SnackBar(content: Text('Failed to send image: $e')),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -308,6 +311,9 @@ class _ChatPageState extends State<ChatPage> {
     final loc = AppLocalizations.of(context);
     final blockService = BlockService();
 
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
     final shouldProceed = await showDialog<bool>(
       context: context,
       useRootNavigator: true,
@@ -347,11 +353,11 @@ class _ChatPageState extends State<ChatPage> {
       await blockService.blockUser(widget.receiverId);
       if (!mounted) return;
       // Close the DM after blocking
-      Navigator.pop(context);
+      navigator.pop();
     }
 
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
         content: Text(
           isCurrentlyBlocked
@@ -520,10 +526,10 @@ class _ChatPageState extends State<ChatPage> {
                             _chatService
                                 .markMessageAsRead(message.id, currentUser.uid)
                                 .catchError((error) {
-                              debugPrint(
-                                '[ChatPage] Failed to mark message as read: ${message.id} -> $error',
-                              );
-                            });
+                                  debugPrint(
+                                    '[ChatPage] Failed to mark message as read: ${message.id} -> $error',
+                                  );
+                                });
                           }
                         });
                       }
@@ -552,42 +558,80 @@ class _ChatPageState extends State<ChatPage> {
                               isRead: message.read,
                               readStatusText: readStatusText,
                               isStarred: message.isStarredBy(currentUser.uid),
+                              onStarToggle: () async {
+                                final messenger = ScaffoldMessenger.of(context);
+                                final errorColor = Theme.of(
+                                  context,
+                                ).colorScheme.error;
+                                try {
+                                  await _chatService.toggleStar(
+                                    message.id,
+                                    currentUser.uid,
+                                  );
+                                  if (!mounted) return;
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        message.isStarredBy(currentUser.uid)
+                                            ? 'Message unstarred'
+                                            : 'Message starred',
+                                      ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  messenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Failed to toggle star: $e',
+                                      ),
+                                      backgroundColor: errorColor,
+                                    ),
+                                  );
+                                }
+                              },
                               onDeleteForMe: () async {
+                                final messenger = ScaffoldMessenger.of(context);
+                                final errorColor = Theme.of(
+                                  context,
+                                ).colorScheme.error;
                                 try {
                                   await _chatService.deleteMessageForMe(
                                     message.id,
                                     currentUser.uid,
                                   );
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  messenger.showSnackBar(
                                     const SnackBar(
                                       content: Text('Message deleted for you'),
                                     ),
                                   );
                                 } catch (e) {
                                   if (!mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  messenger.showSnackBar(
                                     SnackBar(
                                       content: Text(
                                         'Failed to delete: ${e.toString()}',
                                       ),
-                                      backgroundColor: Theme.of(
-                                        context,
-                                      ).colorScheme.error,
+                                      backgroundColor: errorColor,
                                     ),
                                   );
                                 }
                               },
                               onDeleteForEveryone: isCurrentUser
                                   ? () async {
+                                      final messenger = ScaffoldMessenger.of(
+                                        context,
+                                      );
+                                      final errorColor = Theme.of(
+                                        context,
+                                      ).colorScheme.error;
                                       try {
                                         await _chatService.deleteMessage(
                                           message.id,
                                         );
                                         if (!mounted) return;
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
+                                        messenger.showSnackBar(
                                           const SnackBar(
                                             content: Text(
                                               'Message deleted for everyone',
@@ -596,16 +640,12 @@ class _ChatPageState extends State<ChatPage> {
                                         );
                                       } catch (e) {
                                         if (!mounted) return;
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
+                                        messenger.showSnackBar(
                                           SnackBar(
                                             content: Text(
                                               'Failed to delete for everyone: ${e.toString()}',
                                             ),
-                                            backgroundColor: Theme.of(
-                                              context,
-                                            ).colorScheme.error,
+                                            backgroundColor: errorColor,
                                           ),
                                         );
                                       }
