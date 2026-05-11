@@ -73,11 +73,16 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     await _revocationSubscription?.cancel();
     _revocationSubscription = _loginActivityService
         .watchCurrentSessionRevoked()
-        .listen((isRevoked) async {
-          if (!isRevoked || !mounted) return;
-          await _userService.setUserOnline(false);
-          await _auth.signOut();
-        });
+        .listen(
+          (isRevoked) async {
+            if (!isRevoked || !mounted) return;
+            await _userService.setUserOnline(false);
+            await _auth.signOut();
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            debugPrint('Session revocation listener error: $error');
+          },
+        );
   }
 
   @override
@@ -115,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     );
 
     if (shouldLogout != true) return;
-    
+
     await _userService.setUserOnline(false);
     await AuthService().logout();
   }
