@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
 import '../services/block_service.dart';
+import '../services/hashtag_service.dart';
 import '../widgets/profile_preview_bubble.dart';
 import 'profile_screen.dart';
 
@@ -150,6 +151,7 @@ class _FeedContentState extends State<FeedContent> {
   final TextEditingController _postController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
   final BlockService _blockService = BlockService();
+  final HashtagService _hashtagService = HashtagService();
   bool _isPosting = false;
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes;
@@ -377,7 +379,20 @@ class _FeedContentState extends State<FeedContent> {
   }
 
   Future<void> _deletePost(String postId) async {
+    // Fetch post to get hashtags before deletion
+    final postDoc = await _firestore
+        .collection(_collectionName)
+        .doc(postId)
+        .get();
+    final hashtags = List<String>.from(postDoc.data()?['hashtags'] ?? []);
+
+    // Delete the post
     await _firestore.collection(_collectionName).doc(postId).delete();
+
+    // Clean up hashtag records
+    if (hashtags.isNotEmpty) {
+      await _hashtagService.removeHashtags(postId, Set.from(hashtags));
+    }
   }
 
   Future<void> _togglePinComment(
@@ -697,7 +712,10 @@ class _FeedContentState extends State<FeedContent> {
         imageUrl = await _uploadPostImage(_selectedImage!, user.uid);
       }
 
-      await _firestore.collection(_collectionName).add({
+      // Extract hashtags from post text
+      final hashtags = HashtagService.extractHashtags(text);
+
+      final postRef = await _firestore.collection(_collectionName).add({
         'userId': user.uid,
         'userName': user.displayName ?? user.email ?? 'User',
         'userPhotoUrl': user.photoURL ?? '',
@@ -708,7 +726,17 @@ class _FeedContentState extends State<FeedContent> {
         'commentCount': 0,
         'isPinned': false,
         'pinnedAt': null,
+        'hashtags': hashtags.toList(),
       });
+
+      // Record hashtags for trending/search
+      if (hashtags.isNotEmpty) {
+        await _hashtagService.recordHashtags(
+          postRef.id,
+          widget.feedType,
+          hashtags,
+        );
+      }
 
       setState(() {
         _postController.clear();
