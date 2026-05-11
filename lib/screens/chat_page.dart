@@ -5,7 +5,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/message.dart';
 import '../services/chat_service.dart';
+import '../services/block_service.dart';
 import '../widgets/message_bubble.dart';
+import '../core/localization/app_localizations.dart';
 
 class ChatPage extends StatefulWidget {
   final String receiverId;
@@ -33,6 +35,7 @@ class _ChatPageState extends State<ChatPage> {
       widget.chatService ?? ChatService(auth: _auth);
 
   final TextEditingController _messageController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -45,6 +48,7 @@ class _ChatPageState extends State<ChatPage> {
   @override
   void dispose() {
     _messageController.dispose();
+    _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -119,6 +123,90 @@ class _ChatPageState extends State<ChatPage> {
     } catch (_) {
       // Ignore typing state failures.
     }
+  }
+
+  Future<void> _openSearchBottomSheet() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    final queryController = TextEditingController();
+    List<Message> results = [];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            Future<void> runSearch(String query) async {
+              final trimmed = query.trim();
+              if (trimmed.isEmpty) {
+                setModalState(() => results = []);
+                return;
+              }
+
+              try {
+                final found = await _chatService.searchMessagesInChat(
+                  currentUser.uid,
+                  widget.receiverId,
+                  trimmed,
+                );
+                setModalState(() => results = found);
+              } catch (e) {
+                debugPrint('[ChatPage] Search error: $e');
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                top: 8,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: queryController,
+                    decoration: const InputDecoration(
+                      labelText: 'Search messages',
+                      prefixIcon: Icon(Icons.search),
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: runSearch,
+                  ),
+                  const SizedBox(height: 12),
+                  if (results.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: Text('No results yet'),
+                    )
+                  else
+                    SizedBox(
+                      height: 300,
+                      child: ListView.separated(
+                        itemCount: results.length,
+                        separatorBuilder: (_, __) => const Divider(height: 8),
+                        itemBuilder: (context, index) {
+                          final message = results[index];
+                          return ListTile(
+                            title: Text(message.text),
+                            subtitle: Text(message.previewText),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    queryController.dispose();
   }
 
   Future<void> _pickAndSendImage(ImageSource source) async {
@@ -216,6 +304,64 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  Future<void> _showBlockDialog(bool isCurrentlyBlocked) async {
+    final loc = AppLocalizations.of(context);
+    final blockService = BlockService();
+
+    final shouldProceed = await showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          isCurrentlyBlocked
+              ? loc.t('unblock_account_confirm_title')
+              : loc.t('block_account_confirm_title'),
+        ),
+        content: Text(
+          isCurrentlyBlocked
+              ? loc.t('unblock_account_confirm_body')
+              : loc.t('block_account_confirm_body'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(loc.t('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(
+              isCurrentlyBlocked
+                  ? loc.t('unblock_account')
+                  : loc.t('block_account'),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldProceed != true) return;
+
+    if (isCurrentlyBlocked) {
+      await blockService.unblockUser(widget.receiverId);
+    } else {
+      await blockService.blockUser(widget.receiverId);
+      if (!mounted) return;
+      // Close the DM after blocking
+      Navigator.pop(context);
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isCurrentlyBlocked
+              ? loc.t('account_unblocked')
+              : loc.t('account_blocked'),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUser = widget.showTestEmptyState ? null : _auth.currentUser;
@@ -252,6 +398,24 @@ class _ChatPageState extends State<ChatPage> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back),
         ),
+        actions: [
+          StreamBuilder<bool>(
+            stream: BlockService().isUserBlocked(widget.receiverId),
+            builder: (context, blockSnapshot) {
+              final isBlocked = blockSnapshot.data ?? false;
+              return IconButton(
+                tooltip: isBlocked ? 'Unblock user' : 'Block user',
+                onPressed: () => _showBlockDialog(isBlocked),
+                icon: Icon(isBlocked ? Icons.block : Icons.person_add),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'Search messages',
+            onPressed: _openSearchBottomSheet,
+            icon: const Icon(Icons.search),
+          ),
+        ],
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -365,14 +529,8 @@ class _ChatPageState extends State<ChatPage> {
                               readStatusText: readStatusText,
                               isStarred: message.isStarredBy(currentUser.uid),
                               onStarToggle: () async {
-                                await _chatService.toggleStar(
-                                  message.id,
-                                  currentUser.uid,
-                                );
-                              },
-                              onDeleteForMe: () async {
                                 try {
-                                  await _chatService.deleteMessageForMe(
+                                  await _chatService.toggleStar(
                                     message.id,
                                     currentUser.uid,
                                   );
@@ -380,10 +538,40 @@ class _ChatPageState extends State<ChatPage> {
                                   if (!mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                              onDeleteForMe: () async {
+                                try {
+                                  await _chatService.deleteMessageForMe(
+                                    message.id,
+                                    currentUser.uid,
+                                  );
+<<<<<<< HEAD
+=======
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Message deleted for you'),
+                                    ),
+                                  );
+>>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+<<<<<<< HEAD
                                       content: Text('Failed to delete: $e'),
                                       backgroundColor: Theme.of(
                                         context,
                                       ).colorScheme.error,
+=======
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+>>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
                                     ),
                                   );
                                 }
@@ -394,6 +582,7 @@ class _ChatPageState extends State<ChatPage> {
                                         await _chatService.deleteMessage(
                                           message.id,
                                         );
+<<<<<<< HEAD
                                       } catch (e) {
                                         if (!mounted) return;
                                         ScaffoldMessenger.of(
@@ -406,6 +595,20 @@ class _ChatPageState extends State<ChatPage> {
                                             backgroundColor: Theme.of(
                                               context,
                                             ).colorScheme.error,
+=======
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Message deleted for everyone'),
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Error: ${e.toString()}'),
+                                            backgroundColor: Colors.red,
+>>>>>>> 219ca71eff912e9a1683b07e9674057a11a92993
                                           ),
                                         );
                                       }

@@ -1,9 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
+import '../services/auth_service.dart';
+import '../services/login_activity_service.dart';
 import '../services/user_service.dart';
 import 'call_contacts_screen.dart';
 import 'communities_screen.dart';
@@ -38,6 +41,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
 
   late final UserService _userService;
+  final LoginActivityService _loginActivityService = LoginActivityService();
+  StreamSubscription<bool>? _revocationSubscription;
   int _currentIndex = 0;
 
   @override
@@ -46,12 +51,33 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _userService = UserService();
     WidgetsBinding.instance.addObserver(this);
     _userService.setUserOnline(true);
+    _ensureSessionRegistered();
+    _listenForSessionRevocation();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _revocationSubscription?.cancel();
     super.dispose();
+  }
+
+  Future<void> _ensureSessionRegistered() async {
+    await _loginActivityService.ensureCurrentSession();
+  }
+
+  Future<void> _listenForSessionRevocation() async {
+    final user = _auth.currentUser;
+    if (user == null) return;
+
+    await _revocationSubscription?.cancel();
+    _revocationSubscription = _loginActivityService
+        .watchCurrentSessionRevoked()
+        .listen((isRevoked) async {
+          if (!isRevoked || !mounted) return;
+          await _userService.setUserOnline(false);
+          await _auth.signOut();
+        });
   }
 
   @override
@@ -59,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
       _userService.setUserOnline(true);
+      _loginActivityService.touchCurrentSession();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.detached) {
       _userService.setUserOnline(false);
@@ -66,8 +93,31 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _signOut() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final loc = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(loc.t('logout')),
+          content: Text(loc.t('logout_confirm')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(loc.t('cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(loc.t('logout')),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout != true) return;
+    
     await _userService.setUserOnline(false);
-    await _auth.signOut();
+    await AuthService().logout();
   }
 
   Widget _buildBody(BuildContext context) {

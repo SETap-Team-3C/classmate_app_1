@@ -3,7 +3,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../core/theme/theme_provider.dart';
 import '../core/localization/app_localizations.dart';
+import '../services/auth_service.dart';
 import 'profile_settings.dart';
+import 'login_activity_screen.dart';
 
 class GeneralSettingsScreen extends StatefulWidget {
   const GeneralSettingsScreen({super.key, required this.themeProvider});
@@ -60,6 +62,19 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => const ProfileSettings(),
+                      ),
+                    );
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.devices),
+                  title: Text(loc.t('login_activity')),
+                  subtitle: Text(loc.t('login_activity_description')),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LoginActivityScreen(),
                       ),
                     );
                   },
@@ -210,7 +225,7 @@ class _GeneralSettingsScreenState extends State<GeneralSettingsScreen> {
                 );
 
                 if (shouldLogout != true) return;
-                await FirebaseAuth.instance.signOut();
+                await AuthService().logout();
                 if (!mounted) return;
                 if (context.mounted) {
                   Navigator.of(context).pop();

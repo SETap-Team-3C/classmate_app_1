@@ -5,6 +5,7 @@ import 'package:classmate_app_1/widets/enhanced_avatar.dart';
 import 'package:classmate_app_1/widets/online_indicator.dart';
 import 'package:classmate_app_1/core/utils/time_formatter.dart';
 import 'package:classmate_app_1/core/localization/app_localizations.dart';
+import 'package:classmate_app_1/services/block_service.dart';
 import '../core/theme/theme_provider.dart';
 import 'messages_screen.dart';
 import 'settings_screen.dart';
@@ -27,6 +28,7 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   late Stream<DocumentSnapshot> _userStream;
+  final BlockService _blockService = BlockService();
 
   @override
   void initState() {
@@ -236,25 +238,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                    stream: FirebaseFirestore.instance
-                        .collection('posts_mates')
-                        .where('userId', isEqualTo: widget.userId)
-                        .orderBy('createdAt', descending: true)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
-                      }
+                  StreamBuilder<Set<String>>(
+                    stream: _blockService.watchBlockedUserIds(),
+                    builder: (context, blockedSnapshot) {
+                      final blockedUserIds = blockedSnapshot.data ?? <String>{};
+                      final isBlockedProfile =
+                          !widget.isCurrentUser &&
+                          blockedUserIds.contains(widget.userId);
 
-                      final posts = snapshot.data?.docs ?? [];
-
-                      if (posts.isEmpty) {
+                      if (isBlockedProfile) {
                         return Center(
                           child: Padding(
                             padding: const EdgeInsets.all(16),
@@ -266,18 +258,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         );
                       }
 
-                      return ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: posts.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final postDoc = posts[index];
-                          final postData = postDoc.data();
-                          final postText = (postData['text'] ?? '').toString();
-                          final postImageUrl = (postData['imageUrl'] ?? '')
-                              .toString();
-                          final createdAt = postData['createdAt'] as Timestamp?;
+                      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                        stream: FirebaseFirestore.instance
+                            .collection('posts_mates')
+                            .where('userId', isEqualTo: widget.userId)
+                            .orderBy('createdAt', descending: true)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+
+                          final posts = snapshot.data?.docs ?? [];
+
+                          if (posts.isEmpty) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Text(
+                                  '$name ${loc.t('no_posts_yet')}',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ),
+                            );
+                          }
+
+                          return ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: posts.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              final postDoc = posts[index];
+                              final postData = postDoc.data();
+                              final postText =
+                                  (postData['text'] ?? '').toString();
+                              final postImageUrl = (postData['imageUrl'] ?? '')
+                                  .toString();
+                              final createdAt =
+                                  postData['createdAt'] as Timestamp?;
 
                           String formatTime(Timestamp? timestamp) {
                             if (timestamp == null) return 'Just now';
@@ -297,51 +323,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             return '${days}d ago';
                           }
 
-                          return Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    formatTime(createdAt),
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  if (postText.isNotEmpty)
-                                    Text(
-                                      postText,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
-                                    ),
-                                  if (postImageUrl.isNotEmpty) ...[
-                                    const SizedBox(height: 8),
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        postImageUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                Container(
-                                                  height: 200,
-                                                  color: Colors.grey.shade300,
-                                                  child: const Center(
-                                                    child: Icon(
-                                                      Icons.broken_image,
-                                                    ),
-                                                  ),
-                                                ),
+                              return Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        formatTime(createdAt),
+                                        style: const TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 12,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
+                                      const SizedBox(height: 8),
+                                      if (postText.isNotEmpty)
+                                        Text(
+                                          postText,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
+                                        ),
+                                      if (postImageUrl.isNotEmpty) ...[
+                                        const SizedBox(height: 8),
+                                        ClipRRect(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          child: Image.network(
+                                            postImageUrl,
+                                            fit: BoxFit.cover,
+                                            errorBuilder:
+                                                (context, error, stackTrace) =>
+                                                    Container(
+                                                      height: 200,
+                                                      color: Colors.grey.shade300,
+                                                      child: const Center(
+                                                        child: Icon(
+                                                          Icons.broken_image,
+                                                        ),
+                                                      ),
+                                                    ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
                       );

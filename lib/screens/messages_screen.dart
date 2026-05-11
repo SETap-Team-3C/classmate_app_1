@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +8,7 @@ import 'new_group_screen.dart';
 import 'settings_screen.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
+import '../services/block_service.dart';
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({
@@ -33,13 +36,30 @@ class MessagesScreen extends StatefulWidget {
 
 class _MessagesScreenState extends State<MessagesScreen> {
   bool _didHandleInitialTarget = false;
+  StreamSubscription<Set<String>>? _blockedUsersSubscription;
+  Set<String> _blockedUserIds = <String>{};
 
   @override
   void initState() {
     super.initState();
+    _blockedUsersSubscription = _blockService.watchBlockedUserIds().listen((
+      ids,
+    ) {
+      if (!mounted) return;
+      setState(() {
+        _blockedUserIds = ids;
+      });
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _openInitialTargetChatIfNeeded();
     });
+  }
+
+  @override
+  void dispose() {
+    _blockedUsersSubscription?.cancel();
+    _searchController.dispose();
+    super.dispose();
   }
 
   FirebaseAuth? _tryGetAuth() {
@@ -60,6 +80,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  final BlockService _blockService = BlockService();
 
   String _buildChatId(String userA, String userB) {
     final ids = [userA, userB]..sort();
@@ -83,10 +104,20 @@ class _MessagesScreenState extends State<MessagesScreen> {
     required User currentUser,
     required SearchUser selectedUser,
   }) async {
+    final loc = AppLocalizations.of(context);
+
     if (selectedUser.id == currentUser.uid) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You cannot chat with yourself.')),
+        SnackBar(content: Text(loc.t('you_cannot_chat_with_yourself'))),
+      );
+      return;
+    }
+
+    if (_blockedUserIds.contains(selectedUser.id)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(loc.t('blocked_user_chat_not_allowed'))),
       );
       return;
     }
@@ -148,6 +179,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         return UserSearchBottomSheet(
           firestore: firestore,
           currentUserId: currentUser.uid,
+          blockedUserIds: _blockedUserIds,
           onUserSelected: (selectedUser) async {
             Navigator.pop(context);
             await _openChatWithUser(
@@ -172,6 +204,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
     if (currentUser == null || firestore == null) return;
 
     if (targetUserId == currentUser.uid) return;
+
+    if (_blockedUserIds.contains(targetUserId)) return;
 
     var targetName = (widget.initialTargetUserName ?? '').trim();
     if (targetName.isEmpty) {
@@ -369,9 +403,22 @@ class _MessagesScreenState extends State<MessagesScreen> {
                         return Center(child: Text(loc.t('no_chats_yet')));
                       }
 
+                      final visibleChats = chats.where((chat) {
+                        final chatData = chat.data() as Map<String, dynamic>;
+                        final participants = List<String>.from(
+                          chatData['participants'] ?? [],
+                        );
+                        final otherUserId = participants.firstWhere(
+                          (id) => id != currentUser.uid,
+                          orElse: () => '',
+                        );
+                        return otherUserId.isNotEmpty &&
+                            !_blockedUserIds.contains(otherUserId);
+                      }).toList();
+
                       final filteredChats = _searchQuery.isEmpty
-                          ? chats
-                          : chats.where((chat) {
+                          ? visibleChats
+                          : visibleChats.where((chat) {
                               final chatData =
                                   chat.data() as Map<String, dynamic>;
                               final usernames = Map<String, dynamic>.from(
@@ -382,6 +429,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                   .toLowerCase();
                               return names.contains(_searchQuery);
                             }).toList();
+
+                      if (filteredChats.isEmpty) {
+                        return Center(child: Text(loc.t('no_chats_yet')));
+                      }
 
                       return ListView.builder(
                         itemCount: filteredChats.length,
@@ -545,12 +596,14 @@ class UserSearchBottomSheet extends StatefulWidget {
     super.key,
     this.firestore,
     required this.currentUserId,
+    required this.blockedUserIds,
     required this.onUserSelected,
     this.usersLoader,
   });
 
   final FirebaseFirestore? firestore;
   final String currentUserId;
+  final Set<String> blockedUserIds;
   final Future<void> Function(SearchUser user) onUserSelected;
   final Future<List<SearchUser>> Function()? usersLoader;
 
@@ -581,6 +634,7 @@ class _UserSearchBottomSheetState extends State<UserSearchBottomSheet> {
       final loadedUsers = await widget.usersLoader!();
       return loadedUsers
           .where((user) => user.id != widget.currentUserId)
+          .where((user) => !widget.blockedUserIds.contains(user.id))
           .toList();
     }
 
@@ -595,21 +649,23 @@ class _UserSearchBottomSheetState extends State<UserSearchBottomSheet> {
         .limit(300)
         .get();
 
-    return snapshot.docs.where((doc) => doc.id != widget.currentUserId).map((
-      doc,
-    ) {
-      final data = doc.data();
-      final name = (data['name'] ?? 'User').toString();
-      final username = (data['usernameLower'] ?? '').toString();
-      final email = (data['email'] ?? '').toString();
+    return snapshot.docs
+        .where((doc) => doc.id != widget.currentUserId)
+        .where((doc) => !widget.blockedUserIds.contains(doc.id))
+        .map((doc) {
+          final data = doc.data();
+          final name = (data['name'] ?? 'User').toString();
+          final username = (data['usernameLower'] ?? '').toString();
+          final email = (data['email'] ?? '').toString();
 
-      return SearchUser(
-        id: doc.id,
-        name: name,
-        username: username,
-        email: email,
-      );
-    }).toList();
+          return SearchUser(
+            id: doc.id,
+            name: name,
+            username: username,
+            email: email,
+          );
+        })
+        .toList();
   }
 
   @override
