@@ -400,8 +400,11 @@ class MessageBubble extends StatelessWidget {
                   ),
                 ),
               ),
-              // Show options menu (delete for everyone and generic delete)
-              if (onDeleteForEveryone != null || onDelete != null)
+              // Show options menu (star, delete options for all messages)
+              if (onDeleteForEveryone != null ||
+                  onDelete != null ||
+                  onDeleteForMe != null ||
+                  onStarToggle != null)
                 Positioned(
                   right: 6,
                   top: 6,
@@ -419,7 +422,7 @@ class MessageBubble extends StatelessWidget {
                         );
                         return;
                       }
-<<<<<<< HEAD
+
                       if (value == 'star' && onStarToggle != null) {
                         try {
                           onStarToggle?.call();
@@ -436,8 +439,18 @@ class MessageBubble extends StatelessWidget {
                         }
                         return;
                       }
-=======
->>>>>>> a7db96833029af670bc0efd6f12e2ae289d30825
+
+                      if (value == 'delete_me' && onDeleteForMe != null) {
+                        await _confirmAndPerform(
+                          context,
+                          title: 'Delete Message',
+                          confirmText:
+                              'Are you sure you want to delete your message for you?',
+                          action: onDeleteForMe,
+                        );
+                        return;
+                      }
+
                       if (value == 'delete_generic' && onDelete != null) {
                         await _confirmAndPerform(
                           context,
@@ -451,8 +464,6 @@ class MessageBubble extends StatelessWidget {
                     },
                     itemBuilder: (BuildContext context) {
                       final items = <PopupMenuEntry<String>>[];
-
-<<<<<<< HEAD
                       if (onStarToggle != null) {
                         items.add(
                           PopupMenuItem<String>(
@@ -487,9 +498,6 @@ class MessageBubble extends StatelessWidget {
                           ),
                         );
                       }
-
-=======
->>>>>>> a7db96833029af670bc0efd6f12e2ae289d30825
                       // Single 'Delete' entry for older tests that rely on a single callback.
                       if (onDelete != null) {
                         items.add(
