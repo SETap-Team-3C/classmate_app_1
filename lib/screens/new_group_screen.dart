@@ -35,8 +35,14 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
       return;
     }
     if (currentUser == null) return;
+    if (_selected.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Select at least one member')),
+      );
+      return;
+    }
 
-    final members = [_auth.currentUser!.uid, ..._selected];
+    final members = <String>{currentUser.uid, ..._selected}.toList();
     try {
       await _firestore.collection('groups').add({
         'name': name,
@@ -63,9 +69,7 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
     final currentUser = _auth.currentUser;
 
     if (currentUser == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
@@ -97,7 +101,8 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 final docs = snapshot.data?.docs ?? [];
-                final users = docs.where((d) => d.id != currentUser.uid).map((                  d,
+                final users = docs.where((d) => d.id != currentUser.uid).map((
+                  d,
                 ) {
                   final data = d.data() as Map<String, dynamic>;
                   return MapEntry(d.id, (data['name'] ?? 'User').toString());
