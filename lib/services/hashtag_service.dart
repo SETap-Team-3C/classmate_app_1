@@ -3,10 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class HashtagService {
   HashtagService({FirebaseAuth? auth, FirebaseFirestore? firestore})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
 
   /// Extracts hashtags from text (e.g., #hashtag, #CS101)

@@ -23,7 +23,6 @@ class HashtagBrowserScreen extends StatefulWidget {
 class _HashtagBrowserScreenState extends State<HashtagBrowserScreen> {
   late final HashtagService _hashtagService = HashtagService();
   late final BlockService _blockService = BlockService();
-  late final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   Widget build(BuildContext context) {
