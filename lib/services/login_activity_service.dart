@@ -63,7 +63,7 @@ class LoginActivityService {
 
   String _generateSessionId() {
     final now = DateTime.now().microsecondsSinceEpoch;
-    final randomPart = Random().nextInt(1 << 32).toRadixString(16);
+    final randomPart = Random().nextInt(1 << 31).toRadixString(16);
     return 'session_${now}_$randomPart';
   }
 
