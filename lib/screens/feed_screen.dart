@@ -193,6 +193,8 @@ class _FeedContentState extends State<FeedContent> {
 
               if (!mounted) return;
 
+              final messenger = ScaffoldMessenger.of(context);
+
               final shouldProceed = await showDialog<bool>(
                 context: context,
                 useRootNavigator: true,
@@ -233,7 +235,7 @@ class _FeedContentState extends State<FeedContent> {
               }
 
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 SnackBar(
                   content: Text(
                     isCurrentlyBlocked
