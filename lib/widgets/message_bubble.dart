@@ -78,7 +78,9 @@ class MessageBubble extends StatelessWidget {
       size /= 1024;
       unitIndex++;
     }
-    final value = size >= 10 || unitIndex == 0 ? size.round().toString() : size.toStringAsFixed(1);
+    final value = size >= 10 || unitIndex == 0
+        ? size.round().toString()
+        : size.toStringAsFixed(1);
     return '$value ${units[unitIndex]}';
   }
 
@@ -102,7 +104,7 @@ class MessageBubble extends StatelessWidget {
                   child: CircularProgressIndicator(
                     value: progress.expectedTotalBytes != null
                         ? progress.cumulativeBytesLoaded /
-                            progress.expectedTotalBytes!
+                              progress.expectedTotalBytes!
                         : null,
                   ),
                 ),
@@ -201,12 +203,22 @@ class MessageBubble extends StatelessWidget {
 
     if (shouldDelete != true) return;
 
-    await action.call();
+    try {
+      await action.call();
 
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Message deleted')));
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Message deleted')));
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to delete: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -247,7 +259,8 @@ class MessageBubble extends StatelessWidget {
                           title: 'Delete Message for Everyone',
                           confirmText:
                               'This will remove the message for everyone in the chat. Continue?',
-                          action: onDeleteForEveryone,                        )
+                          action: onDeleteForEveryone,
+                        )
                       : (onDeleteForMe != null
                             ? () => _confirmAndPerform(
                                 context,
@@ -260,91 +273,91 @@ class MessageBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                        if (isDeleted)
-                          Text(
-                            '[This message was deleted]',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontStyle: FontStyle.italic,
-                              color: isCurrentUser
-                                  ? cs.onPrimaryContainer
-                                  : cs.onSurface,
-                            ),
-                          )
-                        else
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildAttachmentPreview(context),
-                              if (messageType == MessageType.image &&
-                                  text.trim().isNotEmpty)
-                                const SizedBox(height: 6),
-                              if (messageType == MessageType.image &&
-                                  text.trim().isNotEmpty)
-                                Text(
+                      if (isDeleted)
+                        Text(
+                          '[This message was deleted]',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontStyle: FontStyle.italic,
+                            color: isCurrentUser
+                                ? cs.onPrimaryContainer
+                                : cs.onSurface,
+                          ),
+                        )
+                      else
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildAttachmentPreview(context),
+                            if (messageType == MessageType.image &&
+                                text.trim().isNotEmpty)
+                              const SizedBox(height: 6),
+                            if (messageType == MessageType.image &&
+                                text.trim().isNotEmpty)
+                              Text(
+                                text,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: isCurrentUser
+                                      ? cs.onPrimaryContainer
+                                      : cs.onSurface,
+                                ),
+                              ),
+                            if (messageType == MessageType.text)
+                              Text(
+                                text,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isCurrentUser
+                                      ? cs.onPrimaryContainer
+                                      : cs.onSurface,
+                                ),
+                              ),
+                            if (messageType == MessageType.document &&
+                                text.trim().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
                                   text,
                                   style: TextStyle(
-                                    fontSize: 15,
+                                    fontSize: 14,
                                     color: isCurrentUser
                                         ? cs.onPrimaryContainer
                                         : cs.onSurface,
                                   ),
                                 ),
-                              if (messageType == MessageType.text)
-                                Text(
+                              ),
+                            if (messageType == MessageType.contact &&
+                                text.trim().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Text(
                                   text,
                                   style: TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 14,
                                     color: isCurrentUser
                                         ? cs.onPrimaryContainer
                                         : cs.onSurface,
                                   ),
                                 ),
-                              if (messageType == MessageType.document &&
-                                  text.trim().isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(
-                                    text,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isCurrentUser
-                                          ? cs.onPrimaryContainer
-                                          : cs.onSurface,
-                                    ),
+                              ),
+                            if (messageType == MessageType.document &&
+                                fileSize != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  _humanReadableFileSize(fileSize),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isCurrentUser
+                                        ? cs.onPrimaryContainer.withValues(
+                                            alpha: 0.7,
+                                          )
+                                        : cs.onSurface.withValues(alpha: 0.7),
                                   ),
                                 ),
-                              if (messageType == MessageType.contact &&
-                                  text.trim().isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(
-                                    text,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      color: isCurrentUser
-                                          ? cs.onPrimaryContainer
-                                          : cs.onSurface,
-                                    ),
-                                  ),
-                                ),
-                              if (messageType == MessageType.document &&
-                                  fileSize != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4),
-                                  child: Text(
-                                    _humanReadableFileSize(fileSize),
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isCurrentUser
-                                          ? cs.onPrimaryContainer.withValues(
-                                              alpha: 0.7,
-                                            )
-                                          : cs.onSurface.withValues(alpha: 0.7),
-                                    ),
-                                  ),
-                                ),
-                            ],
+                              ),
+                          ],
                         ),
                       if (isCurrentUser)
                         Padding(
@@ -421,7 +434,19 @@ class MessageBubble extends StatelessWidget {
                         return;
                       }
                       if (value == 'star' && onStarToggle != null) {
-                        onStarToggle?.call();
+                        try {
+                          onStarToggle?.call();
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Failed to update star: $e'),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.error,
+                            ),
+                          );
+                        }
                         return;
                       }
                       if (value == 'delete_generic' && onDelete != null) {
@@ -468,7 +493,8 @@ class MessageBubble extends StatelessWidget {
                                 const SizedBox(width: 8),
                                 const Text('Delete for me'),
                               ],
-                            ),                          ),
+                            ),
+                          ),
                         );
                       }
 
