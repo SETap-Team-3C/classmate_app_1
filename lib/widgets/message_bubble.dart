@@ -184,7 +184,7 @@ class MessageBubble extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Back'),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -201,7 +201,18 @@ class MessageBubble extends StatelessWidget {
 
     if (shouldDelete != true) return;
 
-    await action.call();
+    try {
+      await action.call();
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
 
     if (!context.mounted) return;
     ScaffoldMessenger.of(

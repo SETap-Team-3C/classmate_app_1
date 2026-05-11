@@ -529,22 +529,64 @@ class _ChatPageState extends State<ChatPage> {
                               readStatusText: readStatusText,
                               isStarred: message.isStarredBy(currentUser.uid),
                               onStarToggle: () async {
-                                await _chatService.toggleStar(
-                                  message.id,
-                                  currentUser.uid,
-                                );
+                                try {
+                                  await _chatService.toggleStar(
+                                    message.id,
+                                    currentUser.uid,
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               },
                               onDeleteForMe: () async {
-                                await _chatService.deleteMessageForMe(
-                                  message.id,
-                                  currentUser.uid,
-                                );
+                                try {
+                                  await _chatService.deleteMessageForMe(
+                                    message.id,
+                                    currentUser.uid,
+                                  );
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Message deleted for you'),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Error: ${e.toString()}'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
                               },
                               onDeleteForEveryone: isCurrentUser
                                   ? () async {
-                                      await _chatService.deleteMessage(
-                                        message.id,
-                                      );
+                                      try {
+                                        await _chatService.deleteMessage(
+                                          message.id,
+                                        );
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Message deleted for everyone'),
+                                          ),
+                                        );
+                                      } catch (e) {
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('Error: ${e.toString()}'),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
                                     }
                                   : null,
                             ),

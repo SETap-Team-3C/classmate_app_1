@@ -93,6 +93,29 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _signOut() async {
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        final loc = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(loc.t('logout')),
+          content: Text(loc.t('logout_confirm')),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: Text(loc.t('cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(loc.t('logout')),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldLogout != true) return;
+    
     await _userService.setUserOnline(false);
     await AuthService().logout();
   }
