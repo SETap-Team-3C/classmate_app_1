@@ -16,6 +16,12 @@ service cloud.firestore {
         && request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
     }
 
+    function isGroupMember(groupId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/groups/$(groupId))
+        && request.auth.uid in get(/databases/$(database)/documents/groups/$(groupId)).data.members;
+    }
+
     function validChatParticipants(participants) {
       return participants is list
         && participants.size() == 2
@@ -227,6 +233,27 @@ service cloud.firestore {
       allow create: if signedIn() && validGroupCreateSchema();
       allow update: if signedIn() && request.auth.uid in resource.data.members;
       allow delete: if signedIn() && request.auth.uid == resource.data.createdBy;
+
+      match /messages/{messageId} {
+        allow read: if isGroupMember(groupId);
+        allow create: if isGroupMember(groupId)
+          && request.resource.data.keys().hasAll([
+            'groupId',
+            'senderId',
+            'senderName',
+            'text',
+            'timestamp'
+          ])
+          && request.resource.data.groupId == groupId
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.senderName is string
+          && request.resource.data.senderName.size() > 0
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.timestamp is timestamp;
+        allow update: if false;
+        allow delete: if signedIn() && request.auth.uid == resource.data.senderId;
+      }
     }
 
     match /messages/{messageId} {
