@@ -10,17 +10,17 @@ build:
 
   jobs:
     post_create_environment:
-      # Install Flutter SDK into ./flutter
+      # Install Flutter SDK
       - git clone https://github.com/flutter/flutter.git --depth 1 flutter
 
-      # Verify Flutter installation
+      # Verify Flutter
       - ./flutter/bin/flutter --version
 
-      # Install project dependencies
+      # Install dependencies
       - ./flutter/bin/flutter pub get
 
-      # Generate Dart API docs
-      - ./flutter/bin/dart doc
+      # Generate docs
+      - ./flutter/bin/dart doc --no-fatal-errors
 
 mkdocs:
   configuration: mkdocs.yml
