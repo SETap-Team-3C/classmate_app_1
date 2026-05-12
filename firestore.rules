@@ -236,10 +236,7 @@ service cloud.firestore {
         && validMessageCreateSchema();
 
       allow read: if signedIn()
-        && (
-          request.auth.uid == resource.data.senderId ||
-          request.auth.uid == resource.data.receiverId
-        );
+        && isChatParticipant(resource.data.chatId);
 
       // Allow participants (sender or receiver) to make small updates such as
       // marking read, adding/removing starredBy, or adding their uid to

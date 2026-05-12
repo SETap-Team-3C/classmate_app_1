@@ -312,27 +312,22 @@ class ChatService {
   }
 
   Stream<List<Message>> getMessages(String userId, String otherUserId) {
-    final chatId = _buildChatId(userId, otherUserId);
-
     return Stream<List<Message>>.multi((controller) {
-      List<Message> currentMessages = <Message>[];
+      final messagesById = <String, Message>{};
       Set<String> hiddenMessageIds = <String>{};
       StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? messageSub;
+      StreamSubscription<QuerySnapshot<Map<String, dynamic>>>?
+      reverseMessageSub;
       StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? userSub;
 
       void emit() {
-        final visible = currentMessages.where(
+        final visible = messagesById.values.where(
           (message) =>
               !(message.deletedFor?.contains(userId) ?? false) &&
               !hiddenMessageIds.contains(message.id),
         );
 
-        final byId = <String, Message>{};
-        for (final message in visible) {
-          byId[message.id] = message;
-        }
-
-        final deduped = byId.values.toList()
+        final deduped = visible.toList()
           ..sort((a, b) {
             final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
             final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
@@ -344,12 +339,25 @@ class ChatService {
 
       messageSub = _firestore
           .collection('messages')
-          .where('chatId', isEqualTo: chatId)
+          .where('senderId', isEqualTo: userId)
+          .where('receiverId', isEqualTo: otherUserId)
           .snapshots()
           .listen((snapshot) {
-            currentMessages = snapshot.docs
-                .map((doc) => Message.fromDocument(doc))
-                .toList();
+            for (final doc in snapshot.docs) {
+              messagesById[doc.id] = Message.fromDocument(doc);
+            }
+            emit();
+          }, onError: controller.addError);
+
+      reverseMessageSub = _firestore
+          .collection('messages')
+          .where('senderId', isEqualTo: otherUserId)
+          .where('receiverId', isEqualTo: userId)
+          .snapshots()
+          .listen((snapshot) {
+            for (final doc in snapshot.docs) {
+              messagesById[doc.id] = Message.fromDocument(doc);
+            }
             emit();
           }, onError: controller.addError);
 
@@ -366,6 +374,7 @@ class ChatService {
 
       controller.onCancel = () async {
         await messageSub?.cancel();
+        await reverseMessageSub?.cancel();
         await userSub?.cancel();
       };
     });
@@ -572,15 +581,22 @@ class ChatService {
   ) async {
     if (query.isEmpty) return [];
 
-    final chatId = _buildChatId(userId, otherUserId);
-    final snapshot = await _firestore
+    final sentSnapshot = await _firestore
         .collection('messages')
-        .where('chatId', isEqualTo: chatId)
+        .where('senderId', isEqualTo: userId)
+        .where('receiverId', isEqualTo: otherUserId)
+        .get();
+    final receivedSnapshot = await _firestore
+        .collection('messages')
+        .where('senderId', isEqualTo: otherUserId)
+        .where('receiverId', isEqualTo: userId)
         .get();
 
-    final allMessages = snapshot.docs
-        .map((doc) => Message.fromDocument(doc))
-        .toList();
+    final allMessages = {
+      for (final doc in sentSnapshot.docs) doc.id: Message.fromDocument(doc),
+      for (final doc in receivedSnapshot.docs)
+        doc.id: Message.fromDocument(doc),
+    }.values.toList();
 
     // Filter by search query (case-insensitive)
     final filtered = allMessages
