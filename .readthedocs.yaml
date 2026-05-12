@@ -8,22 +8,17 @@ build:
   tools:
     python: "3.12"
 
-  jobs:
-    post_create_environment:
-      # Install Flutter SDK
-      - git clone https://github.com/flutter/flutter.git --depth 1 flutter
+ jobs:
+  post_create_environment:
+    - git clone https://github.com/flutter/flutter.git --depth 1 flutter
 
-      # Verify Flutter
-      - ./flutter/bin/flutter --version
+    - ./flutter/bin/flutter --version
 
-      # Install dependencies
-      - ./flutter/bin/flutter pub get
+    - ./flutter/bin/flutter pub get
 
-      # Generate docs
-      - ./flutter/bin/dart doc --no-fatal-errors
+    - ./flutter/bin/flutter pub global activate dartdoc
 
-mkdocs:
-  configuration: mkdocs.yml
+    - ~/.pub-cache/bin/dartdoc --no-fatal-errorsml
 
 python:
   install:
