@@ -28,6 +28,7 @@ class AppLocalizations {
       'sign_up': 'Sign Up',
       'signup_successful': 'Signup Successful',
       'updates': 'Updates',
+    'feed': 'Feed',
       'calls': 'Calls',
       'communities': 'Communities',
       'chats': 'Chats',

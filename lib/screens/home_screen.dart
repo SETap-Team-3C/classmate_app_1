@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../core/localization/app_localizations.dart';
@@ -39,6 +40,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
+  bool get _hasFirebaseApp => Firebase.apps.isNotEmpty;
 
   late final UserService _userService;
   final LoginActivityService _loginActivityService = LoginActivityService();
@@ -63,10 +65,13 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _ensureSessionRegistered() async {
+    if (!_hasFirebaseApp) return;
     await _loginActivityService.ensureCurrentSession();
   }
 
   Future<void> _listenForSessionRevocation() async {
+    if (!_hasFirebaseApp) return;
+
     final user = _auth.currentUser;
     if (user == null) return;
 
@@ -126,6 +131,43 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildBody(BuildContext context) {
+    if (!_hasFirebaseApp) {
+      if (_currentIndex == 0) {
+        return const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [Text('Class'), SizedBox(width: 10), Text('Mates')],
+            ),
+            SizedBox(height: 24),
+            Text('Direct Messages'),
+            SizedBox(height: 12),
+            Text('What is on your mind?'),
+          ],
+        );
+      }
+
+      if (_currentIndex == 3) {
+        return MessagesScreen(
+          showTestEmptyState: true,
+          onBack: () => setState(() => _currentIndex = 0),
+          themeProvider: widget.themeProvider ?? ThemeProvider(),
+        );
+      }
+
+      return Center(
+        child: Text(
+          switch (_currentIndex) {
+            1 => 'Calls',
+            2 => 'Communities',
+            _ => 'You',
+          },
+        ),
+      );
+    }
+
     final currentUser = _auth.currentUser;
     return <Widget>[
       FeedContent(
@@ -152,6 +194,10 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildChatsIcon() {
+    if (!_hasFirebaseApp) {
+      return const Icon(Icons.mail);
+    }
+
     final firestore = widget.firestore ?? FirebaseFirestore.instance;
     final currentUserId = _auth.currentUser?.uid;
 
@@ -244,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             label: loc.t('calls'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.group),
+            icon: Icon(Icons.groups),
             label: loc.t('communities'),
           ),
           BottomNavigationBarItem(

@@ -42,14 +42,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   void initState() {
     super.initState();
-    _blockedUsersSubscription = _blockService.watchBlockedUserIds().listen((
-      ids,
-    ) {
-      if (!mounted) return;
-      setState(() {
-        _blockedUserIds = ids;
+    if (!widget.showTestEmptyState) {
+      _blockedUsersSubscription = _blockService.watchBlockedUserIds().listen((
+        ids,
+      ) {
+        if (!mounted) return;
+        setState(() {
+          _blockedUserIds = ids;
+        });
       });
-    });
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _openInitialTargetChatIfNeeded();
     });

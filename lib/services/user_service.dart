@@ -1,29 +1,42 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 
 class UserService {
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
+  final FirebaseAuth? _auth;
+  final FirebaseFirestore? _firestore;
+  final FirebaseStorage? _storage;
 
   UserService({
     FirebaseAuth? auth,
     FirebaseFirestore? firestore,
     FirebaseStorage? storage,
-  }) : _auth = auth ?? FirebaseAuth.instance,
-       _firestore = firestore ?? FirebaseFirestore.instance,
-       _storage = storage ?? FirebaseStorage.instance;
+  }) : _auth = auth,
+       _firestore = firestore,
+       _storage = storage;
+
+  FirebaseAuth? get _firebaseAuth =>
+      _auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null);
+
+  FirebaseFirestore? get _firebaseFirestore =>
+      _firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
+
+  FirebaseStorage? get _firebaseStorage =>
+      _storage ?? (Firebase.apps.isNotEmpty ? FirebaseStorage.instance : null);
 
   /// Update user online status
   Future<void> setUserOnline(bool isOnline) async {
-    final user = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final user = auth?.currentUser;
     if (user == null) return;
+    if (firestore == null) return;
 
     try {
-      await _firestore.collection('users').doc(user.uid).update({
+      await firestore.collection('users').doc(user.uid).update({
         'isOnline': isOnline,
         'lastSeen': FieldValue.serverTimestamp(),
       });
@@ -34,7 +47,10 @@ class UserService {
 
   /// Get user online status
   Stream<bool> getUserOnlineStatus(String userId) {
-    return _firestore
+    final firestore = _firebaseFirestore;
+    if (firestore == null) return const Stream<bool>.empty();
+
+    return firestore
         .collection('users')
         .doc(userId)
         .snapshots()
@@ -43,7 +59,10 @@ class UserService {
 
   /// Get user last seen timestamp
   Stream<DateTime?> getUserLastSeen(String userId) {
-    return _firestore.collection('users').doc(userId).snapshots().map((doc) {
+    final firestore = _firebaseFirestore;
+    if (firestore == null) return const Stream<DateTime?>.empty();
+
+    return firestore.collection('users').doc(userId).snapshots().map((doc) {
       final timestamp = doc.data()?['lastSeen'] as Timestamp?;
       return timestamp?.toDate();
     });
@@ -55,11 +74,14 @@ class UserService {
     String? bio,
     String? status,
   }) async {
-    final user = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final user = auth?.currentUser;
     if (user == null) return;
+    if (firestore == null) return;
 
     try {
-      await _firestore.collection('users').doc(user.uid).update({
+      await firestore.collection('users').doc(user.uid).update({
         'name': name,
         if (bio != null) 'bio': bio,
         if (status != null) 'status': status,
@@ -73,7 +95,10 @@ class UserService {
   /// Get user profile data
   Future<Map<String, dynamic>?> getUserProfile(String userId) async {
     try {
-      final doc = await _firestore.collection('users').doc(userId).get();
+      final firestore = _firebaseFirestore;
+      if (firestore == null) return null;
+
+      final doc = await firestore.collection('users').doc(userId).get();
       return doc.data();
     } catch (e) {
       debugPrint('Error getting profile: $e');
@@ -83,7 +108,10 @@ class UserService {
 
   /// Stream user profile data
   Stream<Map<String, dynamic>?> getUserProfileStream(String userId) {
-    return _firestore
+    final firestore = _firebaseFirestore;
+    if (firestore == null) return const Stream<Map<String, dynamic>?>.empty();
+
+    return firestore
         .collection('users')
         .doc(userId)
         .snapshots()
@@ -92,11 +120,15 @@ class UserService {
 
   /// Upload user profile picture to Firebase Storage
   Future<String?> uploadProfilePicture(XFile imageFile) async {
-    final user = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final storage = _firebaseStorage;
+    final user = auth?.currentUser;
     if (user == null) {
       debugPrint('❌ No user logged in');
       return null;
     }
+    if (firestore == null || storage == null) return null;
 
     try {
       debugPrint('📸 Reading image file: ${imageFile.name}');
@@ -108,7 +140,7 @@ class UserService {
       debugPrint('📁 Storage path: $fileName');
       debugPrint('👤 User ID: ${user.uid}');
 
-      final storageRef = _storage.ref().child(fileName);
+      final storageRef = storage.ref().child(fileName);
 
       debugPrint('📤 Uploading bytes to Firebase Storage...');
       try {
@@ -135,7 +167,7 @@ class UserService {
       debugPrint('✅ Auth updated');
 
       debugPrint('📝 Updating Firestore user document...');
-      await _firestore.collection('users').doc(user.uid).set({
+      await firestore.collection('users').doc(user.uid).set({
         'profilePictureUrl': downloadUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -151,15 +183,18 @@ class UserService {
 
   /// Update user display name
   Future<bool> updateUsername(String newUsername) async {
-    final user = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final user = auth?.currentUser;
     if (user == null) return false;
+    if (firestore == null) return false;
 
     try {
       // Update display name in Firebase Auth
       await user.updateDisplayName(newUsername);
 
       // Update username in Firestore
-      await _firestore.collection('users').doc(user.uid).update({
+      await firestore.collection('users').doc(user.uid).update({
         'username': newUsername,
         'name': newUsername,
         'updatedAt': FieldValue.serverTimestamp(),

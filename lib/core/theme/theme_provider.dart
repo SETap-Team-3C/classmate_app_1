@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class ThemeProvider extends ChangeNotifier {
   bool _isDarkMode = false;
   SharedPreferences? _prefs;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  FirebaseAuth? get _auth => Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null;
+  FirebaseFirestore? get _firestore => Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null;
 
   bool get isDarkMode => _isDarkMode;
 
@@ -16,13 +18,26 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   Future<void> _initTheme() async {
-    _prefs = await SharedPreferences.getInstance();
+    try {
+      _prefs = await SharedPreferences.getInstance();
+    } catch (e) {
+      debugPrint('Error loading theme preferences: $e');
+      _isDarkMode = false;
+      notifyListeners();
+      return;
+    }
 
     // First, try to load from Firestore (server source of truth)
-    final user = _auth.currentUser;
+    final auth = _auth;
+    final user = auth?.currentUser;
     if (user != null) {
       try {
-        final doc = await _firestore.collection('users').doc(user.uid).get();
+        final firestore = _firestore;
+        if (firestore == null) {
+          throw StateError('Firebase is not initialized');
+        }
+
+        final doc = await firestore.collection('users').doc(user.uid).get();
         if (doc.exists) {
           final themePreference = doc.data()?['isDarkMode'];
           if (themePreference is bool) {
@@ -54,9 +69,15 @@ class ThemeProvider extends ChangeNotifier {
       await prefs.setBool('isDarkMode', isDarkMode);
 
       // Also save to Firestore for cross-device persistence
-      final user = _auth.currentUser;
+      final auth = _auth;
+      final firestore = _firestore;
+      final user = auth?.currentUser;
       if (user != null) {
-        await _firestore.collection('users').doc(user.uid).set({
+        if (firestore == null) {
+          return;
+        }
+
+        await firestore.collection('users').doc(user.uid).set({
           'isDarkMode': isDarkMode,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));

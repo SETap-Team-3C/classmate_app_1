@@ -1,8 +1,12 @@
 import 'package:classmate_app_1/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences.setMockInitialValues({});
+
   group('Theme Provider Tests', () {
     test('ThemeProvider initializes with light theme by default', () {
       final provider = ThemeProvider();

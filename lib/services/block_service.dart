@@ -1,26 +1,36 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 class BlockService {
   BlockService({FirebaseAuth? auth, FirebaseFirestore? firestore})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _firestore = firestore ?? FirebaseFirestore.instance;
+    : _auth = auth,
+      _firestore = firestore;
 
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
+  final FirebaseAuth? _auth;
+  final FirebaseFirestore? _firestore;
+
+  FirebaseAuth? get _firebaseAuth =>
+      _auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null);
+
+  FirebaseFirestore? get _firebaseFirestore =>
+      _firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
 
   CollectionReference<Map<String, dynamic>>? _blockedCollection() {
-    final currentUser = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final currentUser = auth?.currentUser;
     if (currentUser == null) return null;
+    if (firestore == null) return null;
 
-    return _firestore
+    return firestore
         .collection('users')
         .doc(currentUser.uid)
         .collection('blockedUsers');
   }
 
   Future<void> blockUser(String blockedUserId) async {
-    final currentUser = _auth.currentUser;
+    final currentUser = _firebaseAuth?.currentUser;
     if (currentUser == null || blockedUserId.isEmpty) return;
     if (currentUser.uid == blockedUserId) return;
 

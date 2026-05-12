@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -29,13 +30,19 @@ class LoginActivitySession {
 
 class LoginActivityService {
   LoginActivityService({FirebaseAuth? auth, FirebaseFirestore? firestore})
-    : _auth = auth ?? FirebaseAuth.instance,
-      _firestore = firestore ?? FirebaseFirestore.instance;
+    : _auth = auth,
+      _firestore = firestore;
 
   static const String _sessionIdKey = 'login_activity_session_id';
 
-  final FirebaseAuth _auth;
-  final FirebaseFirestore _firestore;
+    final FirebaseAuth? _auth;
+    final FirebaseFirestore? _firestore;
+
+    FirebaseAuth? get _firebaseAuth =>
+      _auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null);
+
+    FirebaseFirestore? get _firebaseFirestore =>
+      _firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
 
   String _platformLabel() {
     if (kIsWeb) return 'Web';
@@ -75,15 +82,18 @@ class LoginActivityService {
   }
 
   Future<String?> ensureCurrentSession() async {
-    final user = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final user = auth?.currentUser;
     if (user == null) return null;
+    if (firestore == null) return null;
 
     final prefs = await _prefs;
     var sessionId = prefs.getString(_sessionIdKey);
     sessionId ??= _generateSessionId();
     await prefs.setString(_sessionIdKey, sessionId);
 
-    await _firestore
+    await firestore
         .collection('users')
         .doc(user.uid)
         .collection('loginSessions')
@@ -103,8 +113,11 @@ class LoginActivityService {
   }
 
   Future<void> touchCurrentSession() async {
-    final user = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final user = auth?.currentUser;
     if (user == null) return;
+    if (firestore == null) return;
 
     final sessionId = await getCurrentSessionId();
     if (sessionId == null || sessionId.isEmpty) {
@@ -112,7 +125,7 @@ class LoginActivityService {
       return;
     }
 
-    await _firestore
+    await firestore
         .collection('users')
         .doc(user.uid)
         .collection('loginSessions')
@@ -128,7 +141,10 @@ class LoginActivityService {
     required String userId,
     required String sessionId,
   }) async {
-    await _firestore
+    final firestore = _firebaseFirestore;
+    if (firestore == null) return;
+
+    await firestore
         .collection('users')
         .doc(userId)
         .collection('loginSessions')
@@ -141,7 +157,12 @@ class LoginActivityService {
   }
 
   Stream<List<LoginActivitySession>> watchSessions(String userId) {
-    return _firestore
+    final firestore = _firebaseFirestore;
+    if (firestore == null) {
+      return Stream<List<LoginActivitySession>>.value(const []);
+    }
+
+    return firestore
         .collection('users')
         .doc(userId)
         .collection('loginSessions')
@@ -168,8 +189,14 @@ class LoginActivityService {
   }
 
   Stream<bool> watchCurrentSessionRevoked() async* {
-    final user = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final user = auth?.currentUser;
     if (user == null) {
+      yield false;
+      return;
+    }
+    if (firestore == null) {
       yield false;
       return;
     }
@@ -180,7 +207,7 @@ class LoginActivityService {
       return;
     }
 
-    yield* _firestore
+    yield* firestore
         .collection('users')
         .doc(user.uid)
         .collection('loginSessions')
@@ -194,7 +221,8 @@ class LoginActivityService {
   }
 
   Future<void> logoutCurrentSession() async {
-    final user = _auth.currentUser;
+    final auth = _firebaseAuth;
+    final user = auth?.currentUser;
     final sessionId = await getCurrentSessionId();
 
     try {
@@ -206,7 +234,7 @@ class LoginActivityService {
         }
       }
 
-      await _auth.signOut();
+      await auth?.signOut();
     } finally {
       final prefs = await _prefs;
       await prefs.remove(_sessionIdKey);

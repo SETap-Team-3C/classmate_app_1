@@ -184,9 +184,16 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'ClassMates',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
                     const SizedBox(height: 28),
                     Text(
-                      'Welcome to Classmate',
+                      'Welcome to ClassMates',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                             fontWeight: FontWeight.w700,

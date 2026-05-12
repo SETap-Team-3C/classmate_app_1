@@ -178,7 +178,7 @@ color: Theme.of(
             TextField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: const InputDecoration(labelText: 'Username | Email'),
             ),
             TextField(
               controller: _passwordController,

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
+import 'auth_screen.dart';
 import 'home_screen.dart';
 import 'welcome_screen.dart';
 
@@ -31,7 +32,7 @@ class AuthGate extends StatelessWidget {
           );
         }
 
-        return const WelcomeScreen();
+        return themeProvider == null ? const AuthScreen() : const WelcomeScreen();
       },
     );
   }

@@ -9,9 +9,10 @@ void main() {
     WidgetTester tester,
   ) async {
     await tester.pumpWidget(wrapForTest(const NotificationScreen()));
+    await tester.pumpAndSettle();
 
-    await tester.enterText(find.widgetWithText(TextField, 'Title'), 'Ping');
-    await tester.enterText(find.widgetWithText(TextField, 'Body'), 'Hello');
+    await tester.enterText(find.byType(TextField).at(0), 'Ping');
+    await tester.enterText(find.byType(TextField).at(1), 'Hello');
     await tester.tap(find.text('Show Now'));
     await tester.pump();
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import 'messages_screen.dart';
 import 'profile_screen.dart';
@@ -149,6 +150,7 @@ class _FeedContentState extends State<FeedContent> {
   FirebaseAuth get _auth => widget.auth ?? FirebaseAuth.instance;
   FirebaseFirestore get _firestore =>
       widget.firestore ?? FirebaseFirestore.instance;
+  bool get _hasFirebaseApp => Firebase.apps.isNotEmpty;
 
   String get _collectionName => 'posts_${widget.feedType}';
 
@@ -331,6 +333,10 @@ class _FeedContentState extends State<FeedContent> {
 
   @override
   Widget build(BuildContext context) {
+    if (!_hasFirebaseApp || widget.auth == null && widget.firestore == null) {
+      return const Center(child: Text('What is on your mind?'));
+    }
+
     final auth = _auth;
     final firestore = _firestore;
 

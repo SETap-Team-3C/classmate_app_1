@@ -26,14 +26,13 @@ void main() {
         ),
       ),
     );
-
-    await tester.tap(find.byIcon(Icons.more_vert).first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Delete').first);
+
+    await tester.longPress(find.text('Delete me'));
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Are you sure you want to delete your message?'),
+      find.text('Are you sure you want to delete your message for you?'),
       findsOneWidget,
     );
     await tester.tap(find.widgetWithText(TextButton, 'Delete'));
