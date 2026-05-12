@@ -317,8 +317,12 @@ class ChatService {
     return Stream<List<Message>>.multi((controller) {
       List<Message> currentMessages = <Message>[];
       Set<String> hiddenMessageIds = <String>{};
-      StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? messageSub;
+      StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? sentSub;
+      StreamSubscription<QuerySnapshot<Map<String, dynamic>>>? receivedSub;
       StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>? userSub;
+
+      final sentDocs = <String, Message>{};
+      final receivedDocs = <String, Message>{};
 
       void emit() {
         final visible = currentMessages.where(
@@ -342,15 +346,44 @@ class ChatService {
         controller.add(deduped);
       }
 
-      messageSub = _firestore
+      void refreshCurrentMessages() {
+        final merged = <String, Message>{};
+        merged.addAll(sentDocs);
+        merged.addAll(receivedDocs);
+        currentMessages = merged.values.toList();
+        emit();
+      }
+
+      sentSub = _firestore
           .collection('messages')
           .where('chatId', isEqualTo: chatId)
+          .where('senderId', isEqualTo: userId)
           .snapshots()
           .listen((snapshot) {
-            currentMessages = snapshot.docs
-                .map((doc) => Message.fromDocument(doc))
-                .toList();
-            emit();
+            sentDocs
+              ..clear()
+              ..addEntries(
+                snapshot.docs.map(
+                  (doc) => MapEntry(doc.id, Message.fromDocument(doc)),
+                ),
+              );
+            refreshCurrentMessages();
+          }, onError: controller.addError);
+
+      receivedSub = _firestore
+          .collection('messages')
+          .where('chatId', isEqualTo: chatId)
+          .where('receiverId', isEqualTo: userId)
+          .snapshots()
+          .listen((snapshot) {
+            receivedDocs
+              ..clear()
+              ..addEntries(
+                snapshot.docs.map(
+                  (doc) => MapEntry(doc.id, Message.fromDocument(doc)),
+                ),
+              );
+            refreshCurrentMessages();
           }, onError: controller.addError);
 
       userSub = _firestore.collection('users').doc(userId).snapshots().listen((
@@ -365,7 +398,8 @@ class ChatService {
       }, onError: controller.addError);
 
       controller.onCancel = () async {
-        await messageSub?.cancel();
+        await sentSub?.cancel();
+        await receivedSub?.cancel();
         await userSub?.cancel();
       };
     });
@@ -573,14 +607,26 @@ class ChatService {
     if (query.isEmpty) return [];
 
     final chatId = _buildChatId(userId, otherUserId);
-    final snapshot = await _firestore
+    final sentSnapshot = await _firestore
         .collection('messages')
         .where('chatId', isEqualTo: chatId)
+        .where('senderId', isEqualTo: userId)
+        .get();
+    final receivedSnapshot = await _firestore
+        .collection('messages')
+        .where('chatId', isEqualTo: chatId)
+        .where('receiverId', isEqualTo: userId)
         .get();
 
-    final allMessages = snapshot.docs
-        .map((doc) => Message.fromDocument(doc))
-        .toList();
+    final byId = <String, Message>{};
+    for (final doc in sentSnapshot.docs) {
+      byId[doc.id] = Message.fromDocument(doc);
+    }
+    for (final doc in receivedSnapshot.docs) {
+      byId[doc.id] = Message.fromDocument(doc);
+    }
+
+    final allMessages = byId.values.toList();
 
     // Filter by search query (case-insensitive)
     final filtered = allMessages
