@@ -56,6 +56,16 @@ class _NewGroupScreenState extends State<NewGroupScreen> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Group created')));
       Navigator.pop(context);
+    } on FirebaseException catch (e) {
+      if (!mounted) return;
+      debugPrint('[NewGroupScreen] create group failed: code=${e.code}, message=${e.message}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Failed to create group (${e.code}): ${e.message ?? 'Unknown error'}',
+          ),
+        ),
+      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
