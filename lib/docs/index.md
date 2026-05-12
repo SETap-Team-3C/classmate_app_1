@@ -1,3 +1,2 @@
 # Classmate App
-
-Flutter application documentation.
+Documentation site is working.
