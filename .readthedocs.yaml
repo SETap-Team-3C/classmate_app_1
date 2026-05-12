@@ -11,14 +11,8 @@ build:
   jobs:
     post_create_environment:
       - git clone https://github.com/flutter/flutter.git --depth 1 flutter
-
       - ./flutter/bin/flutter --version
-
       - ./flutter/bin/flutter pub get
-
-      - ./flutter/bin/flutter pub global activate dartdoc
-
-      - ~/.pub-cache/bin/dartdoc --no-fatal-errors
 
 mkdocs:
   configuration: mkdocs.yml
