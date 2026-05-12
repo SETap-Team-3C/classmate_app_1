@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'chat_page.dart';
+import 'group_chat_page.dart';
 import 'new_group_screen.dart';
 import 'settings_screen.dart';
 import '../core/localization/app_localizations.dart';
@@ -34,14 +35,17 @@ class MessagesScreen extends StatefulWidget {
   State<MessagesScreen> createState() => _MessagesScreenState();
 }
 
-class _MessagesScreenState extends State<MessagesScreen> {
+class _MessagesScreenState extends State<MessagesScreen>
+    with SingleTickerProviderStateMixin {
   bool _didHandleInitialTarget = false;
   StreamSubscription<Set<String>>? _blockedUsersSubscription;
   Set<String> _blockedUserIds = <String>{};
+  late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     if (!widget.showTestEmptyState) {
       _blockedUsersSubscription = _blockService.watchBlockedUserIds().listen((
         ids,
@@ -59,6 +63,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   void dispose() {
+    _tabController.dispose();
     _blockedUsersSubscription?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -271,308 +276,489 @@ class _MessagesScreenState extends State<MessagesScreen> {
       body: Column(
         children: [
           Container(
-            height: 60,
             color: cs.primary,
-            child: Row(
+            child: Column(
               children: [
-                IconButton(
-                  onPressed: () {
-                    if (widget.onBack != null) {
-                      widget.onBack!();
-                      return;
-                    }
-                    Navigator.maybePop(context);
-                  },
-                  icon: const Icon(Icons.arrow_back),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      loc.t('direct_messages'),
-                      style: TextStyle(
-                        color: cs.onPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+                SizedBox(
+                  height: 60,
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {
+                          if (widget.onBack != null) {
+                            widget.onBack!();
+                            return;
+                          }
+                          Navigator.maybePop(context);
+                        },
+                        icon: const Icon(Icons.arrow_back),
                       ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    showModalBottomSheet<void>(
-                      context: context,
-                      builder: (sheetContext) => Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextField(
-                              controller: _searchController,
-                              onChanged: (value) {
-                                setState(
-                                  () => _searchQuery = value.toLowerCase(),
-                                );
-                              },
-                              decoration: InputDecoration(
-                                hintText: loc.t('search_chats_hint'),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: const Icon(Icons.search),
-                              ),
-                              autofocus: true,
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            loc.t('messages'),
+                            style: TextStyle(
+                              color: cs.onPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
                             ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: () {
-                                _searchController.clear();
-                                setState(() => _searchQuery = '');
-                                Navigator.pop(sheetContext);
-                              },
-                              child: Text(loc.t('clear')),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
-                    );
-                  },
-                  icon: const Icon(Icons.search),
+                      IconButton(
+                        onPressed: () {
+                          showModalBottomSheet<void>(
+                            context: context,
+                            builder: (sheetContext) => Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextField(
+                                    controller: _searchController,
+                                    onChanged: (value) {
+                                      setState(
+                                        () =>
+                                            _searchQuery = value.toLowerCase(),
+                                      );
+                                    },
+                                    decoration: InputDecoration(
+                                      hintText: loc.t('search_chats_hint'),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      prefixIcon: const Icon(Icons.search),
+                                    ),
+                                    autofocus: true,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() => _searchQuery = '');
+                                      Navigator.pop(sheetContext);
+                                    },
+                                    child: Text(loc.t('clear')),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.search),
+                      ),
+                      IconButton(
+                        onPressed: _showAddUserDialog,
+                        icon: const Icon(Icons.add),
+                      ),
+                      PopupMenuButton<String>(
+                        onSelected: (value) => _handleMenuSelection(value),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: 'new_group',
+                            child: Text(loc.t('new_group')),
+                          ),
+                          PopupMenuItem(
+                            value: 'settings',
+                            child: Text(loc.t('settings')),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                IconButton(
-                  onPressed: _showAddUserDialog,
-                  icon: const Icon(Icons.add),
-                ),
-                PopupMenuButton<String>(
-                  onSelected: (value) => _handleMenuSelection(value),
-                  itemBuilder: (context) => [
-                    PopupMenuItem(
-                      value: 'new_group',
-                      child: Text(loc.t('new_group')),
-                    ),
-                    PopupMenuItem(
-                      value: 'settings',
-                      child: Text(loc.t('settings')),
-                    ),
+                TabBar(
+                  controller: _tabController,
+                  labelColor: cs.onPrimary,
+                  unselectedLabelColor: cs.onPrimary.withValues(alpha: 0.6),
+                  indicatorColor: cs.onPrimary,
+                  tabs: [
+                    Tab(text: loc.t('direct_messages')),
+                    Tab(text: 'Groups'),
                   ],
                 ),
               ],
             ),
           ),
           Expanded(
-            child:
-                widget.showTestEmptyState ||
-                    currentUser == null ||
-                    firestore == null
-                ? Center(child: Text(loc.t('no_chats_yet')))
-                : StreamBuilder<QuerySnapshot>(
-                    stream: firestore
-                        .collection('chats')
-                        .where('participants', arrayContains: currentUser.uid)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              'Could not load chats: ${snapshot.error}',
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        );
-                      }
-
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-
-                      final chats = snapshot.data!.docs.toList();
-                      chats.sort((a, b) {
-                        final aData = a.data() as Map<String, dynamic>;
-                        final bData = b.data() as Map<String, dynamic>;
-                        final aTimestamp = aData['lastTimestamp'] as Timestamp?;
-                        final bTimestamp = bData['lastTimestamp'] as Timestamp?;
-                        final aMillis = aTimestamp?.millisecondsSinceEpoch ?? 0;
-                        final bMillis = bTimestamp?.millisecondsSinceEpoch ?? 0;
-                        return bMillis.compareTo(aMillis);
-                      });
-
-                      if (chats.isEmpty) {
-                        return Center(child: Text(loc.t('no_chats_yet')));
-                      }
-
-                      final visibleChats = chats.where((chat) {
-                        final chatData = chat.data() as Map<String, dynamic>;
-                        final participants = List<String>.from(
-                          chatData['participants'] ?? [],
-                        );
-                        final otherUserId = participants.firstWhere(
-                          (id) => id != currentUser.uid,
-                          orElse: () => '',
-                        );
-                        return otherUserId.isNotEmpty &&
-                            !_blockedUserIds.contains(otherUserId);
-                      }).toList();
-
-                      final filteredChats = _searchQuery.isEmpty
-                          ? visibleChats
-                          : visibleChats.where((chat) {
-                              final chatData =
-                                  chat.data() as Map<String, dynamic>;
-                              final usernames = Map<String, dynamic>.from(
-                                chatData['usernames'] ?? {},
-                              );
-                              final names = usernames.values
-                                  .toString()
-                                  .toLowerCase();
-                              return names.contains(_searchQuery);
-                            }).toList();
-
-                      if (filteredChats.isEmpty) {
-                        return Center(child: Text(loc.t('no_chats_yet')));
-                      }
-
-                      return ListView.builder(
-                        itemCount: filteredChats.length,
-                        itemBuilder: (context, index) {
-                          final chatData =
-                              filteredChats[index].data()
-                                  as Map<String, dynamic>;
-                          final chatId = filteredChats[index].id;
-                          final participants = List<String>.from(
-                            chatData['participants'] ?? [],
-                          );
-                          final otherUserId = participants.firstWhere(
-                            (id) => id != currentUser.uid,
-                            orElse: () => '',
-                          );
-
-                          if (otherUserId.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
-
-                          final usernames = Map<String, dynamic>.from(
-                            chatData['usernames'] ?? {},
-                          );
-                          final receiverName =
-                              (usernames[otherUserId] ?? 'User').toString();
-                          final lastTimestamp =
-                              chatData['lastTimestamp'] as Timestamp?;
-
-                          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                            stream: firestore
-                                .collection('messages')
-                                .where('chatId', isEqualTo: chatId)
-                                .where('receiverId', isEqualTo: currentUser.uid)
-                                .where('read', isEqualTo: false)
-                                .snapshots(),
-                            builder: (context, unreadSnapshot) {
-                              final unreadCount = unreadSnapshot.data?.docs.length ?? 0;
-                              final unreadText = unreadCount == 0
-                                  ? ''
-                                  : unreadCount > 3
-                                  ? '3+ new messages'
-                                  : unreadCount == 1
-                                  ? '1 new message'
-                                  : '$unreadCount new messages';
-
-                              return InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => ChatPage(
-                                        receiverId: otherUserId,
-                                        receiverName: receiverName,
-                                      ),
-                                    ),
-                                  );
-                                },
-                                child: Container(
-                                  height: 70,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: cs.surface,
-                                    border: Border.all(color: cs.outline),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        flex: 1,
-                                        child: Text(
-                                          receiverName,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 2,
-                                        child: Center(
-                                          child: Text(
-                                            unreadText,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: unreadCount > 0
-                                                  ? cs.error
-                                                  : cs.onSurface.withValues(
-                                                      alpha: 0.7,
-                                                    ),
-                                              fontWeight: unreadCount > 0
-                                                  ? FontWeight.bold
-                                                  : FontWeight.normal,
-                                            ),
-                                            textAlign: TextAlign.center,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ),
-                                      Expanded(
-                                        flex: 1,
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          children: [
-                                            Text(
-                                              _formatTimeAgo(lastTimestamp),
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: cs.onSurface.withValues(
-                                                  alpha: 0.7,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildDirectMessagesTab(currentUser, firestore, cs, loc),
+                _buildGroupsTab(currentUser, firestore, cs, loc),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDirectMessagesTab(
+    User? currentUser,
+    FirebaseFirestore? firestore,
+    ColorScheme cs,
+    AppLocalizations loc,
+  ) {
+    return widget.showTestEmptyState || currentUser == null || firestore == null
+        ? Center(child: Text(loc.t('no_chats_yet')))
+        : StreamBuilder<QuerySnapshot>(
+            stream: firestore
+                .collection('chats')
+                .where('participants', arrayContains: currentUser.uid)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Could not load chats: ${snapshot.error}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final chats = snapshot.data!.docs.toList();
+              chats.sort((a, b) {
+                final aData = a.data() as Map<String, dynamic>;
+                final bData = b.data() as Map<String, dynamic>;
+                final aTimestamp = aData['lastTimestamp'] as Timestamp?;
+                final bTimestamp = bData['lastTimestamp'] as Timestamp?;
+                final aMillis = aTimestamp?.millisecondsSinceEpoch ?? 0;
+                final bMillis = bTimestamp?.millisecondsSinceEpoch ?? 0;
+                return bMillis.compareTo(aMillis);
+              });
+
+              if (chats.isEmpty) {
+                return Center(child: Text(loc.t('no_chats_yet')));
+              }
+
+              final visibleChats = chats.where((chat) {
+                final chatData = chat.data() as Map<String, dynamic>;
+                final participants = List<String>.from(
+                  chatData['participants'] ?? [],
+                );
+                final otherUserId = participants.firstWhere(
+                  (id) => id != currentUser.uid,
+                  orElse: () => '',
+                );
+                return otherUserId.isNotEmpty &&
+                    !_blockedUserIds.contains(otherUserId);
+              }).toList();
+
+              final filteredChats = _searchQuery.isEmpty
+                  ? visibleChats
+                  : visibleChats.where((chat) {
+                      final chatData = chat.data() as Map<String, dynamic>;
+                      final usernames = Map<String, dynamic>.from(
+                        chatData['usernames'] ?? {},
+                      );
+                      final names = usernames.values.toString().toLowerCase();
+                      return names.contains(_searchQuery);
+                    }).toList();
+
+              if (filteredChats.isEmpty) {
+                return Center(child: Text(loc.t('no_chats_yet')));
+              }
+
+              return ListView.builder(
+                itemCount: filteredChats.length,
+                itemBuilder: (context, index) {
+                  final chatData =
+                      filteredChats[index].data() as Map<String, dynamic>;
+                  final chatId = filteredChats[index].id;
+                  final participants = List<String>.from(
+                    chatData['participants'] ?? [],
+                  );
+                  final otherUserId = participants.firstWhere(
+                    (id) => id != currentUser.uid,
+                    orElse: () => '',
+                  );
+
+                  if (otherUserId.isEmpty) {
+                    return const SizedBox.shrink();
+                  }
+
+                  final usernames = Map<String, dynamic>.from(
+                    chatData['usernames'] ?? {},
+                  );
+                  final receiverName = (usernames[otherUserId] ?? 'User')
+                      .toString();
+                  final lastTimestamp = chatData['lastTimestamp'] as Timestamp?;
+
+                  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: firestore
+                        .collection('messages')
+                        .where('chatId', isEqualTo: chatId)
+                        .where('receiverId', isEqualTo: currentUser.uid)
+                        .where('read', isEqualTo: false)
+                        .snapshots(),
+                    builder: (context, unreadSnapshot) {
+                      final unreadCount = unreadSnapshot.data?.docs.length ?? 0;
+                      final unreadText = unreadCount == 0
+                          ? ''
+                          : unreadCount > 3
+                          ? '3+ new messages'
+                          : unreadCount == 1
+                          ? '1 new message'
+                          : '$unreadCount new messages';
+
+                      return InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ChatPage(
+                                receiverId: otherUserId,
+                                receiverName: receiverName,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          height: 70,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.surface,
+                            border: Border.all(color: cs.outline),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: Text(
+                                  receiverName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Center(
+                                  child: Text(
+                                    unreadText,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: unreadCount > 0
+                                          ? cs.error
+                                          : cs.onSurface.withValues(alpha: 0.7),
+                                      fontWeight: unreadCount > 0
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                flex: 1,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      _formatTimeAgo(lastTimestamp),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: cs.onSurface.withValues(
+                                          alpha: 0.7,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+  }
+
+  Widget _buildGroupsTab(
+    User? currentUser,
+    FirebaseFirestore? firestore,
+    ColorScheme cs,
+    AppLocalizations loc,
+  ) {
+    if (currentUser == null || firestore == null) {
+      return Center(child: Text(loc.t('no_chats_yet')));
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: firestore
+          .collection('groups')
+          .where('members', arrayContains: currentUser.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Could not load groups: ${snapshot.error}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.group_off, size: 64, color: cs.outline),
+                const SizedBox(height: 16),
+                const Text('No groups yet'),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    _handleMenuSelection('new_group');
+                  },
+                  icon: const Icon(Icons.add),
+                  label: const Text('Create Group'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final groups = snapshot.data!.docs;
+        groups.sort((a, b) {
+          final aData = a.data() as Map<String, dynamic>;
+          final bData = b.data() as Map<String, dynamic>;
+          final aTimestamp = aData['createdAt'] as Timestamp?;
+          final bTimestamp = bData['createdAt'] as Timestamp?;
+          final aMillis = aTimestamp?.millisecondsSinceEpoch ?? 0;
+          final bMillis = bTimestamp?.millisecondsSinceEpoch ?? 0;
+          return bMillis.compareTo(aMillis);
+        });
+
+        final filteredGroups = _searchQuery.isEmpty
+            ? groups
+            : groups.where((group) {
+                final groupData = group.data() as Map<String, dynamic>;
+                final name = (groupData['name'] ?? '').toString().toLowerCase();
+                return name.contains(_searchQuery);
+              }).toList();
+
+        if (filteredGroups.isEmpty) {
+          return Center(child: Text('No matching groups'));
+        }
+
+        return ListView.builder(
+          itemCount: filteredGroups.length,
+          itemBuilder: (context, index) {
+            final groupData =
+                filteredGroups[index].data() as Map<String, dynamic>;
+            final groupId = filteredGroups[index].id;
+            final groupName = (groupData['name'] ?? 'Group').toString();
+            final members = List<String>.from(groupData['members'] ?? []);
+            final createdAt = groupData['createdAt'] as Timestamp?;
+
+            return InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        GroupChatPage(groupId: groupId, groupName: groupName),
+                  ),
+                );
+              },
+              child: Container(
+                height: 70,
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: cs.surface,
+                  border: Border.all(color: cs.outline),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: cs.primaryContainer,
+                      child: Icon(Icons.group, color: cs.onPrimaryContainer),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            groupName,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            '${members.length} members',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: cs.onSurface.withValues(alpha: 0.7),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          _formatTimeAgo(createdAt),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: cs.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          size: 18,
+                          color: cs.onSurface.withValues(alpha: 0.5),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 }
