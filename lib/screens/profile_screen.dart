@@ -39,6 +39,191 @@ class _ProfileScreenState extends State<ProfileScreen> {
         .snapshots();
   }
 
+  Stream<QuerySnapshot<Map<String, dynamic>>> _postsStream(String feedType) {
+    return FirebaseFirestore.instance.collection('posts_$feedType').snapshots();
+  }
+
+  DateTime _postDateTime(dynamic createdAt) {
+    if (createdAt is Timestamp) return createdAt.toDate();
+    return DateTime.fromMillisecondsSinceEpoch(0);
+  }
+
+  bool _isProfilePost(Map<String, dynamic> postData, String name) {
+    final postUserId = (postData['userId'] ?? '').toString();
+    final postUserName = (postData['userName'] ?? '').toString();
+    return postUserId == widget.userId ||
+        (name.isNotEmpty && postUserName == name);
+  }
+
+  List<QueryDocumentSnapshot<Map<String, dynamic>>> _mergePosts(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> classPosts,
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> matesPosts,
+    String name,
+  ) {
+    final mergedPosts = [
+      ...classPosts.where((doc) => _isProfilePost(doc.data(), name)),
+      ...matesPosts.where((doc) => _isProfilePost(doc.data(), name)),
+    ];
+    mergedPosts.sort((left, right) {
+      final leftDate = _postDateTime(left.data()['createdAt']);
+      final rightDate = _postDateTime(right.data()['createdAt']);
+      return rightDate.compareTo(leftDate);
+    });
+    return mergedPosts;
+  }
+
+  String _formatPostTime(Timestamp? timestamp) {
+    final label = TimeFormatter.formatTimeAgo(timestamp);
+    return label.isEmpty ? 'Just now' : label;
+  }
+
+  Widget _buildPostCard(
+    BuildContext context,
+    QueryDocumentSnapshot<Map<String, dynamic>> postDoc,
+  ) {
+    final postData = postDoc.data();
+    final postText = (postData['text'] ?? '').toString();
+    final postImageUrl = (postData['imageUrl'] ?? '').toString();
+    final createdAt = postData['createdAt'] as Timestamp?;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _formatPostTime(createdAt),
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            if (postText.isNotEmpty)
+              Text(postText, style: Theme.of(context).textTheme.bodyMedium),
+            if (postImageUrl.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  postImageUrl,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 200,
+                    color: Colors.grey.shade300,
+                    child: const Center(child: Icon(Icons.broken_image)),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPostsSection(
+    BuildContext context,
+    AppLocalizations loc,
+    String name,
+  ) {
+    return StreamBuilder<Set<String>>(
+      stream: _blockService.watchBlockedUserIds(),
+      builder: (context, blockedSnapshot) {
+        final blockedUserIds = blockedSnapshot.data ?? <String>{};
+        final isBlockedProfile =
+            !widget.isCurrentUser && blockedUserIds.contains(widget.userId);
+
+        if (isBlockedProfile) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                '$name ${loc.t('no_posts_yet')}',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+          );
+        }
+
+        return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: _postsStream('class'),
+          builder: (context, classSnapshot) {
+            if (classSnapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text('Error loading posts: ${classSnapshot.error}'),
+                ),
+              );
+            }
+
+            if (classSnapshot.connectionState == ConnectionState.waiting &&
+                !classSnapshot.hasData) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+
+            return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: _postsStream('mates'),
+              builder: (context, matesSnapshot) {
+                if (matesSnapshot.hasError) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        'Error loading posts: ${matesSnapshot.error}',
+                      ),
+                    ),
+                  );
+                }
+
+                if (matesSnapshot.connectionState == ConnectionState.waiting &&
+                    !matesSnapshot.hasData) {
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                }
+
+                final posts = _mergePosts(
+                  classSnapshot.data?.docs ?? [],
+                  matesSnapshot.data?.docs ?? [],
+                  name,
+                );
+
+                if (posts.isEmpty) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        '$name ${loc.t('no_posts_yet')}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: posts.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) =>
+                      _buildPostCard(context, posts[index]),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
@@ -238,145 +423,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  StreamBuilder<Set<String>>(
-                    stream: _blockService.watchBlockedUserIds(),
-                    builder: (context, blockedSnapshot) {
-                      final blockedUserIds = blockedSnapshot.data ?? <String>{};
-                      final isBlockedProfile =
-                          !widget.isCurrentUser &&
-                          blockedUserIds.contains(widget.userId);
-
-                      if (isBlockedProfile) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Text(
-                              '$name ${loc.t('no_posts_yet')}',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ),
-                        );
-                      }
-
-                      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                        stream: FirebaseFirestore.instance
-                            .collection('posts_mates')
-                            .where('userId', isEqualTo: widget.userId)
-                            .orderBy('createdAt', descending: true)
-                            .snapshots(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
-
-                          final posts = snapshot.data?.docs ?? [];
-
-                          if (posts.isEmpty) {
-                            return Center(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16),
-                                child: Text(
-                                  '$name ${loc.t('no_posts_yet')}',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ),
-                            );
-                          }
-
-                          return ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: posts.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final postDoc = posts[index];
-                              final postData = postDoc.data();
-                              final postText =
-                                  (postData['text'] ?? '').toString();
-                              final postImageUrl = (postData['imageUrl'] ?? '')
-                                  .toString();
-                              final createdAt =
-                                  postData['createdAt'] as Timestamp?;
-
-                          String formatTime(Timestamp? timestamp) {
-                            if (timestamp == null) return 'Just now';
-                            final date = timestamp.toDate();
-                            final minutes = DateTime.now()
-                                .difference(date)
-                                .inMinutes;
-                            if (minutes < 1) return 'Just now';
-                            if (minutes < 60) return '${minutes}m ago';
-
-                            final hours = DateTime.now()
-                                .difference(date)
-                                .inHours;
-                            if (hours < 24) return '${hours}h ago';
-
-                            final days = DateTime.now().difference(date).inDays;
-                            return '${days}d ago';
-                          }
-
-                              return Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        formatTime(createdAt),
-                                        style: const TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      if (postText.isNotEmpty)
-                                        Text(
-                                          postText,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium,
-                                        ),
-                                      if (postImageUrl.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(8),
-                                          child: Image.network(
-                                            postImageUrl,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stackTrace) =>
-                                                    Container(
-                                                      height: 200,
-                                                      color: Colors.grey.shade300,
-                                                      child: const Center(
-                                                        child: Icon(
-                                                          Icons.broken_image,
-                                                        ),
-                                                      ),
-                                                    ),
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
-                  ),
+                  _buildPostsSection(context, loc, name),
                   const SizedBox(height: 32),
 
                   // Info Section
