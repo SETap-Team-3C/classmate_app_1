@@ -28,7 +28,7 @@ class AppLocalizations {
       'sign_up': 'Sign Up',
       'signup_successful': 'Signup Successful',
       'updates': 'Updates',
-    'feed': 'Feed',
+      'feed': 'Feed',
       'calls': 'Calls',
       'communities': 'Communities',
       'chats': 'Chats',
@@ -68,6 +68,7 @@ class AppLocalizations {
       'manage_blocked_users':
           'View accounts you have blocked and unblock them here.',
       'no_blocked_users': 'You have not blocked any accounts yet.',
+      'blocked_posts_hidden': 'Posts from blocked users are hidden.',
       'login_activity': 'Login Activity',
       'login_activity_description':
           'See the devices signed in to your account and revoke access from any of them.',
@@ -232,6 +233,24 @@ class AppLocalizations {
       'last_seen': 'Última vez {{time}}',
       'contact_information': 'Información de contacto',
       'send_message': 'Enviar mensaje',
+      'block_account': 'Bloquear cuenta',
+      'unblock_account': 'Desbloquear cuenta',
+      'block_account_confirm_title': '¿Bloquear cuenta?',
+      'block_account_confirm_body':
+          'Ya no verás las publicaciones ni las respuestas de esta cuenta.',
+      'unblock_account_confirm_title': '¿Desbloquear cuenta?',
+      'unblock_account_confirm_body':
+          'Las publicaciones y respuestas de esta cuenta volverán a ser visibles.',
+      'account_blocked': 'Cuenta bloqueada',
+      'account_unblocked': 'Cuenta desbloqueada',
+      'blocked_user_chat_not_allowed':
+          'Has bloqueado esta cuenta. Desbloquéala para empezar a chatear.',
+      'blocked_users': 'Usuarios bloqueados',
+      'manage_blocked_users':
+          'Ve las cuentas que has bloqueado y desbloquéalas aquí.',
+      'no_blocked_users': 'Aún no has bloqueado ninguna cuenta.',
+      'blocked_posts_hidden':
+          'Las publicaciones de usuarios bloqueados están ocultas.',
       'login_activity': 'Actividad de inicio de sesión',
       'login_activity_description':
           'Consulta los dispositivos conectados a tu cuenta y revoca el acceso de cualquiera de ellos.',
@@ -420,6 +439,19 @@ class AppLocalizations {
       'last_seen': '上次在线 {{time}}',
       'contact_information': '联系信息',
       'send_message': '发送消息',
+      'block_account': '屏蔽账号',
+      'unblock_account': '取消屏蔽账号',
+      'block_account_confirm_title': '屏蔽账号？',
+      'block_account_confirm_body': '你将不再看到此账号的帖子或回复。',
+      'unblock_account_confirm_title': '取消屏蔽账号？',
+      'unblock_account_confirm_body': '此账号的帖子和回复将再次可见。',
+      'account_blocked': '账号已屏蔽',
+      'account_unblocked': '账号已取消屏蔽',
+      'blocked_user_chat_not_allowed': '你已屏蔽此账号。取消屏蔽后才能开始聊天。',
+      'blocked_users': '已屏蔽用户',
+      'manage_blocked_users': '查看你已屏蔽的账号，并在此取消屏蔽。',
+      'no_blocked_users': '你还没有屏蔽任何账号。',
+      'blocked_posts_hidden': '已屏蔽用户的帖子已隐藏。',
       'login_activity': '登录活动',
       'login_activity_description': '查看已登录到你账户的设备，并可撤销任一设备的访问权限。',
       'current_device': '当前设备',
@@ -532,6 +564,24 @@ class AppLocalizations {
       'last_seen': 'आखिरी बार {{time}} को देखा गया',
       'contact_information': 'संपर्क जानकारी',
       'send_message': 'संदेश भेजें',
+      'block_account': 'खाता ब्लॉक करें',
+      'unblock_account': 'खाता अनब्लॉक करें',
+      'block_account_confirm_title': 'खाता ब्लॉक करें?',
+      'block_account_confirm_body':
+          'आप अब इस खाते की पोस्ट या जवाब नहीं देखेंगे।',
+      'unblock_account_confirm_title': 'खाता अनब्लॉक करें?',
+      'unblock_account_confirm_body':
+          'इस खाते की पोस्ट और जवाब फिर से दिखाई देंगे।',
+      'account_blocked': 'खाता ब्लॉक किया गया',
+      'account_unblocked': 'खाता अनब्लॉक किया गया',
+      'blocked_user_chat_not_allowed':
+          'आपने इस खाते को ब्लॉक किया है। चैट शुरू करने के लिए अनब्लॉक करें।',
+      'blocked_users': 'ब्लॉक किए गए उपयोगकर्ता',
+      'manage_blocked_users':
+          'आपके द्वारा ब्लॉक किए गए खातों को देखें और उन्हें यहां अनब्लॉक करें।',
+      'no_blocked_users': 'आपने अभी तक किसी भी खाते को ब्लॉक नहीं किया है।',
+      'blocked_posts_hidden':
+          'ब्लॉक किए गए उपयोगकर्ताओं की पोस्ट छिपी हुई हैं।',
       'login_activity': 'लॉगिन गतिविधि',
       'login_activity_description':
           'अपने खाते में साइन इन किए गए डिवाइस देखें और किसी भी डिवाइस की पहुँच रद्द करें।',
@@ -678,6 +728,24 @@ class AppLocalizations {
       'last_seen': 'Vu pour la dernière fois {{time}}',
       'contact_information': 'Informations de contact',
       'send_message': 'Envoyer un message',
+      'block_account': 'Bloquer le compte',
+      'unblock_account': 'Débloquer le compte',
+      'block_account_confirm_title': 'Bloquer le compte ?',
+      'block_account_confirm_body':
+          'Vous ne verrez plus les publications ni les réponses de ce compte.',
+      'unblock_account_confirm_title': 'Débloquer le compte ?',
+      'unblock_account_confirm_body':
+          'Les publications et réponses de ce compte seront à nouveau visibles.',
+      'account_blocked': 'Compte bloqué',
+      'account_unblocked': 'Compte débloqué',
+      'blocked_user_chat_not_allowed':
+          'Vous avez bloqué ce compte. Débloquez-le pour commencer à discuter.',
+      'blocked_users': 'Utilisateurs bloqués',
+      'manage_blocked_users':
+          'Consultez les comptes que vous avez bloqués et débloquez-les ici.',
+      'no_blocked_users': 'Vous n’avez encore bloqué aucun compte.',
+      'blocked_posts_hidden':
+          'Les publications des utilisateurs bloqués sont masquées.',
       'login_activity': 'Activité de connexion',
       'login_activity_description':
           'Voir les appareils connectés à votre compte et révoquer l’accès de n’importe lequel d’entre eux.',

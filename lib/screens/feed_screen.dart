@@ -397,7 +397,9 @@ class _FeedContentState extends State<FeedContent> {
                         child: Padding(
                           padding: const EdgeInsets.all(16),
                           child: Text(
-                            'Posts from blocked users are hidden.',
+                            AppLocalizations.of(
+                              context,
+                            ).t('blocked_posts_hidden'),
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
