@@ -86,10 +86,7 @@ class _FeedScreenState extends State<FeedScreen> {
           children: [
             const Text(
               'Classmates',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 4),
             Row(
@@ -99,8 +96,9 @@ class _FeedScreenState extends State<FeedScreen> {
                 _buildFeedToggle(
                   label: 'Class',
                   isSelected: _activeFeed == 'class',
-                  labelColor:
-                      _activeFeed == 'class' ? Colors.blue : Colors.black,
+                  labelColor: _activeFeed == 'class'
+                      ? Colors.blue
+                      : Colors.black,
                   onTap: () => setState(() => _activeFeed = 'class'),
                 ),
                 const SizedBox(width: 10),
@@ -135,16 +133,8 @@ class _FeedScreenState extends State<FeedScreen> {
         ],
       ),
       body: _activeFeed == 'mates'
-          ? FeedContent(
-              feedType: 'mates',
-              auth: auth,
-              firestore: firestore,
-            )
-          : FeedContent(
-              feedType: 'class',
-              auth: auth,
-              firestore: firestore,
-            ),
+          ? FeedContent(feedType: 'mates', auth: auth, firestore: firestore)
+          : FeedContent(feedType: 'class', auth: auth, firestore: firestore),
     );
   }
 }
@@ -398,12 +388,23 @@ class _FeedContentState extends State<FeedContent> {
                     );
                   }
 
-                  final docs = _filterBlockedPosts(
-                    _sortedPosts(snapshot.data?.docs ?? []),
-                    blockedUserIds,
-                  );
+                  final rawDocs = _sortedPosts(snapshot.data?.docs ?? []);
+                  final docs = _filterBlockedPosts(rawDocs, blockedUserIds);
 
                   if (docs.isEmpty) {
+                    if (rawDocs.isNotEmpty && blockedUserIds.isNotEmpty) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            'Posts from blocked users are hidden.',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                      );
+                    }
+
                     return const Center(
                       child: Text('No posts yet. Create the first one.'),
                     );

@@ -198,6 +198,10 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if signedIn();
       allow create, update, delete: if isSelf(userId);
+
+      match /blockedUsers/{blockedUserId} {
+        allow read, create, update, delete: if isSelf(userId);
+      }
     }
 
     match /chats/{chatId} {

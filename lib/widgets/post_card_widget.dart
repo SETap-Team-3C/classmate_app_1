@@ -89,6 +89,10 @@ class _PostCardWidgetState extends State<PostCardWidget> {
     final data = widget.postDoc.data();
     final postId = widget.postDoc.id;
     final postAuthorId = (data['userId'] ?? '').toString();
+    if (widget.blockedUserIds.contains(postAuthorId)) {
+      return const SizedBox.shrink();
+    }
+
     final currentUserId = _auth.currentUser?.uid;
     final isCurrentUserPost =
         currentUserId != null && postAuthorId == currentUserId;

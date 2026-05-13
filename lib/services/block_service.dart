@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 
 class BlockService {
   BlockService({FirebaseAuth? auth, FirebaseFirestore? firestore})
@@ -14,7 +15,20 @@ class BlockService {
       _auth ?? (Firebase.apps.isNotEmpty ? FirebaseAuth.instance : null);
 
   FirebaseFirestore? get _firebaseFirestore =>
-      _firestore ?? (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
+      _firestore ??
+      (Firebase.apps.isNotEmpty ? FirebaseFirestore.instance : null);
+
+  static const String _blockedUserIdsField = 'blockedUserIds';
+
+  DocumentReference<Map<String, dynamic>>? _currentUserDoc() {
+    final auth = _firebaseAuth;
+    final firestore = _firebaseFirestore;
+    final currentUser = auth?.currentUser;
+    if (currentUser == null) return null;
+    if (firestore == null) return null;
+
+    return firestore.collection('users').doc(currentUser.uid);
+  }
 
   CollectionReference<Map<String, dynamic>>? _blockedCollection() {
     final auth = _firebaseAuth;
@@ -34,34 +48,61 @@ class BlockService {
     if (currentUser == null || blockedUserId.isEmpty) return;
     if (currentUser.uid == blockedUserId) return;
 
+    final userDoc = _currentUserDoc();
+    if (userDoc == null) return;
+
+    await userDoc.set({
+      _blockedUserIdsField: FieldValue.arrayUnion([blockedUserId]),
+    }, SetOptions(merge: true));
+
     final blockedCollection = _blockedCollection();
     if (blockedCollection == null) return;
 
-    await blockedCollection.doc(blockedUserId).set({
-      'blockedUserId': blockedUserId,
-      'blockedAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      await blockedCollection.doc(blockedUserId).set({
+        'blockedUserId': blockedUserId,
+        'blockedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (error) {
+      debugPrint('Failed to mirror blocked user in subcollection: $error');
+    }
   }
 
   Future<void> unblockUser(String blockedUserId) async {
-    final blockedCollection = _blockedCollection();
-    if (blockedCollection == null || blockedUserId.isEmpty) return;
+    if (blockedUserId.isEmpty) return;
 
-    await blockedCollection.doc(blockedUserId).delete();
+    final userDoc = _currentUserDoc();
+    if (userDoc == null) return;
+
+    await userDoc.set({
+      _blockedUserIdsField: FieldValue.arrayRemove([blockedUserId]),
+    }, SetOptions(merge: true));
+
+    final blockedCollection = _blockedCollection();
+    if (blockedCollection == null) return;
+
+    try {
+      await blockedCollection.doc(blockedUserId).delete();
+    } catch (error) {
+      debugPrint('Failed to remove blocked user mirror doc: $error');
+    }
   }
 
   Stream<Set<String>> watchBlockedUserIds() {
-    final blockedCollection = _blockedCollection();
-    if (blockedCollection == null) {
+    final userDoc = _currentUserDoc();
+    if (userDoc == null) {
       return Stream<Set<String>>.value(<String>{});
     }
 
-    return blockedCollection.snapshots().map((snapshot) {
-      final blocked = <String>{};
-      for (final doc in snapshot.docs) {
-        blocked.add(doc.id);
+    return userDoc.snapshots().map((snapshot) {
+      final data = snapshot.data() ?? <String, dynamic>{};
+      final blockedIds = data[_blockedUserIdsField];
+
+      if (blockedIds is Iterable) {
+        return blockedIds.map((id) => id.toString()).toSet();
       }
-      return blocked;
+
+      return <String>{};
     });
   }
 
