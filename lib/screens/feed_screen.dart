@@ -22,6 +22,10 @@ class FeedScreen extends StatefulWidget {
   final FirebaseAuth? auth;
   final FirebaseFirestore? firestore;
 
+  FirebaseAuth get resolvedAuth => auth ?? FirebaseAuth.instance;
+  FirebaseFirestore get resolvedFirestore =>
+      firestore ?? FirebaseFirestore.instance;
+
   @override
   State<FeedScreen> createState() => _FeedScreenState();
 }
@@ -69,27 +73,46 @@ class _FeedScreenState extends State<FeedScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = widget.resolvedAuth;
+    final firestore = widget.resolvedFirestore;
+
     return Scaffold(
       appBar: AppBar(
         leading: const SizedBox.shrink(),
         elevation: 0,
         centerTitle: true,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        title: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildFeedToggle(
-              label: 'Class',
-              isSelected: _activeFeed == 'class',
-              labelColor: Colors.deepPurple,
-              onTap: () => setState(() => _activeFeed = 'class'),
+            const Text(
+              'Classmates',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            const SizedBox(width: 10),
-            _buildFeedToggle(
-              label: 'Mates',
-              isSelected: _activeFeed == 'mates',
-              labelColor: Colors.black,
-              onTap: () => setState(() => _activeFeed = 'mates'),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildFeedToggle(
+                  label: 'Class',
+                  isSelected: _activeFeed == 'class',
+                  labelColor:
+                      _activeFeed == 'class' ? Colors.blue : Colors.black,
+                  onTap: () => setState(() => _activeFeed = 'class'),
+                ),
+                const SizedBox(width: 10),
+                _buildFeedToggle(
+                  label: 'Mates',
+                  isSelected: _activeFeed == 'mates',
+                  labelColor: _activeFeed == 'mates'
+                      ? Colors.deepPurple
+                      : Colors.black,
+                  onTap: () => setState(() => _activeFeed = 'mates'),
+                ),
+              ],
             ),
           ],
         ),
@@ -101,8 +124,8 @@ class _FeedScreenState extends State<FeedScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => MessagesScreen(
-                    auth: widget.auth ?? FirebaseAuth.instance,
-                    firestore: widget.firestore ?? FirebaseFirestore.instance,
+                    auth: auth,
+                    firestore: firestore,
                     themeProvider: ThemeProvider(),
                   ),
                 ),
@@ -114,13 +137,13 @@ class _FeedScreenState extends State<FeedScreen> {
       body: _activeFeed == 'mates'
           ? FeedContent(
               feedType: 'mates',
-              auth: widget.auth,
-              firestore: widget.firestore,
+              auth: auth,
+              firestore: firestore,
             )
           : FeedContent(
               feedType: 'class',
-              auth: widget.auth,
-              firestore: widget.firestore,
+              auth: auth,
+              firestore: firestore,
             ),
     );
   }
@@ -333,7 +356,7 @@ class _FeedContentState extends State<FeedContent> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_hasFirebaseApp || widget.auth == null && widget.firestore == null) {
+    if (!_hasFirebaseApp) {
       return const Center(child: Text('What is on your mind?'));
     }
 

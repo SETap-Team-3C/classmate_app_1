@@ -7,8 +7,8 @@ import '../../core/utils/validators.dart';
 import '../../services/auth_service.dart';
 // import '../../widets/app_logo.dart'; // unused after switching to image asset
 import '../../widets/custom_textfield.dart';
-import '../home_screen.dart';
 import 'signup_screen.dart';
+import '../home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.themeProvider});
@@ -79,12 +79,13 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => isLoading = false);
 
       if (error == null) {
-        debugPrint('Login successful, navigating to chat list');        if (!mounted) return;
+        debugPrint('Login successful, navigating to home screen');
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (_) => HomeScreen(
-              title: 'Classmate',
+              title: 'Classmates',
               themeProvider: widget.themeProvider,
             ),
           ),

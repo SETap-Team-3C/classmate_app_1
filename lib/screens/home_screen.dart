@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 
 import '../core/localization/app_localizations.dart';
 import '../core/theme/theme_provider.dart';
@@ -46,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final LoginActivityService _loginActivityService = LoginActivityService();
   StreamSubscription<bool>? _revocationSubscription;
   int _currentIndex = 0;
+  String _activeFeed = 'class';
 
   @override
   void initState() {
@@ -171,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     final currentUser = _auth.currentUser;
     return <Widget>[
       FeedContent(
-        feedType: 'class',
+        feedType: _activeFeed,
         auth: widget.auth,
         firestore: widget.firestore,
       ),
@@ -251,19 +253,68 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              'assets/app_logo.png',
-              width: 32,
-              height: 32,
-              fit: BoxFit.contain,
-            ),
-            const SizedBox(width: 8),
-            Flexible(child: Text(widget.title)),
-          ],
-        ),
+        title: isFeedPage
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/app_logo.png',
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () => setState(() => _activeFeed = 'class'),
+                        child: Text(
+                          'Class',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: _activeFeed == 'class'
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: _activeFeed == 'class'
+                                ? Colors.blue
+                                : Colors.black,
+                          ),
+                        ),
+                      ),
+                      // adjacent label so it looks like one word
+                      GestureDetector(
+                        onTap: () => setState(() => _activeFeed = 'mates'),
+                        child: Text(
+                          'Mates',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: _activeFeed == 'mates'
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: _activeFeed == 'mates'
+                                ? Colors.deepPurple
+                                : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'assets/app_logo.png',
+                    width: 32,
+                    height: 32,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(child: Text(widget.title)),
+                ],
+              ),
         actions: [
           if (isFeedPage)
             IconButton(

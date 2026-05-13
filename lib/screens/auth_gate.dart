@@ -27,7 +27,7 @@ class AuthGate extends StatelessWidget {
 
         if (snapshot.hasData) {
           return HomeScreen(
-            title: AppLocalizations.of(context).t('app_name'),
+            title: 'Classmates',
             themeProvider: themeProvider ?? ThemeProvider(),
           );
         }
