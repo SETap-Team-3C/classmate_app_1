@@ -138,12 +138,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         return const Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [Text('Class'), SizedBox(width: 10), Text('Mates')],
-            ),
-            SizedBox(height: 24),
             Text('Direct Messages'),
             SizedBox(height: 12),
             Text('What is on your mind?'),

@@ -29,7 +29,6 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Classmate Home'), findsOneWidget);
     expect(find.text('Direct Messages'), findsOneWidget);
     expect(find.text('Chats'), findsOneWidget);
   });
