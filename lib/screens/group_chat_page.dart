@@ -272,13 +272,36 @@ class _GroupChatPageState extends State<GroupChatPage> {
                             .orderBy('timestamp', descending: true)
                             .snapshots(),
                         builder: (context, messageSnapshot) {
-                          if (messageSnapshot.hasError) {
-                            return Center(
-                              child: Text(
-                                'Failed to load messages: ${messageSnapshot.error}',
-                              ),
-                            );
-                          }
+                            if (messageSnapshot.hasError) {
+                              // Debug output to help diagnose permission issues
+                              debugPrint('[GroupChatPage] Failed to load messages: ${messageSnapshot.error}');
+                              debugPrint('[GroupChatPage] currentUser.uid=${currentUser.uid}');
+                              debugPrint('[GroupChatPage] group members=${memberIds}');
+
+                              return Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'Failed to load messages: ${messageSnapshot.error}',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'Current UID: ${currentUser.uid}',
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Group members: ${memberIds.isEmpty ? 'none' : memberIds.join(', ')}',
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
 
                           if (messageSnapshot.connectionState ==
                               ConnectionState.waiting) {
