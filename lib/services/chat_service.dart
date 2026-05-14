@@ -618,7 +618,7 @@ class ChatService {
 
     final allMessages = byId.values.toList();
 
-    // Filter by search query (case-insensitive)
+    
     final filtered = allMessages
         .where(
           (m) =>
@@ -627,7 +627,7 @@ class ChatService {
         )
         .toList();
 
-    // Sort by timestamp descending
+  
     filtered.sort((a, b) {
       final aMillis = a.timestamp?.millisecondsSinceEpoch ?? 0;
       final bMillis = b.timestamp?.millisecondsSinceEpoch ?? 0;
@@ -637,7 +637,6 @@ class ChatService {
     return filtered;
   }
 
-  // Set user online status
   Future<void> setOnlineStatus(String userId, bool isOnline) async {
     try {
       await _firestore.collection('users').doc(userId).update({
@@ -649,7 +648,7 @@ class ChatService {
     }
   }
 
-  // Get user online status stream
+  
   Stream<bool> getUserOnlineStatus(String userId) {
     return _firestore
         .collection('users')
@@ -658,7 +657,7 @@ class ChatService {
         .map((snap) => snap.data()?['isOnline'] as bool? ?? false);
   }
 
-  // Toggle reaction on a message
+  
   Future<void> toggleReaction(
     String messageId,
     String userId,
@@ -698,7 +697,7 @@ class ChatService {
     }
   }
 
-  // Get last seen time formatted for display
+  
   Future<String> getLastSeenDisplay(String userId) async {
     try {
       final snapshot = await _firestore.collection('users').doc(userId).get();
@@ -719,7 +718,7 @@ class ChatService {
     }
   }
 
-  // Get unread message count for a specific chat
+  
   Future<int> getUnreadCountForChat(String chatId, String currentUserId) async {
     try {
       final snapshot = await _firestore
@@ -736,7 +735,7 @@ class ChatService {
     }
   }
 
-  // Get user-friendly error message
+  
   String getUserFriendlyError(dynamic error) {
     if (error is FirebaseException) {
       switch (error.code) {
