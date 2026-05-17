@@ -2,3 +2,8 @@ site_name: Classmate App Documentation
 
 theme:
   name: material
+
+nav:
+  - Home: index.md
+  - Setup: setup.md
+  - API: api.md
