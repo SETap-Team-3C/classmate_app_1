@@ -1,4 +1,2 @@
-site_name: Classmate App Docs
-
-theme:
-  name: material
+mkdocs
+mkdocs-material
