@@ -1,2 +1,3 @@
-# Classmate App
-Documentation site is working.
+# Classmate App Documentation
+
+Welcome to the Classmate App docs.
