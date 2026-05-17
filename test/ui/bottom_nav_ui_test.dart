@@ -3,6 +3,7 @@ import 'package:firebase_auth_mocks/firebase_auth_mocks.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:classmate_app_1/core/theme/theme_provider.dart';
+import 'package:classmate_app_1/screens/messages_screen.dart';
 import '../test_helpers.dart';
 
 void main() {
@@ -27,7 +28,6 @@ void main() {
 
       expect(find.text('Feed'), findsOneWidget);
       expect(find.text('Calls'), findsOneWidget);
-      expect(find.text('Communities'), findsOneWidget);
       expect(find.text('Chats'), findsOneWidget);
       expect(find.text('You'), findsOneWidget);
     });
@@ -52,7 +52,6 @@ void main() {
 
       expect(find.byIcon(Icons.home), findsOneWidget);
       expect(find.byIcon(Icons.call), findsOneWidget);
-      expect(find.byIcon(Icons.groups), findsOneWidget);
       expect(find.byIcon(Icons.mail), findsOneWidget);
       expect(find.byIcon(Icons.person), findsOneWidget);
     });
@@ -82,8 +81,8 @@ void main() {
       expect(find.byType(BottomNavigationBar), findsOneWidget);
     });
 
-    testWidgets('Clicking Communities tab shows CommunitiesScreen',
-        (WidgetTester tester) async {
+    testWidgets('Clicking Chats tab shows MessagesScreen',
+      (WidgetTester tester) async {
       final auth = MockFirebaseAuth(
         mockUser: MockUser(uid: 'u1', email: 'test@test.com'),
         signedIn: true,
@@ -100,11 +99,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Communities'));
+      await tester.tap(find.text('Chats'));
       await tester.pumpAndSettle();
 
       // Verify navigation occurred
-      expect(find.byType(BottomNavigationBar), findsOneWidget);
+      expect(find.byType(MessagesScreen), findsOneWidget);
     });
 
     testWidgets('Clicking You tab shows ProfileScreen',
