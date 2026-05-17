@@ -81,7 +81,7 @@ void main() {
       await tester.tap(find.text('Calls'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Communities'));
+      await tester.tap(find.text('Chats'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('You'));
@@ -111,7 +111,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Rapid switching
-      final tabs = ['Calls', 'Communities', 'Chats', 'You', 'Feed'];
+      final tabs = ['Calls', 'Chats', 'You', 'Feed'];
       for (int i = 0; i < 3; i++) {
         for (final tab in tabs) {
           await tester.tap(find.text(tab));
