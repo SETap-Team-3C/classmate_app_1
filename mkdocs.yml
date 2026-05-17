@@ -1,0 +1,7 @@
+site_name: Classmate App Documentation
+
+theme:
+  name: material
+
+nav:
+  - Home: index.md
