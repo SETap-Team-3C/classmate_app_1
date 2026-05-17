@@ -46,7 +46,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check on multiple pages
-      final pages = ['Calls', 'Communities', 'Chats', 'You'];
+      final pages = ['Calls', 'Chats', 'You'];
       for (final page in pages) {
         await tester.tap(find.text(page));
         await tester.pumpAndSettle();
@@ -203,7 +203,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final navItems = ['Feed', 'Calls', 'Communities', 'Chats', 'You'];
+      final navItems = ['Feed', 'Calls', 'Chats', 'You'];
 
       for (final item in navItems) {
         await tester.tap(find.text(item));
