@@ -11,7 +11,6 @@ import '../services/auth_service.dart';
 import '../services/login_activity_service.dart';
 import '../services/user_service.dart';
 import 'call_contacts_screen.dart';
-import 'communities_screen.dart';
 import 'feed_screen.dart';
 import 'messages_screen.dart';
 import 'notification_screen.dart';
@@ -146,10 +145,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       }
 
       if (_currentIndex == 2) {
-        return const CommunitiesScreen();
-      }
-
-      if (_currentIndex == 3) {
         return MessagesScreen(
           showTestEmptyState: true,
           onBack: () => setState(() => _currentIndex = 0),
@@ -161,8 +156,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         child: Text(
           switch (_currentIndex) {
             1 => 'Calls',
-            2 => 'Communities',
-            3 => 'Chats',
+            2 => 'Chats',
             _ => 'You',
           },
         ),
@@ -177,7 +171,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         firestore: widget.firestore,
       ),
       const CallContactsScreen(),
-      const CommunitiesScreen(),
       widget.messagesScreenBuilder != null
           ? widget.messagesScreenBuilder!(context)
           : MessagesScreen(
@@ -338,10 +331,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           BottomNavigationBarItem(
             icon: Icon(Icons.call),
             label: loc.t('calls'),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.groups),
-            label: loc.t('communities'),
           ),
           BottomNavigationBarItem(
             icon: _buildChatsIcon(),
