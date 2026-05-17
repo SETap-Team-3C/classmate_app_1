@@ -1,7 +1,21 @@
 site_name: Classmate App Documentation
+site_description: Official documentation for the Classmate App project.
+site_author: SETap Team 3C
+repo_url: https://github.com/SETap-Team-3C/classmate_app_1
+repo_name: classmate_app_1
 
 theme:
   name: material
+  language: en
+  features:
+    - navigation.expand
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+    - toc.integrate
 
 nav:
   - Home: index.md
@@ -10,8 +24,33 @@ nav:
   - User Guide: user_guide.md
   - Developer Guide: developer_guide.md
   - Architecture: architecture.md
+  - User Flows: user_flows.md
+  - State Management: state_management.md
+  - Firebase Integration: firebase_integration.md
+  - Feature Modules: feature_modules.md
+  - Data Models: data_models.md
+  - Navigation Map: navigation_map.md
   - API Reference: api_reference.md
-  - API Documentation: api.md
   - Roadmap: roadmap.md
   - Changelog: changelog.md
   - FAQ: faq.md
+
+markdown_extensions:
+  - admonition
+  - codehilite
+  - toc:
+      permalink: true
+  - tables
+  - footnotes
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed
+  - pymdownx.emoji
+
+plugins:
+  - search
+  - autoreload
