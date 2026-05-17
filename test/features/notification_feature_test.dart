@@ -110,7 +110,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Check pages where notification should not appear
-      final testPages = ['Calls', 'Communities', 'Chats', 'You'];
+      final testPages = ['Calls', 'Chats', 'You'];
 
       for (final page in testPages) {
         await tester.tap(find.text(page));

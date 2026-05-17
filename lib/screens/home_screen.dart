@@ -11,7 +11,6 @@ import '../services/auth_service.dart';
 import '../services/login_activity_service.dart';
 import '../services/user_service.dart';
 import 'call_contacts_screen.dart';
-// communities screen removed per request
 import 'feed_screen.dart';
 import 'messages_screen.dart';
 import 'notification_screen.dart';
