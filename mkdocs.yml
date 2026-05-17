@@ -6,4 +6,12 @@ theme:
 nav:
   - Home: index.md
   - Setup: setup.md
-  - API: api.md
+  - Features: features.md
+  - User Guide: user_guide.md
+  - Developer Guide: developer_guide.md
+  - Architecture: architecture.md
+  - API Reference: api_reference.md
+  - API Documentation: api.md
+  - Roadmap: roadmap.md
+  - Changelog: changelog.md
+  - FAQ: faq.md
